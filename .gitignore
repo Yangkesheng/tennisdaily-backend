@@ -1,5 +1,6 @@
 .DS_Store
 tennisdaily-api
+__debug_bin*
 *.log
 .env
 .env.*
