@@ -1,0 +1,7 @@
+.DS_Store
+tennisdaily-api
+*.log
+.env
+.env.*
+.idea/
+.vscode/
