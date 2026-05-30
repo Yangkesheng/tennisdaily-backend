@@ -45,11 +45,11 @@ http://192.168.x.x:8081
 | 配置项 | 当前值 | 说明 |
 |---|---|---|
 | server.port | `8081` | Go API 服务端口 |
-| database.host | `localhost` | PostgreSQL 主机 |
-| database.port | `5433` | PostgreSQL 端口 |
+| database.host | `localhost` | MySQL 主机 |
+| database.port | `3306` | MySQL 端口 |
 | database.name | `tennis_diary` | 数据库名 |
-| database.sslMode | `disable` | 本地关闭 SSL |
-| database.timeZone | `Asia/Shanghai` | 数据库时区 |
+| database.charset | `utf8mb4` | 字符集 |
+| database.loc | `Asia/Shanghai` | 数据库时区 |
 | jwt.expireHours | `720` | JWT 有效期，约 30 天 |
 | wechat.appId | 空 | 本地未配置微信正式 AppID |
 | wechat.appSecret | 空 | 本地未配置微信正式密钥 |

@@ -3,13 +3,16 @@ server:
 
 database:
   host: "localhost"
-  port: 5433
-  user: "postgres"
-  password: "postgres"
+  port: 3306
+  user: "root"
+  password: "root"
   name: "tennis_diary"
-  sslMode: "disable"
+  charset: "utf8mb4"
+  parseTime: true
+  loc: "Asia/Shanghai"
   timeZone: "Asia/Shanghai"
 
+  
 # database:
 #   host: "tennisdaily-postgres"
 #   port: 5432

@@ -15,7 +15,7 @@ type TennisSession struct {
 	Type            SessionType    `json:"type" gorm:"not null;default:1"`
 	MatchRank       MatchRank      `json:"matchRank" gorm:"not null;default:0"`
 	CourtName       string         `json:"courtName" gorm:"size:128;not null;default:''"`
-	Cost            float64        `json:"cost" gorm:"type:numeric(10,2);not null;default:0"`
+	Cost            float64        `json:"cost" gorm:"type:decimal(10,2);not null;default:0"`
 	RacketName      string         `json:"racketName" gorm:"size:128;not null;default:''"`
 	ShoeName        string         `json:"shoeName" gorm:"size:128;not null;default:''"`
 	Note            string         `json:"note" gorm:"not null;default:''"`

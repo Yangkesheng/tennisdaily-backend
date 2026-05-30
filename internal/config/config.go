@@ -2,7 +2,10 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -29,13 +32,15 @@ type serverConfig struct {
 }
 
 type databaseConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Name     string `yaml:"name"`
-	SSLMode  string `yaml:"sslMode"`
-	TimeZone string `yaml:"timeZone"`
+	Host      string `yaml:"host"`
+	Port      int    `yaml:"port"`
+	User      string `yaml:"user"`
+	Password  string `yaml:"password"`
+	Name      string `yaml:"name"`
+	Charset   string `yaml:"charset"`
+	ParseTime bool   `yaml:"parseTime"`
+	Loc       string `yaml:"loc"`
+	TimeZone  string `yaml:"timeZone"`
 }
 
 type jwtConfig struct {
@@ -62,7 +67,7 @@ func Load() Config {
 }
 
 func loadConfigFile() fileConfig {
-	path := "config.yaml"
+	path := configPath()
 	content, err := os.ReadFile(path)
 	if err != nil {
 		panic(fmt.Errorf("read config file %s: %w", path, err))
@@ -75,15 +80,51 @@ func loadConfigFile() fileConfig {
 	return fc
 }
 
+func configPath() string {
+	if path := os.Getenv("CONFIG_PATH"); path != "" {
+		return path
+	}
+
+	if _, err := os.Stat("config.yaml"); err == nil {
+		return "config.yaml"
+	}
+
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		return "config.yaml"
+	}
+
+	return filepath.Join(filepath.Dir(filename), "..", "..", "config.yaml")
+}
+
 func (c databaseConfig) DSN() string {
+	charset := c.Charset
+	if charset == "" {
+		charset = "utf8mb4"
+	}
+
+	loc := c.Loc
+	if loc == "" {
+		loc = c.TimeZone
+	}
+	if loc == "" {
+		loc = "Asia/Shanghai"
+	}
+
+	parseTime := "False"
+	if c.ParseTime || c.Loc == "" {
+		parseTime = "True"
+	}
+
 	return fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=%s",
-		c.Host,
+		"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%s&loc=%s",
 		c.User,
 		c.Password,
-		c.Name,
+		c.Host,
 		c.Port,
-		c.SSLMode,
-		c.TimeZone,
+		c.Name,
+		charset,
+		parseTime,
+		url.QueryEscape(loc),
 	)
 }

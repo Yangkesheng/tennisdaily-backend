@@ -12,14 +12,14 @@ import (
 	"tennisdaily-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 func main() {
 	cfg := config.Load()
 
-	db, err := gorm.Open(postgres.Open(cfg.DatabaseDSN), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(cfg.DatabaseDSN), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("connect database: %v", err)
 	}
