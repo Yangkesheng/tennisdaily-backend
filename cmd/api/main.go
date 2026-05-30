@@ -5,6 +5,7 @@ import (
 
 	"tennisdaily-backend/internal/config"
 	"tennisdaily-backend/internal/handler"
+	"tennisdaily-backend/internal/logger"
 	"tennisdaily-backend/internal/middleware"
 	"tennisdaily-backend/internal/repository"
 	"tennisdaily-backend/internal/response"
@@ -36,6 +37,8 @@ func main() {
 
 	r := gin.Default()
 	r.GET("/health", func(c *gin.Context) {
+		logger.Debug("GET /health start clientIP=%s", c.ClientIP())
+		logger.Debug("GET /health success status=ok")
 		response.OK(c, gin.H{"status": "ok"})
 	})
 

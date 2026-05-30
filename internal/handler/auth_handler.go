@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 
+	"tennisdaily-backend/internal/logger"
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/response"
 	"tennisdaily-backend/internal/service"
@@ -19,6 +20,8 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) WechatLogin(c *gin.Context) {
+	logger.Debug("POST /api/auth/wechat-login start clientIP=%s", c.ClientIP())
+
 	var req model.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
@@ -35,5 +38,6 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		return
 	}
 
+	logger.Debug("POST /api/auth/wechat-login success userID=%d openid=%s", loginResp.UserID, loginResp.OpenID)
 	response.OK(c, loginResp)
 }

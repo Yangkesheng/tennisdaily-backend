@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"tennisdaily-backend/internal/logger"
 	"tennisdaily-backend/internal/middleware"
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/response"
@@ -25,12 +26,14 @@ func (h *SessionHandler) List(c *gin.Context) {
 	if !ok {
 		return
 	}
+	logger.Debug("GET /api/sessions start userID=%d", userID)
 
 	sessions, err := h.sessionService.List(userID)
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
 	}
+	logger.Debug("GET /api/sessions success userID=%d count=%d", userID, len(sessions))
 	response.OK(c, sessions)
 }
 
@@ -39,6 +42,7 @@ func (h *SessionHandler) Create(c *gin.Context) {
 	if !ok {
 		return
 	}
+	logger.Debug("POST /api/sessions start userID=%d", userID)
 
 	var req model.CreateSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -51,6 +55,7 @@ func (h *SessionHandler) Create(c *gin.Context) {
 		handleServiceError(c, err)
 		return
 	}
+	logger.Debug("POST /api/sessions success userID=%d sessionID=%d", userID, session.ID)
 	response.OK(c, session)
 }
 
@@ -63,12 +68,14 @@ func (h *SessionHandler) Get(c *gin.Context) {
 	if !ok {
 		return
 	}
+	logger.Debug("GET /api/sessions/:id start userID=%d sessionID=%d", userID, id)
 
 	session, err := h.sessionService.FindByID(userID, id)
 	if err != nil {
 		handleServiceError(c, err)
 		return
 	}
+	logger.Debug("GET /api/sessions/:id success userID=%d sessionID=%d", userID, session.ID)
 	response.OK(c, session)
 }
 
@@ -81,6 +88,7 @@ func (h *SessionHandler) Update(c *gin.Context) {
 	if !ok {
 		return
 	}
+	logger.Debug("PUT /api/sessions/:id start userID=%d sessionID=%d", userID, id)
 
 	var req model.UpdateSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -93,6 +101,7 @@ func (h *SessionHandler) Update(c *gin.Context) {
 		handleServiceError(c, err)
 		return
 	}
+	logger.Debug("PUT /api/sessions/:id success userID=%d sessionID=%d", userID, session.ID)
 	response.OK(c, session)
 }
 
@@ -105,11 +114,13 @@ func (h *SessionHandler) Delete(c *gin.Context) {
 	if !ok {
 		return
 	}
+	logger.Debug("DELETE /api/sessions/:id start userID=%d sessionID=%d", userID, id)
 
 	if err := h.sessionService.Delete(userID, id); err != nil {
 		handleServiceError(c, err)
 		return
 	}
+	logger.Debug("DELETE /api/sessions/:id success userID=%d sessionID=%d", userID, id)
 	response.OK(c, gin.H{"deleted": true})
 }
 
@@ -118,11 +129,17 @@ func (h *SessionHandler) Latest(c *gin.Context) {
 	if !ok {
 		return
 	}
+	logger.Debug("GET /api/sessions/latest start userID=%d", userID)
 
 	session, err := h.sessionService.Latest(userID)
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
+	}
+	if session == nil {
+		logger.Debug("GET /api/sessions/latest success userID=%d sessionID=<nil>", userID)
+	} else {
+		logger.Debug("GET /api/sessions/latest success userID=%d sessionID=%d", userID, session.ID)
 	}
 	response.OK(c, session)
 }
