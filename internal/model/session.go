@@ -16,6 +16,7 @@ type TennisSession struct {
 	MatchRank       MatchRank      `json:"matchRank" gorm:"not null;default:0"`
 	CourtName       string         `json:"courtName" gorm:"size:128;not null;default:''"`
 	Cost            float64        `json:"cost" gorm:"type:decimal(10,2);not null;default:0"`
+	RacketID        int64          `json:"racketId" gorm:"not null;default:0;index"`
 	RacketName      string         `json:"racketName" gorm:"size:128;not null;default:''"`
 	ShoeName        string         `json:"shoeName" gorm:"size:128;not null;default:''"`
 	Note            string         `json:"note" gorm:"not null;default:''"`
@@ -39,6 +40,7 @@ type SessionResponse struct {
 	MatchRankLabel  string      `json:"matchRankLabel"`
 	CourtName       string      `json:"courtName"`
 	Cost            float64     `json:"cost"`
+	RacketID        int64       `json:"racketId"`
 	RacketName      string      `json:"racketName"`
 	ShoeName        string      `json:"shoeName"`
 	Note            string      `json:"note"`
@@ -58,6 +60,7 @@ func NewSessionResponse(session TennisSession) SessionResponse {
 		MatchRankLabel:  session.MatchRank.Label(),
 		CourtName:       session.CourtName,
 		Cost:            session.Cost,
+		RacketID:        session.RacketID,
 		RacketName:      session.RacketName,
 		ShoeName:        session.ShoeName,
 		Note:            session.Note,
@@ -74,6 +77,7 @@ type CreateSessionRequest struct {
 	MatchRank       MatchRank   `json:"matchRank"`
 	CourtName       string      `json:"courtName"`
 	Cost            float64     `json:"cost"`
+	RacketID        int64       `json:"racketId"`
 	RacketName      string      `json:"racketName"`
 	ShoeName        string      `json:"shoeName"`
 	Note            string      `json:"note"`
@@ -87,6 +91,7 @@ type UpdateSessionRequest struct {
 	MatchRank       MatchRank   `json:"matchRank"`
 	CourtName       string      `json:"courtName"`
 	Cost            float64     `json:"cost"`
+	RacketID        int64       `json:"racketId"`
 	RacketName      string      `json:"racketName"`
 	ShoeName        string      `json:"shoeName"`
 	Note            string      `json:"note"`

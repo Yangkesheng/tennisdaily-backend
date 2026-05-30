@@ -27,13 +27,17 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	sessionRepo := repository.NewSessionRepository(db)
 
+	racketRepo := repository.NewRacketRepository(db)
+
 	authService := service.NewAuthService(cfg, userRepo)
 	sessionService := service.NewSessionService(sessionRepo)
 	statsService := service.NewStatsService(sessionRepo)
+	racketService := service.NewRacketService(racketRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	sessionHandler := handler.NewSessionHandler(sessionService)
 	statsHandler := handler.NewStatsHandler(statsService)
+	racketHandler := handler.NewRacketHandler(racketService)
 
 	r := gin.Default()
 	r.GET("/health", func(c *gin.Context) {
@@ -55,6 +59,19 @@ func main() {
 		authed.PUT("/sessions/:id", sessionHandler.Update)
 		authed.DELETE("/sessions/:id", sessionHandler.Delete)
 		authed.GET("/stats/month", statsHandler.Month)
+
+		authed.GET("/racket-library", racketHandler.Library)
+		authed.GET("/my-rackets", racketHandler.MyRackets)
+		authed.GET("/rackets/stats", racketHandler.Stats)
+		authed.GET("/rackets", racketHandler.List)
+		authed.POST("/rackets", racketHandler.Create)
+		authed.GET("/rackets/selectable", racketHandler.Selectable)
+		authed.GET("/rackets/:id", racketHandler.Detail)
+		authed.PUT("/rackets/:id", racketHandler.Update)
+		authed.DELETE("/rackets/:id", racketHandler.Delete)
+		authed.POST("/rackets/:id/set-primary", racketHandler.SetPrimary)
+		authed.POST("/rackets/:id/retire", racketHandler.Retire)
+		authed.POST("/rackets/:id/stringing-records", racketHandler.CreateStringingRecord)
 	}
 
 	if err := r.Run(":" + cfg.Port); err != nil {

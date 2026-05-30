@@ -15,6 +15,7 @@
 - 打球记录新增、查询、编辑、删除
 - 最近一次打球记录
 - 本月统计
+- 球拍管理和球拍消费统计
 
 ### 1.2 Base URL
 
@@ -261,6 +262,7 @@ Authorization: Bearer <token>
 | PUT | `/api/sessions/:id` | 是 | 更新打球记录 |
 | DELETE | `/api/sessions/:id` | 是 | 删除打球记录，软删除 |
 | GET | `/api/stats/month` | 是 | 获取本月统计 |
+| GET | `/api/rackets/stats` | 是 | 获取球拍统计 |
 
 ---
 
@@ -869,3 +871,577 @@ curl http://localhost:8081/api/stats/month \
 4. 普通查询只能访问当前 token 对应用户的数据。
 5. 当前列表接口暂不支持分页、日期筛选和近 30 天筛选。
 6. 如果小程序当前内部仍使用字符串类型，需要在前端 service 层做枚举 mapper。
+
+---
+
+## 18. 球拍管理接口
+
+### 18.1 球拍状态
+
+| 值 | 含义 |
+|---:|---|
+| 1 | 主力拍 |
+| 2 | 在用 |
+| 3 | 已退役 |
+
+### 18.2 RacketResponse
+
+```json
+{
+  "id": 1,
+  "name": "EZONE 主力拍",
+  "brand": "Yonex",
+  "model": "EZONE 100",
+  "status": 1,
+  "imageUrl": "",
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1599,
+  "stringName": "Poly Tour Pro",
+  "tension": 48,
+  "lastStringDate": "2026-05-10",
+  "lastStringCost": 80,
+  "totalMinutes": 5160,
+  "totalHours": 86,
+  "createdAt": "2026-05-30T12:00:00+08:00",
+  "updatedAt": "2026-05-30T12:00:00+08:00"
+}
+```
+
+说明：
+
+- `stringName`、`tension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
+- `totalMinutes`、`totalHours` 通过打球记录中的 `racketId` 实时统计。
+- 默认列表不返回已退役球拍。
+
+### 18.3 获取球拍列表
+
+```http
+GET /api/rackets
+Authorization: Bearer <token>
+```
+
+查询参数：
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| includeRetired | boolean | 是否包含已退役球拍，默认 `false` |
+
+响应 data：
+
+```json
+[
+  {
+    "id": 1,
+    "name": "EZONE 主力拍",
+    "brand": "Yonex",
+    "model": "EZONE 100",
+    "status": 1,
+    "stringName": "Poly Tour Pro",
+    "tension": 48,
+    "lastStringDate": "2026-05-10",
+    "lastStringCost": 80,
+    "totalMinutes": 5160,
+    "totalHours": 86
+  }
+]
+```
+
+### 18.4 获取球拍统计
+
+统计当前登录用户的球拍数量和球拍相关消费。
+
+```http
+GET /api/rackets/stats
+Authorization: Bearer <token>
+```
+
+统计口径：
+
+- `racketCount`：当前用户未删除球拍总数，包含主力拍、在用、已退役，不包含已逻辑删除球拍。
+- `racketCost`：当前用户未删除球拍的购买费用合计，累加 `racket.purchase_price`，空值按 `0` 处理。
+- `stringingCost`：当前用户未删除球拍的未删除穿线记录费用合计，累加 `racket_stringing_record.cost`。
+- 已删除球拍不计入球拍总数、球拍花费和穿线费用。
+- 已删除穿线记录不计入穿线费用。
+
+响应 data：
+
+```json
+{
+  "racketCount": 3,
+  "racketCost": 4597,
+  "stringingCost": 320,
+  "totalCost": 4917,
+  "racketCostText": "4597.00",
+  "stringingCostText": "320.00",
+  "totalCostText": "4917.00"
+}
+```
+
+字段说明：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| racketCount | number | 球拍总数，排除已删除球拍 |
+| racketCost | number | 球拍购买费用合计 |
+| stringingCost | number | 球拍穿线费用合计 |
+| totalCost | number | 球拍购买费用 + 穿线费用 |
+| racketCostText | string | 格式化后的球拍购买费用，保留两位小数 |
+| stringingCostText | string | 格式化后的穿线费用，保留两位小数 |
+| totalCostText | string | 格式化后的总费用，保留两位小数 |
+
+curl 示例：
+
+```bash
+curl http://localhost:8081/api/rackets/stats \
+  -H 'Authorization: Bearer <token>'
+```
+
+### 18.5 获取可选球拍列表
+
+新增打球记录时使用，只返回：
+
+```text
+status IN (1, 2)
+```
+
+接口：
+
+```http
+GET /api/rackets/selectable
+Authorization: Bearer <token>
+```
+
+### 18.6 添加球拍
+
+```http
+POST /api/rackets
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "name": "EZONE 主力拍",
+  "brand": "Yonex",
+  "model": "EZONE 100",
+  "imageUrl": "",
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1599,
+  "stringName": "Poly Tour Pro",
+  "tension": 48,
+  "lastStringDate": "2026-05-10",
+  "lastStringCost": 80
+}
+```
+
+规则：
+
+- `name` 必填。
+- 新增球拍默认 `status = 2`，表示在用。
+- 如果传入穿线相关字段，会自动创建一条穿线记录。
+
+### 18.7 获取球拍详情
+
+```http
+GET /api/rackets/:id
+Authorization: Bearer <token>
+```
+
+响应 data：
+
+```json
+{
+  "racket": {
+    "id": 1,
+    "name": "EZONE 主力拍",
+    "brand": "Yonex",
+    "model": "EZONE 100",
+    "status": 1,
+    "purchasePrice": 1599,
+    "stringName": "Poly Tour Pro",
+    "tension": 48,
+    "lastStringDate": "2026-05-10",
+    "lastStringCost": 80,
+    "totalHours": 86
+  },
+  "stringingRecords": [
+    {
+      "id": 1,
+      "racketId": 1,
+      "stringName": "Poly Tour Pro",
+      "tension": 48,
+      "cost": 80,
+      "stringDate": "2026-05-10"
+    }
+  ]
+}
+```
+
+### 18.8 编辑球拍
+
+```http
+PUT /api/rackets/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "name": "EZONE 主力拍",
+  "brand": "Yonex",
+  "model": "EZONE 100",
+  "status": 1,
+  "imageUrl": "",
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1599,
+  "stringName": "Poly Tour Pro",
+  "tension": 48,
+  "lastStringDate": "2026-05-10",
+  "lastStringCost": 80
+}
+```
+
+说明：
+
+- `status = 1` 时会自动将其他主力拍改为在用。
+- 传入穿线相关字段时，会新增一条穿线记录。
+
+### 18.9 设置主力拍
+
+```http
+POST /api/rackets/:id/set-primary
+Authorization: Bearer <token>
+```
+
+规则：
+
+- 系统只允许当前用户存在一支主力拍。
+- 设置成功后，原主力拍会自动变成在用。
+
+### 18.10 退役球拍
+
+```http
+POST /api/rackets/:id/retire
+Authorization: Bearer <token>
+```
+
+规则：
+
+- 退役后 `status = 3`。
+- 默认球拍列表不展示。
+- `/api/rackets/selectable` 不返回退役球拍。
+- 历史打球记录和统计不受影响。
+
+### 18.11 新增穿线记录
+
+```http
+POST /api/rackets/:id/stringing-records
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "stringName": "Poly Tour Pro",
+  "tension": 48,
+  "cost": 80,
+  "stringDate": "2026-05-10"
+}
+```
+
+### 18.12 打球记录关联球拍
+
+新增/编辑打球记录支持传入：
+
+```json
+{
+  "racketId": 1,
+  "racketName": "EZONE 主力拍"
+}
+```
+
+`racketId` 用于球拍累计使用时长统计，`racketName` 用于前端展示兼容。
+
+---
+
+## 19. 球拍库与添加球拍选择接口
+
+### 19.1 获取球拍库，按品牌分类
+
+添加球拍页面使用。返回系统球拍库中的球拍，并按品牌分组。
+
+```http
+GET /api/racket-library
+Authorization: Bearer <token>
+```
+
+响应 data 示例：
+
+```json
+[
+  {
+    "brand": "Yonex",
+    "items": [
+      {
+        "id": 1,
+        "brand": "Yonex",
+        "model": "EZONE 100",
+        "releaseYear": 2025,
+        "weight": 300,
+        "headSize": 100,
+        "imageUrl": ""
+      }
+    ]
+  },
+  {
+    "brand": "Wilson",
+    "items": [
+      {
+        "id": 7,
+        "brand": "Wilson",
+        "model": "Blade 98 16x19",
+        "releaseYear": 2024,
+        "weight": 305,
+        "headSize": 98,
+        "imageUrl": ""
+      }
+    ]
+  }
+]
+```
+
+### 19.2 从球拍库添加到我的球拍
+
+用户选择球拍库中的球拍后，新增我的球拍时传 `libraryId`。
+
+```http
+POST /api/rackets
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体示例：
+
+```json
+{
+  "libraryId": 1,
+  "name": "EZONE 主力拍",
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1599,
+  "stringName": "Poly Tour Pro",
+  "tension": 48,
+  "lastStringDate": "2026-05-10",
+  "lastStringCost": 80
+}
+```
+
+说明：
+
+- `libraryId` 有值时，后端会从球拍库补全 `brand`、`model`、`imageUrl`。
+- 如果请求体里也传了 `brand`、`model`、`imageUrl`，以前端传入值为准。
+- `name` 仍可自定义，比如“EZONE 主力拍”。
+
+### 19.3 添加库中没有的球拍
+
+如果球拍库没有对应球拍，用户可以手动输入。
+
+```http
+POST /api/rackets
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体示例：
+
+```json
+{
+  "name": "我的老款备用拍",
+  "brand": "Volkl",
+  "model": "V-Cell 10",
+  "purchasePrice": 1200
+}
+```
+
+说明：
+
+- 手动输入时不传 `libraryId`，或传 `0`。
+- `name` 必填。
+- `brand`、`model` 可选。
+
+### 19.4 获取我的球拍，用于新增打球记录时选择
+
+新增打球记录页面使用。只返回当前用户未退役球拍：
+
+```text
+status IN (1, 2)
+```
+
+接口：
+
+```http
+GET /api/my-rackets
+Authorization: Bearer <token>
+```
+
+响应 data 示例：
+
+```json
+[
+  {
+    "id": 1,
+    "libraryId": 1,
+    "name": "EZONE 主力拍",
+    "brand": "Yonex",
+    "model": "EZONE 100",
+    "status": 1,
+    "stringName": "Poly Tour Pro",
+    "tension": 48,
+    "lastStringDate": "2026-05-10",
+    "totalHours": 86
+  }
+]
+```
+
+新增打球记录时，把选中的我的球拍写入：
+
+```json
+{
+  "racketId": 1,
+  "racketName": "EZONE 主力拍"
+}
+```
+
+---
+
+## 20. 球拍接口重构说明
+
+### 20.1 添加球拍不再包含穿线信息
+
+添加球拍只维护球拍本体信息，不创建穿线记录。
+
+```http
+POST /api/rackets
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "libraryId": 1,
+  "name": "EZONE 主力拍",
+  "brand": "Yonex",
+  "model": "EZONE 100",
+  "imageUrl": "",
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1599
+}
+```
+
+说明：
+
+- `name` 必填。
+- `libraryId` 可选。
+- 从球拍库选择时，后端可根据 `libraryId` 补全 `brand`、`model`、`imageUrl`。
+- 库中没有的球拍，用户可不传 `libraryId`，直接手动输入 `name`、`brand`、`model`。
+- 当前接口不再接收/处理 `stringName`、`tension`、`lastStringDate`、`lastStringCost`。
+
+### 20.2 编辑球拍，支持主力/在用/退役
+
+```http
+PUT /api/rackets/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "libraryId": 1,
+  "name": "EZONE 主力拍",
+  "brand": "Yonex",
+  "model": "EZONE 100",
+  "status": 1,
+  "imageUrl": "",
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1599
+}
+```
+
+说明：
+
+- `status = 1`：设为主力拍，后端会自动将当前用户其他主力拍改为在用。
+- `status = 2`：在用。
+- `status = 3`：退役。
+- 编辑球拍不再接收/处理穿线信息。
+
+### 20.3 删除球拍
+
+```http
+DELETE /api/rackets/:id
+Authorization: Bearer <token>
+```
+
+响应：
+
+```json
+{
+  "deleted": true
+}
+```
+
+说明：
+
+- 当前实现为逻辑删除，更新 `deleted_at`。
+- 删除后默认列表、我的球拍列表不再返回。
+- 历史打球记录中的 `racketId` 不会被清空。
+
+### 20.4 新增穿线记录
+
+穿线信息通过独立接口维护。
+
+```http
+POST /api/rackets/:id/stringing-records
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "stringName": "Poly Tour Pro",
+  "tension": 48,
+  "cost": 80,
+  "stringDate": "2026-05-10"
+}
+```
+
+说明：
+
+- `stringName` 必填。
+- `stringDate` 必填，格式 `YYYY-MM-DD`。
+- 球拍列表和详情中的当前球线信息来自最近一条穿线记录。
+
+### 20.5 保留我的球拍接口
+
+新增打球记录选择球拍时继续使用：
+
+```http
+GET /api/my-rackets
+Authorization: Bearer <token>
+```
+
+只返回未删除且未退役的球拍：
+
+```text
+status IN (1, 2)
+```

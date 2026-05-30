@@ -39,3 +39,21 @@ CREATE TABLE IF NOT EXISTS racket_stringing_record (
   INDEX idx_stringing_user_deleted_date (user_id, deleted_at, string_date),
   INDEX idx_stringing_racket_deleted_date (racket_id, deleted_at, string_date)
 ) COMMENT='球拍穿线历史表';
+
+
+
+DROP TABLE IF EXISTS racket_library;
+
+CREATE TABLE IF NOT EXISTS racket_library (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '球拍库ID',
+  brand VARCHAR(50) NOT NULL COMMENT '品牌',
+  model VARCHAR(100) NOT NULL COMMENT '型号',
+  release_year SMALLINT NOT NULL COMMENT '版本年份',
+  weight SMALLINT DEFAULT NULL COMMENT '裸拍重量(g)',
+  head_size SMALLINT DEFAULT NULL COMMENT '拍面大小(sq in)',
+  image_url VARCHAR(500) DEFAULT NULL COMMENT '球拍图片',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uk_brand_model_year (brand, model, release_year)
+) COMMENT='球拍库';

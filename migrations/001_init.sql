@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
 
   court_name VARCHAR(128) NOT NULL DEFAULT '',
   cost DECIMAL(10,2) NOT NULL DEFAULT 0,
+  racket_id BIGINT NOT NULL DEFAULT 0,
   racket_name VARCHAR(128) NOT NULL DEFAULT '',
   shoe_name VARCHAR(128) NOT NULL DEFAULT '',
   note TEXT NOT NULL,
@@ -36,5 +37,6 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
     CHECK (rating >= 1 AND rating <= 5),
 
   INDEX idx_tennis_sessions_user_deleted_date (user_id, deleted_at, date DESC),
-  INDEX idx_tennis_sessions_user_deleted_created (user_id, deleted_at, created_at DESC)
+  INDEX idx_tennis_sessions_user_deleted_created (user_id, deleted_at, created_at DESC),
+  INDEX idx_tennis_sessions_user_racket_deleted (user_id, racket_id, deleted_at)
 ) COMMENT='打球记录表';
