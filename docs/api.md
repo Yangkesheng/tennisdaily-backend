@@ -900,8 +900,11 @@ curl http://localhost:8081/api/stats/month \
   "tension": 48,
   "lastStringDate": "2026-05-10",
   "lastStringCost": 80,
-  "totalMinutes": 5160,
-  "totalHours": 86,
+  "usageCount": 12,
+  "usageMinutes": 1440,
+  "usageHours": 24,
+  "totalMinutes": 1440,
+  "totalHours": 24,
   "createdAt": "2026-05-30T12:00:00+08:00",
   "updatedAt": "2026-05-30T12:00:00+08:00"
 }
@@ -910,7 +913,8 @@ curl http://localhost:8081/api/stats/month \
 说明：
 
 - `stringName`、`tension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
-- `totalMinutes`、`totalHours` 通过打球记录中的 `racketId` 实时统计。
+- `usageCount`、`usageMinutes`、`usageHours` 通过打球记录中的 `racketId` 实时统计。
+- `totalMinutes`、`totalHours` 为兼容旧前端保留，当前与 `usageMinutes`、`usageHours` 一致。
 - 默认列表不返回已退役球拍。
 
 ### 18.3 获取球拍列表
@@ -940,11 +944,33 @@ Authorization: Bearer <token>
     "tension": 48,
     "lastStringDate": "2026-05-10",
     "lastStringCost": 80,
-    "totalMinutes": 5160,
-    "totalHours": 86
+    "usageCount": 12,
+    "usageMinutes": 1440,
+    "usageHours": 24,
+    "totalMinutes": 1440,
+    "totalHours": 24
   }
 ]
 ```
+
+统计口径：
+
+- 按 `tennis_sessions.racket_id = racket.id` 关联统计。
+- 只统计当前登录用户自己的未删除打球记录。
+- 统计 `COUNT(tennis_sessions.id)` 得到 `usageCount`。
+- 统计 `SUM(tennis_sessions.duration_minutes)` 得到 `usageMinutes`。
+- `usageHours = usageMinutes / 60`，当前向下取整。
+- 列表返回哪些球拍仍由 `includeRetired` 和球拍删除状态控制。
+
+新增字段说明：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| usageCount | number | 该球拍关联打球记录次数 |
+| usageMinutes | number | 该球拍累计使用分钟数 |
+| usageHours | number | 该球拍累计使用小时数，当前向下取整 |
+| totalMinutes | number | 兼容旧字段，等于 `usageMinutes` |
+| totalHours | number | 兼容旧字段，等于 `usageHours` |
 
 ### 18.4 获取球拍统计
 

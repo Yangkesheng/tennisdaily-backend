@@ -29,6 +29,9 @@ type Racket struct {
 	Tension        *float64       `json:"tension" gorm:"-"`
 	LastStringDate string         `json:"lastStringDate" gorm:"-"`
 	LastStringCost *float64       `json:"lastStringCost" gorm:"-"`
+	UsageCount     int            `json:"usageCount" gorm:"-"`
+	UsageMinutes   int            `json:"usageMinutes" gorm:"-"`
+	UsageHours     int            `json:"usageHours" gorm:"-"`
 	TotalMinutes   int            `json:"totalMinutes" gorm:"-"`
 	TotalHours     int            `json:"totalHours" gorm:"-"`
 	CreatedAt      time.Time      `json:"createdAt"`
@@ -57,6 +60,12 @@ func (RacketStringingRecord) TableName() string {
 	return "racket_stringing_record"
 }
 
+type RacketUsageStats struct {
+	Count   int
+	Minutes int
+	Hours   int
+}
+
 type RacketResponse struct {
 	ID             int64        `json:"id"`
 	LibraryID      int64        `json:"libraryId"`
@@ -71,6 +80,9 @@ type RacketResponse struct {
 	Tension        *float64     `json:"tension"`
 	LastStringDate string       `json:"lastStringDate"`
 	LastStringCost *float64     `json:"lastStringCost"`
+	UsageCount     int          `json:"usageCount"`
+	UsageMinutes   int          `json:"usageMinutes"`
+	UsageHours     int          `json:"usageHours"`
 	TotalMinutes   int          `json:"totalMinutes"`
 	TotalHours     int          `json:"totalHours"`
 	CreatedAt      time.Time    `json:"createdAt"`
@@ -151,6 +163,9 @@ func NewRacketResponse(racket Racket) RacketResponse {
 		Tension:        racket.Tension,
 		LastStringDate: racket.LastStringDate,
 		LastStringCost: racket.LastStringCost,
+		UsageCount:     racket.UsageCount,
+		UsageMinutes:   racket.UsageMinutes,
+		UsageHours:     racket.UsageHours,
 		TotalMinutes:   racket.TotalMinutes,
 		TotalHours:     racket.TotalHours,
 		CreatedAt:      racket.CreatedAt,

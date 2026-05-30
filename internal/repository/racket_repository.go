@@ -176,19 +176,20 @@ func (r *RacketRepository) LatestStringingRecords(userID int64, racketIDs []int6
 	return latest, nil
 }
 
-func (r *RacketRepository) UsageMinutes(userID int64, racketIDs []int64) (map[int64]int, error) {
-	usage := make(map[int64]int)
+func (r *RacketRepository) UsageStats(userID int64, racketIDs []int64) (map[int64]model.RacketUsageStats, error) {
+	usage := make(map[int64]model.RacketUsageStats)
 	if len(racketIDs) == 0 {
 		return usage, nil
 	}
 
 	type row struct {
 		RacketID int64 `gorm:"column:racket_id"`
+		Count    int   `gorm:"column:count"`
 		Minutes  int   `gorm:"column:minutes"`
 	}
 	var rows []row
 	err := r.db.Model(&model.TennisSession{}).
-		Select("racket_id, COALESCE(SUM(duration_minutes), 0) AS minutes").
+		Select("racket_id, COUNT(id) AS count, COALESCE(SUM(duration_minutes), 0) AS minutes").
 		Where("user_id = ? AND racket_id IN ? AND deleted_at IS NULL", userID, racketIDs).
 		Group("racket_id").
 		Scan(&rows).Error
@@ -197,7 +198,11 @@ func (r *RacketRepository) UsageMinutes(userID int64, racketIDs []int64) (map[in
 	}
 
 	for _, row := range rows {
-		usage[row.RacketID] = row.Minutes
+		usage[row.RacketID] = model.RacketUsageStats{
+			Count:   row.Count,
+			Minutes: row.Minutes,
+			Hours:   row.Minutes / 60,
+		}
 	}
 	return usage, nil
 }
