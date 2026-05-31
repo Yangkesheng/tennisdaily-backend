@@ -15,28 +15,31 @@ const (
 )
 
 type Racket struct {
-	ID             int64          `json:"id" gorm:"primaryKey"`
-	UserID         int64          `json:"userId" gorm:"not null;index"`
-	LibraryID      int64          `json:"libraryId" gorm:"column:library_id;not null;default:0;index"`
-	Name           string         `json:"name" gorm:"size:100;not null"`
-	Brand          string         `json:"brand" gorm:"size:50"`
-	Model          string         `json:"model" gorm:"size:100"`
-	Status         RacketStatus   `json:"status" gorm:"not null;default:2"`
-	ImageURL       string         `json:"imageUrl" gorm:"column:image_url;size:500"`
-	PurchaseDate   *time.Time     `json:"purchaseDate" gorm:"type:date"`
-	PurchasePrice  *float64       `json:"purchasePrice" gorm:"type:decimal(10,2)"`
-	StringName     string         `json:"stringName" gorm:"-"`
-	Tension        *float64       `json:"tension" gorm:"-"`
-	LastStringDate string         `json:"lastStringDate" gorm:"-"`
-	LastStringCost *float64       `json:"lastStringCost" gorm:"-"`
-	UsageCount     int            `json:"usageCount" gorm:"-"`
-	UsageMinutes   int            `json:"usageMinutes" gorm:"-"`
-	UsageHours     int            `json:"usageHours" gorm:"-"`
-	TotalMinutes   int            `json:"totalMinutes" gorm:"-"`
-	TotalHours     int            `json:"totalHours" gorm:"-"`
-	CreatedAt      time.Time      `json:"createdAt"`
-	UpdatedAt      time.Time      `json:"updatedAt"`
-	DeletedAt      gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                         int64          `json:"id" gorm:"primaryKey"`
+	UserID                     int64          `json:"userId" gorm:"not null;index"`
+	LibraryID                  int64          `json:"libraryId" gorm:"column:library_id;not null;default:0;index"`
+	Name                       string         `json:"name" gorm:"size:100;not null"`
+	Brand                      string         `json:"brand" gorm:"size:50"`
+	Model                      string         `json:"model" gorm:"size:100"`
+	Status                     RacketStatus   `json:"status" gorm:"not null;default:2"`
+	ImageURL                   string         `json:"imageUrl" gorm:"column:image_url;size:500"`
+	PurchaseDate               *time.Time     `json:"purchaseDate" gorm:"type:date"`
+	PurchasePrice              *float64       `json:"purchasePrice" gorm:"type:decimal(10,2)"`
+	StringName                 string         `json:"stringName" gorm:"-"`
+	Tension                    *float64       `json:"tension" gorm:"-"`
+	LastStringDate             string         `json:"lastStringDate" gorm:"-"`
+	LastStringCost             *float64       `json:"lastStringCost" gorm:"-"`
+	UsageCount                 int            `json:"usageCount" gorm:"-"`
+	UsageMinutes               int            `json:"usageMinutes" gorm:"-"`
+	UsageHours                 int            `json:"usageHours" gorm:"-"`
+	AfterStringingUsageCount   int            `json:"afterStringingUsageCount" gorm:"-"`
+	AfterStringingUsageMinutes int            `json:"afterStringingUsageMinutes" gorm:"-"`
+	AfterStringingUsageHours   int            `json:"afterStringingUsageHours" gorm:"-"`
+	TotalMinutes               int            `json:"totalMinutes" gorm:"-"`
+	TotalHours                 int            `json:"totalHours" gorm:"-"`
+	CreatedAt                  time.Time      `json:"createdAt"`
+	UpdatedAt                  time.Time      `json:"updatedAt"`
+	DeletedAt                  gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func (Racket) TableName() string {
@@ -67,26 +70,29 @@ type RacketUsageStats struct {
 }
 
 type RacketResponse struct {
-	ID             int64        `json:"id"`
-	LibraryID      int64        `json:"libraryId"`
-	Name           string       `json:"name"`
-	Brand          string       `json:"brand"`
-	Model          string       `json:"model"`
-	Status         RacketStatus `json:"status"`
-	ImageURL       string       `json:"imageUrl"`
-	PurchaseDate   string       `json:"purchaseDate"`
-	PurchasePrice  *float64     `json:"purchasePrice"`
-	StringName     string       `json:"stringName"`
-	Tension        *float64     `json:"tension"`
-	LastStringDate string       `json:"lastStringDate"`
-	LastStringCost *float64     `json:"lastStringCost"`
-	UsageCount     int          `json:"usageCount"`
-	UsageMinutes   int          `json:"usageMinutes"`
-	UsageHours     int          `json:"usageHours"`
-	TotalMinutes   int          `json:"totalMinutes"`
-	TotalHours     int          `json:"totalHours"`
-	CreatedAt      time.Time    `json:"createdAt"`
-	UpdatedAt      time.Time    `json:"updatedAt"`
+	ID                         int64        `json:"id"`
+	LibraryID                  int64        `json:"libraryId"`
+	Name                       string       `json:"name"`
+	Brand                      string       `json:"brand"`
+	Model                      string       `json:"model"`
+	Status                     RacketStatus `json:"status"`
+	ImageURL                   string       `json:"imageUrl"`
+	PurchaseDate               string       `json:"purchaseDate"`
+	PurchasePrice              *float64     `json:"purchasePrice"`
+	StringName                 string       `json:"stringName"`
+	Tension                    *float64     `json:"tension"`
+	LastStringDate             string       `json:"lastStringDate"`
+	LastStringCost             *float64     `json:"lastStringCost"`
+	UsageCount                 int          `json:"usageCount"`
+	UsageMinutes               int          `json:"usageMinutes"`
+	UsageHours                 int          `json:"usageHours"`
+	AfterStringingUsageCount   int          `json:"afterStringingUsageCount"`
+	AfterStringingUsageMinutes int          `json:"afterStringingUsageMinutes"`
+	AfterStringingUsageHours   int          `json:"afterStringingUsageHours"`
+	TotalMinutes               int          `json:"totalMinutes"`
+	TotalHours                 int          `json:"totalHours"`
+	CreatedAt                  time.Time    `json:"createdAt"`
+	UpdatedAt                  time.Time    `json:"updatedAt"`
 }
 
 type StringingRecordResponse struct {
@@ -150,26 +156,29 @@ func NewRacketResponse(racket Racket) RacketResponse {
 	}
 
 	return RacketResponse{
-		ID:             racket.ID,
-		LibraryID:      racket.LibraryID,
-		Name:           racket.Name,
-		Brand:          racket.Brand,
-		Model:          racket.Model,
-		Status:         racket.Status,
-		ImageURL:       racket.ImageURL,
-		PurchaseDate:   purchaseDate,
-		PurchasePrice:  racket.PurchasePrice,
-		StringName:     racket.StringName,
-		Tension:        racket.Tension,
-		LastStringDate: racket.LastStringDate,
-		LastStringCost: racket.LastStringCost,
-		UsageCount:     racket.UsageCount,
-		UsageMinutes:   racket.UsageMinutes,
-		UsageHours:     racket.UsageHours,
-		TotalMinutes:   racket.TotalMinutes,
-		TotalHours:     racket.TotalHours,
-		CreatedAt:      racket.CreatedAt,
-		UpdatedAt:      racket.UpdatedAt,
+		ID:                         racket.ID,
+		LibraryID:                  racket.LibraryID,
+		Name:                       racket.Name,
+		Brand:                      racket.Brand,
+		Model:                      racket.Model,
+		Status:                     racket.Status,
+		ImageURL:                   racket.ImageURL,
+		PurchaseDate:               purchaseDate,
+		PurchasePrice:              racket.PurchasePrice,
+		StringName:                 racket.StringName,
+		Tension:                    racket.Tension,
+		LastStringDate:             racket.LastStringDate,
+		LastStringCost:             racket.LastStringCost,
+		UsageCount:                 racket.UsageCount,
+		UsageMinutes:               racket.UsageMinutes,
+		UsageHours:                 racket.UsageHours,
+		AfterStringingUsageCount:   racket.AfterStringingUsageCount,
+		AfterStringingUsageMinutes: racket.AfterStringingUsageMinutes,
+		AfterStringingUsageHours:   racket.AfterStringingUsageHours,
+		TotalMinutes:               racket.TotalMinutes,
+		TotalHours:                 racket.TotalHours,
+		CreatedAt:                  racket.CreatedAt,
+		UpdatedAt:                  racket.UpdatedAt,
 	}
 }
 

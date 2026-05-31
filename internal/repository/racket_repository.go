@@ -162,7 +162,7 @@ func (r *RacketRepository) LatestStringingRecords(userID int64, racketIDs []int6
 
 	var records []model.RacketStringingRecord
 	err := r.db.Where("user_id = ? AND racket_id IN ? AND deleted_at IS NULL", userID, racketIDs).
-		Order("racket_id ASC, string_date DESC, created_at DESC").
+		Order("racket_id ASC, string_date DESC, id DESC").
 		Find(&records).Error
 	if err != nil {
 		return nil, err
@@ -205,4 +205,25 @@ func (r *RacketRepository) UsageStats(userID int64, racketIDs []int64) (map[int6
 		}
 	}
 	return usage, nil
+}
+
+func (r *RacketRepository) UsageStatsSince(userID int64, racketID int64, startDate string) (model.RacketUsageStats, error) {
+	type row struct {
+		Count   int `gorm:"column:count"`
+		Minutes int `gorm:"column:minutes"`
+	}
+	var usage row
+	err := r.db.Model(&model.TennisSession{}).
+		Select("COUNT(id) AS count, COALESCE(SUM(duration_minutes), 0) AS minutes").
+		Where("user_id = ? AND racket_id = ? AND date >= ? AND deleted_at IS NULL", userID, racketID, startDate).
+		Scan(&usage).Error
+	if err != nil {
+		return model.RacketUsageStats{}, err
+	}
+
+	return model.RacketUsageStats{
+		Count:   usage.Count,
+		Minutes: usage.Minutes,
+		Hours:   usage.Minutes / 60,
+	}, nil
 }

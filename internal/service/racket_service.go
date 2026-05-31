@@ -334,6 +334,15 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 		racket.UsageHours = stats.Hours
 		racket.TotalMinutes = stats.Minutes
 		racket.TotalHours = stats.Hours
+		if racket.LastStringDate != "" {
+			afterStringingStats, err := s.repo.UsageStatsSince(userID, racket.ID, racket.LastStringDate)
+			if err != nil {
+				return nil, err
+			}
+			racket.AfterStringingUsageCount = afterStringingStats.Count
+			racket.AfterStringingUsageMinutes = afterStringingStats.Minutes
+			racket.AfterStringingUsageHours = afterStringingStats.Hours
+		}
 		responses = append(responses, model.NewRacketResponse(racket))
 	}
 	return responses, nil

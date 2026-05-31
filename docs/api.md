@@ -1081,16 +1081,28 @@ Authorization: Bearer <token>
 {
   "racket": {
     "id": 1,
+    "libraryId": 1,
     "name": "EZONE 主力拍",
     "brand": "Yonex",
     "model": "EZONE 100",
     "status": 1,
+    "imageUrl": "",
+    "purchaseDate": "2026-01-01",
     "purchasePrice": 1599,
     "stringName": "Poly Tour Pro",
     "tension": 48,
     "lastStringDate": "2026-05-10",
     "lastStringCost": 80,
-    "totalHours": 86
+    "usageCount": 12,
+    "usageMinutes": 1440,
+    "usageHours": 24,
+    "afterStringingUsageCount": 3,
+    "afterStringingUsageMinutes": 360,
+    "afterStringingUsageHours": 6,
+    "totalMinutes": 1440,
+    "totalHours": 24,
+    "createdAt": "2026-05-30T12:00:00+08:00",
+    "updatedAt": "2026-05-30T12:00:00+08:00"
   },
   "stringingRecords": [
     {
@@ -1099,11 +1111,34 @@ Authorization: Bearer <token>
       "stringName": "Poly Tour Pro",
       "tension": 48,
       "cost": 80,
-      "stringDate": "2026-05-10"
+      "stringDate": "2026-05-10",
+      "createdAt": "2026-05-30T12:00:00+08:00",
+      "updatedAt": "2026-05-30T12:00:00+08:00"
     }
   ]
 }
 ```
+
+详情页使用统计口径：
+
+- 累计使用统计：当前用户未删除打球记录中，按 `tennis_sessions.racket_id = racket.id` 统计。
+- `usageCount = COUNT(tennis_sessions.id)`。
+- `usageMinutes = COALESCE(SUM(tennis_sessions.duration_minutes), 0)`。
+- `usageHours = usageMinutes / 60`，当前向下取整。
+- 最近一次穿线按 `string_date DESC, id DESC` 取第一条未删除穿线记录。
+- 如果存在最近一次穿线记录，穿线后使用统计按 `tennis_sessions.date >= lastStringDate` 统计，包含穿线当天。
+- 如果没有穿线记录，`afterStringingUsageCount`、`afterStringingUsageMinutes`、`afterStringingUsageHours` 均为 `0`。
+
+详情新增字段说明：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| usageCount | number | 该球拍累计关联打球记录次数 |
+| usageMinutes | number | 该球拍累计使用分钟数 |
+| usageHours | number | 该球拍累计使用小时数，当前向下取整 |
+| afterStringingUsageCount | number | 最近一次穿线后累计使用次数 |
+| afterStringingUsageMinutes | number | 最近一次穿线后累计使用分钟数 |
+| afterStringingUsageHours | number | 最近一次穿线后累计使用小时数，当前向下取整 |
 
 ### 18.8 编辑球拍
 
