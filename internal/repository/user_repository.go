@@ -41,7 +41,7 @@ func (r *UserRepository) FindOrCreateByOpenID(openid string) (*model.User, error
 	}
 
 	user = model.User{OpenID: openid}
-	if err := r.db.Create(&user).Error; err != nil {
+	if err := r.db.Omit("Phone").Create(&user).Error; err != nil {
 		return nil, err
 	}
 	if err := r.bindWechatIdentity(user.ID, appID, openid, ""); err != nil {
