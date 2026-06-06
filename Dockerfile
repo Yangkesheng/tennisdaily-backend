@@ -20,7 +20,8 @@ ENV TZ=Asia/Shanghai
 ENV PORT=8080
 
 COPY --from=builder /tennisdaily-api /app/tennisdaily-api
+COPY --from=builder /config.yaml /app/config.yaml
 
-EXPOSE 8080
+EXPOSE 8081
 
 CMD ["/app/tennisdaily-api"]
