@@ -48,10 +48,15 @@ func main() {
 
 	api := r.Group("/api")
 	api.POST("/auth/wechat-login", authHandler.WechatLogin)
+	api.POST("/auth/phone-login", authHandler.PhoneLogin)
 
 	authed := api.Group("")
 	authed.Use(middleware.Auth(authService))
 	{
+		authed.GET("/auth/me", authHandler.Me)
+		authed.POST("/auth/logout", authHandler.Logout)
+		authed.PUT("/auth/profile", authHandler.UpdateProfile)
+
 		authed.GET("/sessions", sessionHandler.List)
 		authed.POST("/sessions", sessionHandler.Create)
 		authed.GET("/sessions/latest", sessionHandler.Latest)
