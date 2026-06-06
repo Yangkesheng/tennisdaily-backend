@@ -25,9 +25,9 @@ func (User) TableName() string {
 type UserWechatIdentity struct {
 	ID        int64          `json:"id" gorm:"primaryKey"`
 	UserID    int64          `json:"userId" gorm:"not null;index"`
-	AppID     string         `json:"appid" gorm:"size:64;not null;uniqueIndex:idx_user_wechat_appid_openid"`
-	OpenID    string         `json:"openid" gorm:"size:128;not null;uniqueIndex:idx_user_wechat_appid_openid"`
-	UnionID   string         `json:"unionid" gorm:"size:128;index"`
+	AppID     string         `json:"appid" gorm:"column:appid;size:64;not null;uniqueIndex:idx_user_wechat_appid_openid"`
+	OpenID    string         `json:"openid" gorm:"column:openid;size:128;not null;uniqueIndex:idx_user_wechat_appid_openid"`
+	UnionID   string         `json:"unionid" gorm:"column:unionid;size:128;index"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`

@@ -1,0 +1,214 @@
+-- TennisDaily MySQL 初始化脚本
+-- 可重复执行：创建数据库、创建表，并为旧表补齐新增字段和索引。
+
+CREATE DATABASE IF NOT EXISTS tennis_diary
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+
+USE tennis_diary;
+
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  openid VARCHAR(128) DEFAULT NULL,
+  phone VARCHAR(32) DEFAULT NULL,
+  nickname VARCHAR(128) NOT NULL DEFAULT '',
+  avatar_url TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL,
+
+  UNIQUE KEY uk_users_openid (openid),
+  UNIQUE KEY idx_users_phone (phone),
+  INDEX idx_users_deleted_at (deleted_at)
+) COMMENT='用户表';
+
+CREATE TABLE IF NOT EXISTS user_wechat_identities (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  appid VARCHAR(64) NOT NULL,
+  openid VARCHAR(128) NOT NULL,
+  unionid VARCHAR(128) DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL,
+
+  UNIQUE KEY idx_user_wechat_appid_openid (appid, openid),
+  INDEX idx_user_wechat_user_id (user_id),
+  INDEX idx_user_wechat_unionid (unionid),
+  INDEX idx_user_wechat_deleted_at (deleted_at)
+) COMMENT='用户微信身份绑定表';
+
+CREATE TABLE IF NOT EXISTS tennis_sessions (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+
+  date DATE NOT NULL,
+  duration_minutes INT NOT NULL DEFAULT 120,
+  rating SMALLINT NOT NULL DEFAULT 3,
+
+  type SMALLINT NOT NULL DEFAULT 1,
+  match_rank SMALLINT NOT NULL DEFAULT 0,
+
+  court_name VARCHAR(128) NOT NULL DEFAULT '',
+  cost DECIMAL(10,2) NOT NULL DEFAULT 0,
+  racket_id BIGINT NOT NULL DEFAULT 0,
+  racket_name VARCHAR(128) NOT NULL DEFAULT '',
+  shoe_name VARCHAR(128) NOT NULL DEFAULT '',
+  note TEXT NOT NULL,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL,
+
+  CONSTRAINT tennis_sessions_type_check
+    CHECK (type IN (1, 2, 3, 4, 5)),
+  CONSTRAINT tennis_sessions_match_rank_check
+    CHECK (match_rank IN (0, 1, 2, 3, 4, 5)),
+  CONSTRAINT tennis_sessions_rating_check
+    CHECK (rating >= 1 AND rating <= 5),
+
+  INDEX idx_tennis_sessions_user_deleted_date (user_id, deleted_at, date DESC),
+  INDEX idx_tennis_sessions_user_deleted_created (user_id, deleted_at, created_at DESC),
+  INDEX idx_tennis_sessions_user_racket_deleted (user_id, racket_id, deleted_at)
+) COMMENT='打球记录表';
+
+CREATE TABLE IF NOT EXISTS racket (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '球拍ID',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
+  library_id BIGINT NOT NULL DEFAULT 0 COMMENT '球拍库ID',
+
+  name VARCHAR(100) NOT NULL COMMENT '球拍名称',
+  brand VARCHAR(50) DEFAULT NULL COMMENT '品牌',
+  model VARCHAR(100) DEFAULT NULL COMMENT '型号',
+  status TINYINT NOT NULL DEFAULT 2 COMMENT '状态:1主力拍 2在用 3已退役',
+  image_url VARCHAR(500) DEFAULT NULL COMMENT '图片',
+  purchase_date DATE DEFAULT NULL COMMENT '购买日期',
+  purchase_price DECIMAL(10,2) DEFAULT NULL COMMENT '购买价格',
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted_at DATETIME DEFAULT NULL COMMENT '删除时间',
+
+  CONSTRAINT racket_status_check
+    CHECK (status IN (1, 2, 3)),
+
+  INDEX idx_racket_user_deleted_status (user_id, deleted_at, status),
+  INDEX idx_racket_user_deleted_created (user_id, deleted_at, created_at),
+  INDEX idx_racket_user_library (user_id, library_id)
+) COMMENT='球拍表';
+
+CREATE TABLE IF NOT EXISTS racket_stringing_record (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '穿线记录ID',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
+  racket_id BIGINT NOT NULL COMMENT '球拍ID',
+
+  string_name VARCHAR(100) NOT NULL COMMENT '球线名称',
+  tension DECIMAL(4,1) DEFAULT NULL COMMENT '磅数',
+  cost DECIMAL(10,2) NOT NULL COMMENT '穿线费用',
+  string_date DATE NOT NULL COMMENT '穿线日期',
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted_at DATETIME DEFAULT NULL COMMENT '删除时间',
+
+  INDEX idx_stringing_user_deleted_racket (user_id, deleted_at, racket_id),
+  INDEX idx_stringing_user_deleted_date (user_id, deleted_at, string_date),
+  INDEX idx_stringing_racket_deleted_date (racket_id, deleted_at, string_date)
+) COMMENT='球拍穿线历史表';
+
+CREATE TABLE IF NOT EXISTS racket_library (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '球拍库ID',
+  brand VARCHAR(50) NOT NULL COMMENT '品牌',
+  model VARCHAR(100) NOT NULL COMMENT '型号',
+  release_year SMALLINT NOT NULL COMMENT '版本年份',
+  weight SMALLINT DEFAULT NULL COMMENT '裸拍重量(g)',
+  head_size SMALLINT DEFAULT NULL COMMENT '拍面大小(sq in)',
+  image_url VARCHAR(500) DEFAULT NULL COMMENT '球拍图片',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uk_brand_model_year (brand, model, release_year)
+) COMMENT='球拍库';
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS ensure_column$$
+CREATE PROCEDURE ensure_column(
+  IN p_table_name VARCHAR(64),
+  IN p_column_name VARCHAR(64),
+  IN p_column_definition TEXT,
+  IN p_after_column VARCHAR(64)
+)
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = p_table_name
+      AND COLUMN_NAME = p_column_name
+  ) THEN
+    SET @ddl = CONCAT('ALTER TABLE `', p_table_name, '` ADD COLUMN ', p_column_definition);
+    IF p_after_column IS NOT NULL AND p_after_column <> '' THEN
+      SET @ddl = CONCAT(@ddl, ' AFTER `', p_after_column, '`');
+    END IF;
+    PREPARE stmt FROM @ddl;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS ensure_index$$
+CREATE PROCEDURE ensure_index(
+  IN p_table_name VARCHAR(64),
+  IN p_index_name VARCHAR(64),
+  IN p_index_definition TEXT
+)
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = p_table_name
+      AND INDEX_NAME = p_index_name
+  ) THEN
+    SET @ddl = CONCAT('ALTER TABLE `', p_table_name, '` ADD ', p_index_definition);
+    PREPARE stmt FROM @ddl;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END$$
+
+DELIMITER ;
+
+-- 兼容已存在的旧 users 表。
+CALL ensure_column('users', 'phone', '`phone` VARCHAR(32) NULL', 'openid');
+CALL ensure_column('users', 'deleted_at', '`deleted_at` DATETIME NULL', 'updated_at');
+CALL ensure_index('users', 'idx_users_phone', 'UNIQUE INDEX `idx_users_phone` (`phone`)');
+CALL ensure_index('users', 'idx_users_deleted_at', 'INDEX `idx_users_deleted_at` (`deleted_at`)');
+
+-- 兼容旧版本 users.openid NOT NULL；手机号登录允许手机号用户先存在，openid 可为空。
+ALTER TABLE users MODIFY COLUMN openid VARCHAR(128) DEFAULT NULL;
+
+-- 兼容已存在的旧 tennis_sessions 表。
+CALL ensure_column('tennis_sessions', 'racket_id', '`racket_id` BIGINT NOT NULL DEFAULT 0', 'cost');
+CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_date', 'INDEX `idx_tennis_sessions_user_deleted_date` (`user_id`, `deleted_at`, `date` DESC)');
+CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_created', 'INDEX `idx_tennis_sessions_user_deleted_created` (`user_id`, `deleted_at`, `created_at` DESC)');
+CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_racket_deleted', 'INDEX `idx_tennis_sessions_user_racket_deleted` (`user_id`, `racket_id`, `deleted_at`)');
+
+-- 兼容已存在的旧 racket 表。
+CALL ensure_column('racket', 'library_id', '`library_id` BIGINT NOT NULL DEFAULT 0', 'user_id');
+CALL ensure_index('racket', 'idx_racket_user_deleted_status', 'INDEX `idx_racket_user_deleted_status` (`user_id`, `deleted_at`, `status`)');
+CALL ensure_index('racket', 'idx_racket_user_deleted_created', 'INDEX `idx_racket_user_deleted_created` (`user_id`, `deleted_at`, `created_at`)');
+CALL ensure_index('racket', 'idx_racket_user_library', 'INDEX `idx_racket_user_library` (`user_id`, `library_id`)');
+
+-- 兼容已存在但索引不完整的表。
+CALL ensure_index('user_wechat_identities', 'idx_user_wechat_appid_openid', 'UNIQUE INDEX `idx_user_wechat_appid_openid` (`appid`, `openid`)');
+CALL ensure_index('user_wechat_identities', 'idx_user_wechat_user_id', 'INDEX `idx_user_wechat_user_id` (`user_id`)');
+CALL ensure_index('user_wechat_identities', 'idx_user_wechat_unionid', 'INDEX `idx_user_wechat_unionid` (`unionid`)');
+CALL ensure_index('racket_stringing_record', 'idx_stringing_user_deleted_racket', 'INDEX `idx_stringing_user_deleted_racket` (`user_id`, `deleted_at`, `racket_id`)');
+CALL ensure_index('racket_stringing_record', 'idx_stringing_user_deleted_date', 'INDEX `idx_stringing_user_deleted_date` (`user_id`, `deleted_at`, `string_date`)');
+CALL ensure_index('racket_stringing_record', 'idx_stringing_racket_deleted_date', 'INDEX `idx_stringing_racket_deleted_date` (`racket_id`, `deleted_at`, `string_date`)');
+CALL ensure_index('racket_library', 'uk_brand_model_year', 'UNIQUE INDEX `uk_brand_model_year` (`brand`, `model`, `release_year`)');
+
+DROP PROCEDURE IF EXISTS ensure_column;
+DROP PROCEDURE IF EXISTS ensure_index;
