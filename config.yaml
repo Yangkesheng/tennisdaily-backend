@@ -2,10 +2,14 @@ server:
   port: "8081"
 
 # database:
-#   host: "localhost"
-#   port: 3306
+#   # host: "localhost"
+#   # port: 3306
+#   #   user: "root"
+#   # password: "root"
+#   host: "sh-cynosdbmysql-grp-4686fcoi.sql.tencentcdb.com"
+#   port: 26404
 #   user: "root"
-#   password: "root"
+#   password: "MFAcn5Fy"
 #   name: "tennis_diary"
 #   charset: "utf8mb4"
 #   parseTime: true
