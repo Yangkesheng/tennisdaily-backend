@@ -1,11 +1,23 @@
 server:
   port: "8081"
 
+# database:
+#   host: "localhost"
+#   port: 3306
+#   user: "root"
+#   password: "root"
+#   name: "tennis_diary"
+#   charset: "utf8mb4"
+#   parseTime: true
+#   loc: "Asia/Shanghai"
+#   timeZone: "Asia/Shanghai"
+
+
 database:
-  host: "localhost"
+  host: "10.26.103.99:3306"
   port: 3306
   user: "root"
-  password: "root"
+  password: "MFAcn5Fy"
   name: "tennis_diary"
   charset: "utf8mb4"
   parseTime: true
@@ -13,15 +25,6 @@ database:
   timeZone: "Asia/Shanghai"
 
   
-# database:
-#   host: "tennisdaily-postgres"
-#   port: 5432
-#   user: "postgres"
-#   password: "postgres"
-#   name: "tennis_diary"
-#   sslMode: "disable"
-#   timeZone: "Asia/Shanghai"
-
 jwt:
   secret: "dev-secret-change-me"
   expireHours: 720

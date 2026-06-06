@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"tennisdaily-backend/internal/config"
 	"tennisdaily-backend/internal/handler"
@@ -17,6 +19,8 @@ import (
 )
 
 func main() {
+	printCurrentDirectoryInfo()
+
 	cfg := config.Load()
 
 	db, err := gorm.Open(mysql.Open(cfg.DatabaseDSN), &gorm.Config{})
@@ -81,5 +85,25 @@ func main() {
 
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("run server: %v", err)
+	}
+}
+
+func printCurrentDirectoryInfo() {
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("当前路径: 获取失败: %v\n", err)
+	} else {
+		fmt.Printf("当前路径: %s\n", wd)
+	}
+
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		fmt.Printf("读取当前目录失败: %v\n", err)
+		return
+	}
+
+	fmt.Println("当前目录文件列表:")
+	for _, entry := range entries {
+		fmt.Println(entry.Name())
 	}
 }
