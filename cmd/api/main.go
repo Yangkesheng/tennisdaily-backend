@@ -61,6 +61,7 @@ func main() {
 		authed.GET("/sessions", sessionHandler.List)
 		authed.POST("/sessions", sessionHandler.Create)
 		authed.GET("/sessions/latest", sessionHandler.Latest)
+		authed.GET("/sessions/calendar", sessionHandler.Calendar)
 		authed.GET("/sessions/:id", sessionHandler.Get)
 		authed.PUT("/sessions/:id", sessionHandler.Update)
 		authed.DELETE("/sessions/:id", sessionHandler.Delete)

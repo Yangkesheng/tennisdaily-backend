@@ -26,14 +26,21 @@ func (h *SessionHandler) List(c *gin.Context) {
 	if !ok {
 		return
 	}
-	logger.Debug("GET /api/sessions start userID=%d", userID)
+	date := c.Query("date")
+	logger.Debug("GET /api/sessions start userID=%d date=%s", userID, date)
 
-	sessions, err := h.sessionService.List(userID)
+	var sessions []model.SessionResponse
+	var err error
+	if date == "" {
+		sessions, err = h.sessionService.List(userID)
+	} else {
+		sessions, err = h.sessionService.ListByDate(userID, date)
+	}
 	if err != nil {
-		response.Error(c, 500, response.CodeInternalError, "internal error")
+		handleServiceError(c, err)
 		return
 	}
-	logger.Debug("GET /api/sessions success userID=%d count=%d", userID, len(sessions))
+	logger.Debug("GET /api/sessions success userID=%d date=%s count=%d", userID, date, len(sessions))
 	response.OK(c, sessions)
 }
 
@@ -142,6 +149,33 @@ func (h *SessionHandler) Latest(c *gin.Context) {
 		logger.Debug("GET /api/sessions/latest success userID=%d sessionID=%d", userID, session.ID)
 	}
 	response.OK(c, session)
+}
+
+func (h *SessionHandler) Calendar(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+
+	year, err := strconv.Atoi(c.Query("year"))
+	if err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	month, err := strconv.Atoi(c.Query("month"))
+	if err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	logger.Debug("GET /api/sessions/calendar start userID=%d year=%d month=%d", userID, year, month)
+
+	calendar, err := h.sessionService.Calendar(userID, year, month)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	logger.Debug("GET /api/sessions/calendar success userID=%d year=%d month=%d activeDayCount=%d", userID, year, month, calendar.ActiveDayCount)
+	response.OK(c, calendar)
 }
 
 func currentUserID(c *gin.Context) (int64, bool) {

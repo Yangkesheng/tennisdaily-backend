@@ -48,6 +48,18 @@ type SessionResponse struct {
 	UpdatedAt       time.Time   `json:"updatedAt"`
 }
 
+type SessionCalendarDay struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type SessionCalendarResponse struct {
+	Year           int                  `json:"year"`
+	Month          int                  `json:"month"`
+	ActiveDayCount int                  `json:"activeDayCount"`
+	Days           []SessionCalendarDay `json:"days"`
+}
+
 func NewSessionResponse(session TennisSession) SessionResponse {
 	return SessionResponse{
 		ID:              session.ID,

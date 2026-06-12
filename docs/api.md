@@ -359,17 +359,30 @@ curl -X POST http://localhost:8081/api/auth/wechat-login \
 
 ### 8.1 GET /api/sessions
 
-获取当前登录用户的全部未删除打球记录。
+获取当前登录用户的未删除打球记录。支持通过 `date` 查询某一天的打球记录。
 
 排序规则：
 
-1. `date` 倒序
-2. `created_at` 倒序
+1. 未传 `date` 时：`date` 倒序，`created_at` 倒序
+2. 传 `date` 时：`created_at` 倒序
 
 #### 请求
 
 ```http
 GET /api/sessions
+Authorization: Bearer <token>
+```
+
+#### Query Parameters
+
+| 参数 | 类型 | 必填 | 示例 | 说明 |
+|---|---|---:|---|---|
+| `date` | string | 否 | `2026-01-15` | 打球日期，格式 `YYYY-MM-DD` |
+
+#### 按日期查询示例
+
+```http
+GET /api/sessions?date=2026-01-15
 Authorization: Bearer <token>
 ```
 
@@ -401,6 +414,11 @@ Authorization: Bearer <token>
 
 ```bash
 curl http://localhost:8081/api/sessions \
+  -H 'Authorization: Bearer <token>'
+```
+
+```bash
+curl 'http://localhost:8081/api/sessions?date=2026-01-15' \
   -H 'Authorization: Bearer <token>'
 ```
 

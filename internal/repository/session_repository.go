@@ -23,6 +23,12 @@ func (r *SessionRepository) List(userID int64) ([]model.TennisSession, error) {
 	return sessions, err
 }
 
+func (r *SessionRepository) ListByDate(userID int64, date time.Time) ([]model.TennisSession, error) {
+	var sessions []model.TennisSession
+	err := r.db.Where("user_id = ? AND date = ?", userID, date).Order("created_at DESC").Find(&sessions).Error
+	return sessions, err
+}
+
 func (r *SessionRepository) Create(session *model.TennisSession) error {
 	return r.db.Create(session).Error
 }
@@ -63,6 +69,17 @@ func (r *SessionRepository) Latest(userID int64) (*model.TennisSession, error) {
 		return nil, err
 	}
 	return &session, nil
+}
+
+func (r *SessionRepository) CalendarDays(userID int64, start, end time.Time) ([]model.SessionCalendarDay, error) {
+	var days []model.SessionCalendarDay
+	err := r.db.Model(&model.TennisSession{}).
+		Select("DATE_FORMAT(date, '%Y-%m-%d') AS date, COUNT(*) AS count").
+		Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).
+		Group("date").
+		Order("date ASC").
+		Scan(&days).Error
+	return days, err
 }
 
 func (r *SessionRepository) StatsByMonth(userID int64, start, end time.Time) (model.SessionStats, error) {

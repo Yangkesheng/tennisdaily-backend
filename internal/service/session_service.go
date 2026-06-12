@@ -34,6 +34,19 @@ func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
 	return toSessionResponses(sessions), nil
 }
 
+func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionResponse, error) {
+	sessionDate, err := time.ParseInLocation("2006-01-02", date, s.loc)
+	if err != nil {
+		return nil, ErrInvalidRequest
+	}
+
+	sessions, err := s.repo.ListByDate(userID, sessionDate)
+	if err != nil {
+		return nil, err
+	}
+	return toSessionResponses(sessions), nil
+}
+
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
 	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.MatchRank, req.CourtName, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
 	if err != nil {
@@ -109,6 +122,26 @@ func (s *SessionService) Latest(userID int64) (*model.SessionResponse, error) {
 	}
 	resp := model.NewSessionResponse(*session)
 	return &resp, nil
+}
+
+func (s *SessionService) Calendar(userID int64, year, month int) (model.SessionCalendarResponse, error) {
+	if year < 2000 || year > 2100 || month < 1 || month > 12 {
+		return model.SessionCalendarResponse{}, ErrInvalidRequest
+	}
+
+	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, s.loc)
+	end := start.AddDate(0, 1, 0)
+	days, err := s.repo.CalendarDays(userID, start, end)
+	if err != nil {
+		return model.SessionCalendarResponse{}, err
+	}
+
+	return model.SessionCalendarResponse{
+		Year:           year,
+		Month:          month,
+		ActiveDayCount: len(days),
+		Days:           days,
+	}, nil
 }
 
 func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, matchRank model.MatchRank, courtName string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {
