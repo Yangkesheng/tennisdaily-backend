@@ -81,6 +81,30 @@ func (r *RacketRepository) Stats(userID int64) (int, float64, float64, error) {
 	return racketStats.Count, racketStats.Cost, stringingStats.Cost, nil
 }
 
+func (r *RacketRepository) SumPurchaseCostByMonth(userID int64, start, end time.Time) (float64, error) {
+	type row struct {
+		Cost float64 `gorm:"column:cost"`
+	}
+	var result row
+	err := r.db.Model(&model.Racket{}).
+		Select("COALESCE(SUM(purchase_price), 0) AS cost").
+		Where("user_id = ? AND deleted_at IS NULL AND purchase_date >= ? AND purchase_date < ?", userID, start, end).
+		Scan(&result).Error
+	return result.Cost, err
+}
+
+func (r *RacketRepository) SumStringingCostByMonth(userID int64, start, end time.Time) (float64, error) {
+	type row struct {
+		Cost float64 `gorm:"column:cost"`
+	}
+	var result row
+	err := r.db.Model(&model.RacketStringingRecord{}).
+		Select("COALESCE(SUM(cost), 0) AS cost").
+		Where("user_id = ? AND deleted_at IS NULL AND string_date >= ? AND string_date < ?", userID, start, end).
+		Scan(&result).Error
+	return result.Cost, err
+}
+
 func (r *RacketRepository) Create(racket *model.Racket) error {
 	return r.db.Create(racket).Error
 }

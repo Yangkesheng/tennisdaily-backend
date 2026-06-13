@@ -82,6 +82,12 @@ func (r *SessionRepository) CalendarDays(userID int64, start, end time.Time) ([]
 	return days, err
 }
 
+func (r *SessionRepository) ListLatest(userID int64, limit int) ([]model.TennisSession, error) {
+	var sessions []model.TennisSession
+	err := r.db.Where("user_id = ?", userID).Order("date DESC, created_at DESC").Limit(limit).Find(&sessions).Error
+	return sessions, err
+}
+
 func (r *SessionRepository) StatsByMonth(userID int64, start, end time.Time) (model.SessionStats, error) {
 	var stats model.SessionStats
 

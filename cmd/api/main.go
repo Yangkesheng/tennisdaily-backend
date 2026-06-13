@@ -34,11 +34,13 @@ func main() {
 	sessionService := service.NewSessionService(sessionRepo)
 	statsService := service.NewStatsService(sessionRepo)
 	racketService := service.NewRacketService(racketRepo)
+	homeService := service.NewHomeService(sessionRepo, racketRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	sessionHandler := handler.NewSessionHandler(sessionService)
 	statsHandler := handler.NewStatsHandler(statsService)
 	racketHandler := handler.NewRacketHandler(racketService)
+	homeHandler := handler.NewHomeHandler(homeService)
 
 	r := gin.Default()
 	r.GET("/health", func(c *gin.Context) {
@@ -57,6 +59,8 @@ func main() {
 		authed.GET("/auth/me", authHandler.Me)
 		authed.POST("/auth/logout", authHandler.Logout)
 		authed.PUT("/auth/profile", authHandler.UpdateProfile)
+
+		authed.GET("/home/summary", homeHandler.Summary)
 
 		authed.GET("/sessions", sessionHandler.List)
 		authed.POST("/sessions", sessionHandler.Create)
