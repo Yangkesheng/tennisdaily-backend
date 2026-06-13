@@ -6,7 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"strings"
 	"time"
+
+	"tennisdaily-backend/internal/logger"
 
 	"gopkg.in/yaml.v3"
 )
@@ -56,14 +60,74 @@ type wechatConfig struct {
 func Load() Config {
 	fc := loadConfigFile()
 
-	return Config{
-		Port:         fc.Server.Port,
-		DatabaseDSN:  fc.Database.DSN(),
-		JWTSecret:    fc.JWT.Secret,
-		JWTExpire:    time.Duration(fc.JWT.ExpireHours) * time.Hour,
-		WechatAppID:  fc.Wechat.AppID,
-		WechatSecret: fc.Wechat.AppSecret,
+	port, portSource := envOrDefaultWithSource("SERVER_PORT", fc.Server.Port)
+	databaseDSN, databaseDSNSource := envOrDefaultWithSource("DATABASE_DSN", fc.Database.DSN())
+	jwtSecret, jwtSecretSource := envOrDefaultWithSource("JWT_SECRET", fc.JWT.Secret)
+	wechatAppID, wechatAppIDSource := envOrDefaultWithSource("WECHAT_APP_ID", fc.Wechat.AppID)
+	wechatSecret, wechatSecretSource := envOrDefaultWithSource("WECHAT_APP_SECRET", fc.Wechat.AppSecret)
+	jwtExpireHours := fc.JWT.ExpireHours
+	jwtExpireHoursSource := "config"
+	if value := os.Getenv("JWT_EXPIRE_HOURS"); value != "" {
+		parsed, err := strconv.Atoi(value)
+		if err != nil || parsed <= 0 {
+			panic(fmt.Errorf("invalid JWT_EXPIRE_HOURS: %s", value))
+		}
+		jwtExpireHours = parsed
+		jwtExpireHoursSource = "env"
 	}
+
+	logger.Debug("config loaded server.port source=%s value=%s", portSource, port)
+	logger.Debug("config loaded database.dsn source=%s value=%s", databaseDSNSource, maskDSN(databaseDSN))
+	logger.Debug("config loaded jwt.secret source=%s value=%s", jwtSecretSource, maskSecret(jwtSecret))
+	logger.Debug("config loaded jwt.expireHours source=%s value=%d", jwtExpireHoursSource, jwtExpireHours)
+	logger.Debug("config loaded wechat.appId source=%s value=%s", wechatAppIDSource, maskMiddle(wechatAppID))
+	logger.Debug("config loaded wechat.appSecret source=%s value=%s", wechatSecretSource, maskSecret(wechatSecret))
+
+	return Config{
+		Port:         port,
+		DatabaseDSN:  databaseDSN,
+		JWTSecret:    jwtSecret,
+		JWTExpire:    time.Duration(jwtExpireHours) * time.Hour,
+		WechatAppID:  wechatAppID,
+		WechatSecret: wechatSecret,
+	}
+}
+
+func envOrDefaultWithSource(key string, fallback string) (string, string) {
+	if value := os.Getenv(key); value != "" {
+		return value, "env"
+	}
+	return fallback, "config"
+}
+
+func maskSecret(value string) string {
+	if value == "" {
+		return "<empty>"
+	}
+	return fmt.Sprintf("<set length=%d>", len(value))
+}
+
+func maskMiddle(value string) string {
+	if value == "" {
+		return "<empty>"
+	}
+	if len(value) <= 8 {
+		return fmt.Sprintf("%s***", value[:1])
+	}
+	return fmt.Sprintf("%s***%s", value[:4], value[len(value)-4:])
+}
+
+func maskDSN(value string) string {
+	if value == "" {
+		return "<empty>"
+	}
+
+	atIndex := strings.Index(value, "@")
+	if atIndex <= 0 {
+		return maskMiddle(value)
+	}
+
+	return fmt.Sprintf("<credentials-hidden>%s", value[atIndex:])
 }
 
 func loadConfigFile() fileConfig {
