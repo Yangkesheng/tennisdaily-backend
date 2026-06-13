@@ -82,6 +82,14 @@ func (r *RacketRepository) Stats(userID int64) (int, float64, float64, error) {
 }
 
 func (r *RacketRepository) SumPurchaseCostByMonth(userID int64, start, end time.Time) (float64, error) {
+	return r.SumPurchaseCostByRange(userID, start, end)
+}
+
+func (r *RacketRepository) SumStringingCostByMonth(userID int64, start, end time.Time) (float64, error) {
+	return r.SumStringingCostByRange(userID, start, end)
+}
+
+func (r *RacketRepository) SumPurchaseCostByRange(userID int64, start, end time.Time) (float64, error) {
 	type row struct {
 		Cost float64 `gorm:"column:cost"`
 	}
@@ -93,7 +101,7 @@ func (r *RacketRepository) SumPurchaseCostByMonth(userID int64, start, end time.
 	return result.Cost, err
 }
 
-func (r *RacketRepository) SumStringingCostByMonth(userID int64, start, end time.Time) (float64, error) {
+func (r *RacketRepository) SumStringingCostByRange(userID int64, start, end time.Time) (float64, error) {
 	type row struct {
 		Cost float64 `gorm:"column:cost"`
 	}

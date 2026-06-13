@@ -32,7 +32,7 @@ func main() {
 
 	authService := service.NewAuthService(cfg, userRepo)
 	sessionService := service.NewSessionService(sessionRepo)
-	statsService := service.NewStatsService(sessionRepo)
+	statsService := service.NewStatsService(sessionRepo, racketRepo)
 	racketService := service.NewRacketService(racketRepo)
 	homeService := service.NewHomeService(sessionRepo, racketRepo)
 
@@ -70,6 +70,7 @@ func main() {
 		authed.PUT("/sessions/:id", sessionHandler.Update)
 		authed.DELETE("/sessions/:id", sessionHandler.Delete)
 		authed.GET("/stats/month", statsHandler.Month)
+		authed.GET("/stats/charts", statsHandler.Charts)
 
 		authed.GET("/racket-library", racketHandler.Library)
 		authed.GET("/my-rackets", racketHandler.MyRackets)
