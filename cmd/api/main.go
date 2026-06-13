@@ -31,7 +31,7 @@ func main() {
 	racketRepo := repository.NewRacketRepository(db)
 
 	authService := service.NewAuthService(cfg, userRepo)
-	sessionService := service.NewSessionService(sessionRepo)
+	sessionService := service.NewSessionService(sessionRepo, racketRepo)
 	statsService := service.NewStatsService(sessionRepo, racketRepo)
 	racketService := service.NewRacketService(racketRepo)
 	homeService := service.NewHomeService(sessionRepo, racketRepo)

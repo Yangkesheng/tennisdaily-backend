@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"time"
 
 	"tennisdaily-backend/internal/model"
@@ -14,16 +15,17 @@ const (
 )
 
 type SessionService struct {
-	repo *repository.SessionRepository
-	loc  *time.Location
+	repo       *repository.SessionRepository
+	racketRepo *repository.RacketRepository
+	loc        *time.Location
 }
 
-func NewSessionService(repo *repository.SessionRepository) *SessionService {
+func NewSessionService(repo *repository.SessionRepository, racketRepo *repository.RacketRepository) *SessionService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &SessionService{repo: repo, loc: loc}
+	return &SessionService{repo: repo, racketRepo: racketRepo, loc: loc}
 }
 
 func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
@@ -136,12 +138,111 @@ func (s *SessionService) Calendar(userID int64, year, month int) (model.SessionC
 		return model.SessionCalendarResponse{}, err
 	}
 
+	summary, err := s.calendarSummary(userID, start, end)
+	if err != nil {
+		return model.SessionCalendarResponse{}, err
+	}
+
+	ratingTrend, err := s.calendarRatingTrend(userID, start, end)
+	if err != nil {
+		return model.SessionCalendarResponse{}, err
+	}
+
 	return model.SessionCalendarResponse{
 		Year:           year,
 		Month:          month,
 		ActiveDayCount: len(days),
 		Days:           days,
+		Summary:        summary,
+		Charts: model.SessionCalendarChartsResponse{
+			WeeklySessions:   s.calendarWeeklySessions(start, end, days),
+			RatingTrend:      ratingTrend,
+			ExpenseBreakdown: calendarExpenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+		},
 	}, nil
+}
+
+func (s *SessionService) calendarSummary(userID int64, start, end time.Time) (model.SessionCalendarSummaryResponse, error) {
+	sessionStats, err := s.repo.StatsAggregate(userID, start, end)
+	if err != nil {
+		return model.SessionCalendarSummaryResponse{}, err
+	}
+
+	racketCost, err := s.racketRepo.SumPurchaseCostByRange(userID, start, end)
+	if err != nil {
+		return model.SessionCalendarSummaryResponse{}, err
+	}
+
+	stringingCost, err := s.racketRepo.SumStringingCostByRange(userID, start, end)
+	if err != nil {
+		return model.SessionCalendarSummaryResponse{}, err
+	}
+
+	return model.SessionCalendarSummaryResponse{
+		SessionCount:   sessionStats.SessionCount,
+		ActiveDayCount: sessionStats.ActiveDayCount,
+		TotalMinutes:   sessionStats.TotalMinutes,
+		AverageMinutes: round1(sessionStats.AverageMinutes),
+		AverageRating:  round1(sessionStats.AverageRating),
+		SessionCost:    sessionStats.SessionCost,
+		RacketCost:     racketCost,
+		StringingCost:  stringingCost,
+		TotalCost:      sessionStats.SessionCost + racketCost + stringingCost,
+	}, nil
+}
+
+func (s *SessionService) calendarWeeklySessions(start, end time.Time, days []model.SessionCalendarDay) []model.CalendarWeeklySessionChartItemResponse {
+	mondayStart := start.AddDate(0, 0, -weekdayOffset(start))
+	weeks := 0
+	for weekStart := mondayStart; weekStart.Before(end); weekStart = weekStart.AddDate(0, 0, 7) {
+		weeks++
+	}
+
+	weeklySessions := make([]model.CalendarWeeklySessionChartItemResponse, weeks)
+	for index := range weeklySessions {
+		weeklySessions[index] = model.CalendarWeeklySessionChartItemResponse{
+			Label: fmt.Sprintf("第%d周", index+1),
+			Count: 0,
+		}
+	}
+
+	for _, day := range days {
+		date, err := time.ParseInLocation("2006-01-02", day.Date, s.loc)
+		if err != nil {
+			continue
+		}
+		index := int(date.Sub(mondayStart).Hours() / 24 / 7)
+		if index >= 0 && index < len(weeklySessions) {
+			weeklySessions[index].Count += int64(day.Count)
+		}
+	}
+
+	return weeklySessions
+}
+
+func (s *SessionService) calendarRatingTrend(userID int64, start, end time.Time) ([]model.CalendarRatingTrendChartItemResponse, error) {
+	sessions, err := s.repo.ListRatingTrendByRange(userID, start, end, statsRatingTrendLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	trend := make([]model.CalendarRatingTrendChartItemResponse, 0, len(sessions))
+	for index := len(sessions) - 1; index >= 0; index-- {
+		session := sessions[index]
+		trend = append(trend, model.CalendarRatingTrendChartItemResponse{
+			Date:   session.Date.Format("2006-01-02"),
+			Rating: session.Rating,
+		})
+	}
+	return trend, nil
+}
+
+func calendarExpenseBreakdown(sessionCost, racketCost, stringingCost float64) []model.CalendarExpenseChartItemResponse {
+	return []model.CalendarExpenseChartItemResponse{
+		{Label: "打球", Value: sessionCost},
+		{Label: "球拍", Value: racketCost},
+		{Label: "穿线", Value: stringingCost},
+	}
 }
 
 func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, matchRank model.MatchRank, courtName string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {

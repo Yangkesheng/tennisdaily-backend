@@ -53,11 +53,46 @@ type SessionCalendarDay struct {
 	Count int    `json:"count"`
 }
 
+type SessionCalendarSummaryResponse struct {
+	SessionCount   int64   `json:"sessionCount"`
+	ActiveDayCount int64   `json:"activeDayCount"`
+	TotalMinutes   int64   `json:"totalMinutes"`
+	AverageMinutes float64 `json:"averageMinutes"`
+	AverageRating  float64 `json:"averageRating"`
+	SessionCost    float64 `json:"sessionCost"`
+	RacketCost     float64 `json:"racketCost"`
+	StringingCost  float64 `json:"stringingCost"`
+	TotalCost      float64 `json:"totalCost"`
+}
+
+type CalendarWeeklySessionChartItemResponse struct {
+	Label string `json:"label"`
+	Count int64  `json:"count"`
+}
+
+type CalendarRatingTrendChartItemResponse struct {
+	Date   string `json:"date"`
+	Rating int16  `json:"rating"`
+}
+
+type CalendarExpenseChartItemResponse struct {
+	Label string  `json:"label"`
+	Value float64 `json:"value"`
+}
+
+type SessionCalendarChartsResponse struct {
+	WeeklySessions   []CalendarWeeklySessionChartItemResponse `json:"weeklySessions"`
+	RatingTrend      []CalendarRatingTrendChartItemResponse   `json:"ratingTrend"`
+	ExpenseBreakdown []CalendarExpenseChartItemResponse       `json:"expenseBreakdown"`
+}
+
 type SessionCalendarResponse struct {
-	Year           int                  `json:"year"`
-	Month          int                  `json:"month"`
-	ActiveDayCount int                  `json:"activeDayCount"`
-	Days           []SessionCalendarDay `json:"days"`
+	Year           int                            `json:"year"`
+	Month          int                            `json:"month"`
+	ActiveDayCount int                            `json:"activeDayCount"`
+	Days           []SessionCalendarDay           `json:"days"`
+	Summary        SessionCalendarSummaryResponse `json:"summary"`
+	Charts         SessionCalendarChartsResponse  `json:"charts"`
 }
 
 func NewSessionResponse(session TennisSession) SessionResponse {
