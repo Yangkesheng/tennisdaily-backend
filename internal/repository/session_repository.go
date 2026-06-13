@@ -88,6 +88,14 @@ func (r *SessionRepository) ListLatest(userID int64, limit int) ([]model.TennisS
 	return sessions, err
 }
 
+func (r *SessionRepository) CountByDateRange(userID int64, start, end time.Time) (int, error) {
+	var count int64
+	err := r.db.Model(&model.TennisSession{}).
+		Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).
+		Count(&count).Error
+	return int(count), err
+}
+
 func (r *SessionRepository) StatsByMonth(userID int64, start, end time.Time) (model.SessionStats, error) {
 	var stats model.SessionStats
 

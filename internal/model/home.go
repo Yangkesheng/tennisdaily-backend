@@ -9,6 +9,7 @@ type HomeSessionSummaryResponse struct {
 	MonthCount   int     `json:"monthCount"`
 	MonthMinutes int     `json:"monthMinutes"`
 	MonthCost    float64 `json:"monthCost"`
+	YearCount    int     `json:"yearCount"`
 	TotalCount   int     `json:"totalCount"`
 }
 

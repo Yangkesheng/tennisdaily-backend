@@ -41,6 +41,8 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 
 	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, s.loc)
 	end := start.AddDate(0, 1, 0)
+	yearStart := time.Date(year, 1, 1, 0, 0, 0, 0, s.loc)
+	yearEnd := yearStart.AddDate(1, 0, 0)
 
 	sessionStats, err := s.sessionRepo.StatsByMonth(userID, start, end)
 	if err != nil {
@@ -53,6 +55,11 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 	}
 
 	stringingCost, err := s.racketRepo.SumStringingCostByMonth(userID, start, end)
+	if err != nil {
+		return model.HomeSummaryResponse{}, err
+	}
+
+	yearCount, err := s.sessionRepo.CountByDateRange(userID, yearStart, yearEnd)
 	if err != nil {
 		return model.HomeSummaryResponse{}, err
 	}
@@ -91,6 +98,7 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 			MonthCount:   sessionStats.MonthCount,
 			MonthMinutes: sessionStats.MonthMinutes,
 			MonthCost:    sessionCost,
+			YearCount:    yearCount,
 			TotalCount:   sessionStats.TotalCount,
 		},
 		Expense: model.HomeExpenseSummaryResponse{
