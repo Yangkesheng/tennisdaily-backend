@@ -26,22 +26,21 @@ func (h *SessionHandler) List(c *gin.Context) {
 	if !ok {
 		return
 	}
-	date := c.Query("date")
-	logger.Debug("GET /api/sessions start userID=%d date=%s", userID, date)
 
-	var sessions []model.SessionResponse
-	var err error
-	if date == "" {
-		sessions, err = h.sessionService.List(userID)
-	} else {
-		sessions, err = h.sessionService.ListByDate(userID, date)
+	var query model.SessionListQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
 	}
+	logger.Debug("GET /api/sessions start userID=%d date=%s page=%d pageSize=%d", userID, query.Date, query.Page, query.PageSize)
+
+	page, err := h.sessionService.ListPage(userID, query)
 	if err != nil {
 		handleServiceError(c, err)
 		return
 	}
-	logger.Debug("GET /api/sessions success userID=%d date=%s count=%d", userID, date, len(sessions))
-	response.OK(c, sessions)
+	logger.Debug("GET /api/sessions success userID=%d date=%s count=%d total=%d page=%d pageSize=%d", userID, query.Date, len(page.List), page.Total, page.Page, page.PageSize)
+	response.OK(c, page)
 }
 
 func (h *SessionHandler) Create(c *gin.Context) {

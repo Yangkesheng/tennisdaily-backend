@@ -15,6 +15,7 @@ type TennisSession struct {
 	Type            SessionType    `json:"type" gorm:"not null;default:1"`
 	MatchRank       MatchRank      `json:"matchRank" gorm:"not null;default:0"`
 	CourtName       string         `json:"courtName" gorm:"size:128;not null;default:''"`
+	Partner         string         `json:"partner" gorm:"size:128;not null;default:''"`
 	Cost            float64        `json:"cost" gorm:"type:decimal(10,2);not null;default:0"`
 	RacketID        int64          `json:"racketId" gorm:"not null;default:0;index"`
 	RacketName      string         `json:"racketName" gorm:"size:128;not null;default:''"`
@@ -39,6 +40,7 @@ type SessionResponse struct {
 	MatchRank       MatchRank   `json:"matchRank"`
 	MatchRankLabel  string      `json:"matchRankLabel"`
 	CourtName       string      `json:"courtName"`
+	Partner         string      `json:"partner"`
 	Cost            float64     `json:"cost"`
 	RacketID        int64       `json:"racketId"`
 	RacketName      string      `json:"racketName"`
@@ -106,6 +108,7 @@ func NewSessionResponse(session TennisSession) SessionResponse {
 		MatchRank:       session.MatchRank,
 		MatchRankLabel:  session.MatchRank.Label(),
 		CourtName:       session.CourtName,
+		Partner:         session.Partner,
 		Cost:            session.Cost,
 		RacketID:        session.RacketID,
 		RacketName:      session.RacketName,
@@ -116,6 +119,21 @@ func NewSessionResponse(session TennisSession) SessionResponse {
 	}
 }
 
+type SessionListQuery struct {
+	Date     string `form:"date"`
+	Page     int    `form:"page"`
+	PageSize int    `form:"pageSize"`
+}
+
+type SessionListPageResponse struct {
+	List       []SessionResponse `json:"list"`
+	Total      int64             `json:"total"`
+	Page       int               `json:"page"`
+	PageSize   int               `json:"pageSize"`
+	TotalPages int               `json:"totalPages"`
+	HasMore    bool              `json:"hasMore"`
+}
+
 type CreateSessionRequest struct {
 	Date            string      `json:"date" binding:"required"`
 	DurationMinutes int         `json:"durationMinutes"`
@@ -123,6 +141,7 @@ type CreateSessionRequest struct {
 	Type            SessionType `json:"type" binding:"required"`
 	MatchRank       MatchRank   `json:"matchRank"`
 	CourtName       string      `json:"courtName"`
+	Partner         string      `json:"partner"`
 	Cost            float64     `json:"cost"`
 	RacketID        int64       `json:"racketId"`
 	RacketName      string      `json:"racketName"`
@@ -137,6 +156,7 @@ type UpdateSessionRequest struct {
 	Type            SessionType `json:"type" binding:"required"`
 	MatchRank       MatchRank   `json:"matchRank"`
 	CourtName       string      `json:"courtName"`
+	Partner         string      `json:"partner"`
 	Cost            float64     `json:"cost"`
 	RacketID        int64       `json:"racketId"`
 	RacketName      string      `json:"racketName"`

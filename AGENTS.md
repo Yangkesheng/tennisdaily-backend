@@ -703,7 +703,7 @@ go test ./...
 5. 是否过滤软删除数据
 6. 日期是否使用 `Asia/Shanghai`
 7. JSON 字段是否 camelCase
-8. 是否更新 `docs/api.md` 或相关接口文档
+8. 是否更新 `docs/api.md`、`docs/change-log.md` 或相关接口文档
 9. 是否执行 `gofmt`
 10. 是否执行 `go test ./...`
 
@@ -801,10 +801,22 @@ GET /api/sessions/calendar?year=YYYY&month=M
 
 ```text
 docs/api.md
+docs/change-log.md
 AGENTS.md
 ```
 
 当接口有新增、字段变化或统计口径变化时，必须更新文档。
+
+每次修改代码后，必须在 `docs/change-log.md` 追加本次修改总结，建议包含：
+
+- 修改时间
+- 需求/变更内容
+- 修改文件
+- 接口变化
+- 数据库变化
+- 兼容性说明
+- 已执行检查命令
+- 测试结果
 
 旧文档：
 

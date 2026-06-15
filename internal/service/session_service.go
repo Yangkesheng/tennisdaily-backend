@@ -12,6 +12,9 @@ const (
 	defaultDurationMinutes = 120
 	maxDurationMinutes     = 600
 	defaultRating          = 3
+	defaultSessionPage     = 1
+	defaultSessionPageSize = 20
+	maxSessionPageSize     = 100
 )
 
 type SessionService struct {
@@ -36,6 +39,55 @@ func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
 	return toSessionResponses(sessions), nil
 }
 
+func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (model.SessionListPageResponse, error) {
+	if query.Date != "" {
+		responses, err := s.ListByDate(userID, query.Date)
+		if err != nil {
+			return model.SessionListPageResponse{}, err
+		}
+		total := int64(len(responses))
+		return model.SessionListPageResponse{
+			List:       responses,
+			Total:      total,
+			Page:       1,
+			PageSize:   len(responses),
+			TotalPages: 1,
+			HasMore:    false,
+		}, nil
+	}
+
+	page := query.Page
+	if page == 0 {
+		page = defaultSessionPage
+	}
+	pageSize := query.PageSize
+	if pageSize == 0 {
+		pageSize = defaultSessionPageSize
+	}
+	if page < 1 || pageSize < 1 || pageSize > maxSessionPageSize {
+		return model.SessionListPageResponse{}, ErrInvalidRequest
+	}
+
+	sessions, total, err := s.repo.ListPage(userID, page, pageSize)
+	if err != nil {
+		return model.SessionListPageResponse{}, err
+	}
+
+	totalPages := 0
+	if total > 0 {
+		totalPages = int((total + int64(pageSize) - 1) / int64(pageSize))
+	}
+
+	return model.SessionListPageResponse{
+		List:       toSessionResponses(sessions),
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+		HasMore:    int64(page*pageSize) < total,
+	}, nil
+}
+
 func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionResponse, error) {
 	sessionDate, err := time.ParseInLocation("2006-01-02", date, s.loc)
 	if err != nil {
@@ -50,7 +102,7 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
-	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.MatchRank, req.CourtName, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
+	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
@@ -80,7 +132,7 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 		return model.SessionResponse{}, ErrNotFound
 	}
 
-	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.MatchRank, req.CourtName, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
+	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
@@ -91,6 +143,7 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	existing.Type = updated.Type
 	existing.MatchRank = updated.MatchRank
 	existing.CourtName = updated.CourtName
+	existing.Partner = updated.Partner
 	existing.Cost = updated.Cost
 	existing.RacketID = updated.RacketID
 	existing.RacketName = updated.RacketName
@@ -245,7 +298,7 @@ func calendarExpenseBreakdown(sessionCost, racketCost, stringingCost float64) []
 	}
 }
 
-func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, matchRank model.MatchRank, courtName string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {
+func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {
 	sessionDate, err := time.ParseInLocation("2006-01-02", date, s.loc)
 	if err != nil {
 		return model.TennisSession{}, ErrInvalidRequest
@@ -280,6 +333,7 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		Type:            sessionType,
 		MatchRank:       matchRank,
 		CourtName:       courtName,
+		Partner:         partner,
 		Cost:            cost,
 		RacketID:        racketID,
 		RacketName:      racketName,

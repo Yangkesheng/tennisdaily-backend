@@ -8,14 +8,14 @@ CREATE DATABASE IF NOT EXISTS tennis_diary
 USE tennis_diary;
 
 CREATE TABLE IF NOT EXISTS users (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  openid VARCHAR(128) DEFAULT NULL,
-  phone VARCHAR(32) DEFAULT NULL,
-  nickname VARCHAR(128) NOT NULL DEFAULT '',
-  avatar_url TEXT NOT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at DATETIME DEFAULT NULL,
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+  openid VARCHAR(128) DEFAULT NULL COMMENT '微信OpenID，微信登录用户唯一标识',
+  phone VARCHAR(32) DEFAULT NULL COMMENT '手机号',
+  nickname VARCHAR(128) NOT NULL DEFAULT '' COMMENT '昵称',
+  avatar_url TEXT NOT NULL COMMENT '头像地址',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted_at DATETIME DEFAULT NULL COMMENT '删除时间',
 
   UNIQUE KEY uk_users_openid (openid),
   UNIQUE KEY idx_users_phone (phone),
@@ -23,14 +23,14 @@ CREATE TABLE IF NOT EXISTS users (
 ) COMMENT='用户表';
 
 CREATE TABLE IF NOT EXISTS user_wechat_identities (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  appid VARCHAR(64) NOT NULL,
-  openid VARCHAR(128) NOT NULL,
-  unionid VARCHAR(128) DEFAULT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at DATETIME DEFAULT NULL,
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '微信身份绑定ID',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
+  appid VARCHAR(64) NOT NULL COMMENT '微信小程序AppID',
+  openid VARCHAR(128) NOT NULL COMMENT '微信OpenID',
+  unionid VARCHAR(128) DEFAULT NULL COMMENT '微信UnionID',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted_at DATETIME DEFAULT NULL COMMENT '删除时间',
 
   UNIQUE KEY idx_user_wechat_appid_openid (appid, openid),
   INDEX idx_user_wechat_user_id (user_id),
@@ -39,26 +39,27 @@ CREATE TABLE IF NOT EXISTS user_wechat_identities (
 ) COMMENT='用户微信身份绑定表';
 
 CREATE TABLE IF NOT EXISTS tennis_sessions (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '打球记录ID',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
 
-  date DATE NOT NULL,
-  duration_minutes INT NOT NULL DEFAULT 120,
-  rating SMALLINT NOT NULL DEFAULT 3,
+  date DATE NOT NULL COMMENT '打球日期',
+  duration_minutes INT NOT NULL DEFAULT 120 COMMENT '打球时长，单位分钟',
+  rating SMALLINT NOT NULL DEFAULT 3 COMMENT '手感评分，范围1-5',
 
-  type SMALLINT NOT NULL DEFAULT 1,
-  match_rank SMALLINT NOT NULL DEFAULT 0,
+  type SMALLINT NOT NULL DEFAULT 1 COMMENT '打球类型:1双打 2单打 3训练 4单打比赛 5双打比赛',
+  match_rank SMALLINT NOT NULL DEFAULT 0 COMMENT '比赛成绩:0无 1冠军 2亚军 3四强 4八强 5小组赛',
 
-  court_name VARCHAR(128) NOT NULL DEFAULT '',
-  cost DECIMAL(10,2) NOT NULL DEFAULT 0,
-  racket_id BIGINT NOT NULL DEFAULT 0,
-  racket_name VARCHAR(128) NOT NULL DEFAULT '',
-  shoe_name VARCHAR(128) NOT NULL DEFAULT '',
-  note TEXT NOT NULL,
+  court_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '球场名称',
+  partner VARCHAR(128) NOT NULL DEFAULT '' COMMENT '搭档',
+  cost DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT '本次打球费用',
+  racket_id BIGINT NOT NULL DEFAULT 0 COMMENT '使用球拍ID',
+  racket_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '使用球拍名称快照',
+  shoe_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '球鞋名称',
+  note TEXT NOT NULL COMMENT '备注',
 
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at DATETIME DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted_at DATETIME DEFAULT NULL COMMENT '删除时间',
 
   CONSTRAINT tennis_sessions_type_check
     CHECK (type IN (1, 2, 3, 4, 5)),
@@ -81,7 +82,7 @@ CREATE TABLE IF NOT EXISTS racket (
   brand VARCHAR(50) DEFAULT NULL COMMENT '品牌',
   model VARCHAR(100) DEFAULT NULL COMMENT '型号',
   status TINYINT NOT NULL DEFAULT 2 COMMENT '状态:1主力拍 2在用 3已退役',
-  image_url VARCHAR(500) DEFAULT NULL COMMENT '图片',
+  image_url VARCHAR(500) DEFAULT NULL COMMENT '球拍图片地址',
   purchase_date DATE DEFAULT NULL COMMENT '购买日期',
   purchase_price DECIMAL(10,2) DEFAULT NULL COMMENT '购买价格',
 
@@ -124,8 +125,8 @@ CREATE TABLE IF NOT EXISTS racket_library (
   weight SMALLINT DEFAULT NULL COMMENT '裸拍重量(g)',
   head_size SMALLINT DEFAULT NULL COMMENT '拍面大小(sq in)',
   image_url VARCHAR(500) DEFAULT NULL COMMENT '球拍图片',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
   UNIQUE KEY uk_brand_model_year (brand, model, release_year)
 ) COMMENT='球拍库';
@@ -181,22 +182,23 @@ END$$
 DELIMITER ;
 
 -- 兼容已存在的旧 users 表。
-CALL ensure_column('users', 'phone', '`phone` VARCHAR(32) NULL', 'openid');
-CALL ensure_column('users', 'deleted_at', '`deleted_at` DATETIME NULL', 'updated_at');
+CALL ensure_column('users', 'phone', '`phone` VARCHAR(32) NULL COMMENT ''手机号''', 'openid');
+CALL ensure_column('users', 'deleted_at', '`deleted_at` DATETIME NULL COMMENT ''删除时间''', 'updated_at');
 CALL ensure_index('users', 'idx_users_phone', 'UNIQUE INDEX `idx_users_phone` (`phone`)');
 CALL ensure_index('users', 'idx_users_deleted_at', 'INDEX `idx_users_deleted_at` (`deleted_at`)');
 
 -- 兼容旧版本 users.openid NOT NULL；手机号登录允许手机号用户先存在，openid 可为空。
-ALTER TABLE users MODIFY COLUMN openid VARCHAR(128) DEFAULT NULL;
+ALTER TABLE users MODIFY COLUMN openid VARCHAR(128) DEFAULT NULL COMMENT '微信OpenID，微信登录用户唯一标识';
 
 -- 兼容已存在的旧 tennis_sessions 表。
-CALL ensure_column('tennis_sessions', 'racket_id', '`racket_id` BIGINT NOT NULL DEFAULT 0', 'cost');
+CALL ensure_column('tennis_sessions', 'partner', '`partner` VARCHAR(128) NOT NULL DEFAULT '''' COMMENT ''搭档''', 'court_name');
+CALL ensure_column('tennis_sessions', 'racket_id', '`racket_id` BIGINT NOT NULL DEFAULT 0 COMMENT ''使用球拍ID''', 'cost');
 CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_date', 'INDEX `idx_tennis_sessions_user_deleted_date` (`user_id`, `deleted_at`, `date` DESC)');
 CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_created', 'INDEX `idx_tennis_sessions_user_deleted_created` (`user_id`, `deleted_at`, `created_at` DESC)');
 CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_racket_deleted', 'INDEX `idx_tennis_sessions_user_racket_deleted` (`user_id`, `racket_id`, `deleted_at`)');
 
 -- 兼容已存在的旧 racket 表。
-CALL ensure_column('racket', 'library_id', '`library_id` BIGINT NOT NULL DEFAULT 0', 'user_id');
+CALL ensure_column('racket', 'library_id', '`library_id` BIGINT NOT NULL DEFAULT 0 COMMENT ''球拍库ID''', 'user_id');
 CALL ensure_index('racket', 'idx_racket_user_deleted_status', 'INDEX `idx_racket_user_deleted_status` (`user_id`, `deleted_at`, `status`)');
 CALL ensure_index('racket', 'idx_racket_user_deleted_created', 'INDEX `idx_racket_user_deleted_created` (`user_id`, `deleted_at`, `created_at`)');
 CALL ensure_index('racket', 'idx_racket_user_library', 'INDEX `idx_racket_user_library` (`user_id`, `library_id`)');

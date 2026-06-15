@@ -178,6 +178,7 @@ Authorization: Bearer <token>
   "matchRank": 1,
   "matchRankLabel": "冠军",
   "courtName": "奥森网球场",
+  "partner": "张三",
   "cost": 80,
   "racketName": "Wilson Blade",
   "shoeName": "Asics Gel Resolution",
@@ -200,6 +201,7 @@ Authorization: Bearer <token>
 | matchRank | number | 比赛成绩枚举 |
 | matchRankLabel | string | 比赛成绩中文文案 |
 | courtName | string | 场地名称 |
+| partner | string | 搭档 |
 | cost | number | 花费 |
 | racketName | string | 球拍 |
 | shoeName | string | 球鞋 |
@@ -219,6 +221,7 @@ Authorization: Bearer <token>
   "type": 5,
   "matchRank": 1,
   "courtName": "奥森网球场",
+  "partner": "张三",
   "cost": 80,
   "racketName": "Wilson Blade",
   "shoeName": "Asics Gel Resolution",
@@ -236,6 +239,7 @@ Authorization: Bearer <token>
 | type | 是 | 允许 1-5 |
 | matchRank | 否 | 允许 0-5；非比赛类型会被强制改为 0 |
 | courtName | 否 | 字符串 |
+| partner | 否 | 字符串，搭档名称 |
 | cost | 否 | 数字 |
 | racketName | 否 | 字符串 |
 | shoeName | 否 | 字符串 |
@@ -448,6 +452,7 @@ Content-Type: application/json
   "type": 1,
   "matchRank": 0,
   "courtName": "奥森网球场",
+  "partner": "张三",
   "cost": 80,
   "racketName": "Wilson Blade",
   "shoeName": "Asics Gel Resolution",
@@ -465,6 +470,7 @@ Content-Type: application/json
   "type": 5,
   "matchRank": 1,
   "courtName": "奥森网球场",
+  "partner": "张三",
   "cost": 120,
   "racketName": "Wilson Blade",
   "shoeName": "Asics Gel Resolution",
@@ -508,7 +514,7 @@ Content-Type: application/json
 curl -X POST http://localhost:8081/api/sessions \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"type":5,"matchRank":1,"courtName":"奥森网球场","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"type":5,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ---
@@ -592,6 +598,7 @@ Content-Type: application/json
   "type": 4,
   "matchRank": 2,
   "courtName": "国家网球中心",
+  "partner": "李四",
   "cost": 100,
   "racketName": "Babolat Pure Drive",
   "shoeName": "Nike Vapor",
@@ -635,7 +642,7 @@ Content-Type: application/json
 curl -X PUT http://localhost:8081/api/sessions/1 \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"type":4,"matchRank":2,"courtName":"国家网球中心","cost":100,"racketName":"Babolat Pure Drive","shoeName":"Nike Vapor","note":"更新后的记录"}'
+  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"type":4,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"racketName":"Babolat Pure Drive","shoeName":"Nike Vapor","note":"更新后的记录"}'
 ```
 
 ---
@@ -862,7 +869,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
 curl -X POST http://localhost:8081/api/sessions \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"type":5,"matchRank":1,"courtName":"奥森网球场","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"type":5,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ### 16.3 查看列表
