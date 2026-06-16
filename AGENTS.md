@@ -306,6 +306,7 @@ GET    /api/sessions
 GET    /api/sessions?date=YYYY-MM-DD
 POST   /api/sessions
 GET    /api/sessions/latest
+GET    /api/sessions/calendar?year=2026
 GET    /api/sessions/calendar?year=2026&month=6
 GET    /api/sessions/:id
 PUT    /api/sessions/:id
@@ -771,13 +772,14 @@ GET /api/sessions?date=YYYY-MM-DD
 
 ### 20.3 月份日历
 
-日历页使用：
+日历页可按年或按月使用：
 
 ```http
+GET /api/sessions/calendar?year=YYYY
 GET /api/sessions/calendar?year=YYYY&month=M
 ```
 
-响应中 `activeDayCount` 表示有打球记录的天数，不是打球记录条数。
+只传 `year` 时返回全年有记录的日期；同时传 `year` 和 `month` 时返回指定月份有记录的日期。响应中 `activeDayCount` 表示查询范围内有打球记录的天数，不是打球记录条数。
 
 ### 20.4 费用统计
 

@@ -262,6 +262,7 @@ Authorization: Bearer <token>
 | GET | `/api/sessions` | 是 | 获取打球记录列表 |
 | POST | `/api/sessions` | 是 | 新增打球记录 |
 | GET | `/api/sessions/latest` | 是 | 获取最近一次打球记录 |
+| GET | `/api/sessions/calendar` | 是 | 获取日历记录标记，支持按月或按年 |
 | GET | `/api/sessions/:id` | 是 | 获取单条打球记录 |
 | PUT | `/api/sessions/:id` | 是 | 更新打球记录 |
 | DELETE | `/api/sessions/:id` | 是 | 删除打球记录，软删除 |
@@ -742,6 +743,84 @@ Authorization: Bearer <token>
   "code": 0,
   "message": "ok",
   "data": null
+}
+```
+
+---
+
+## 13.2 获取日历记录标记
+
+### GET /api/sessions/calendar
+
+获取当前登录用户在指定月份或指定年份内有打球记录的日期、统计摘要和图表数据。
+
+#### 请求
+
+按月查询：
+
+```http
+GET /api/sessions/calendar?year=2026&month=6
+Authorization: Bearer <token>
+```
+
+按年查询：
+
+```http
+GET /api/sessions/calendar?year=2026
+Authorization: Bearer <token>
+```
+
+#### Query Parameters
+
+| 参数 | 类型 | 必填 | 示例 | 说明 |
+|---|---|---:|---|---|
+| `year` | number | 是 | `2026` | 查询年份，范围 `2000-2100` |
+| `month` | number | 否 | `6` | 查询月份，范围 `1-12`；不传则查询全年 |
+
+#### 响应说明
+
+- 传 `year + month`：按指定自然月统计，响应中 `month` 为对应月份。
+- 只传 `year`：按指定自然年统计，响应中 `month` 为 `0`。
+- `days` 返回查询范围内有记录的日期列表。
+- `activeDayCount` 表示查询范围内有打球记录的天数，不是打球记录条数。
+
+#### 响应示例：按年查询
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "year": 2026,
+    "month": 0,
+    "activeDayCount": 2,
+    "days": [
+      {
+        "date": "2026-01-15",
+        "count": 1
+      },
+      {
+        "date": "2026-06-10",
+        "count": 2
+      }
+    ],
+    "summary": {
+      "sessionCount": 3,
+      "activeDayCount": 2,
+      "totalMinutes": 360,
+      "averageMinutes": 120,
+      "averageRating": 4,
+      "sessionCost": 240,
+      "racketCost": 1599,
+      "stringingCost": 80,
+      "totalCost": 1919
+    },
+    "charts": {
+      "weeklySessions": [],
+      "ratingTrend": [],
+      "expenseBreakdown": []
+    }
+  }
 }
 ```
 

@@ -161,10 +161,14 @@ func (h *SessionHandler) Calendar(c *gin.Context) {
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
 		return
 	}
-	month, err := strconv.Atoi(c.Query("month"))
-	if err != nil {
-		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
-		return
+	month := 0
+	monthQuery := c.Query("month")
+	if monthQuery != "" {
+		month, err = strconv.Atoi(monthQuery)
+		if err != nil {
+			response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+			return
+		}
 	}
 	logger.Debug("GET /api/sessions/calendar start userID=%d year=%d month=%d", userID, year, month)
 

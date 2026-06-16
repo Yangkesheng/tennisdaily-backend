@@ -180,12 +180,16 @@ func (s *SessionService) Latest(userID int64) (*model.SessionResponse, error) {
 }
 
 func (s *SessionService) Calendar(userID int64, year, month int) (model.SessionCalendarResponse, error) {
-	if year < 2000 || year > 2100 || month < 1 || month > 12 {
+	if year < 2000 || year > 2100 || month < 0 || month > 12 {
 		return model.SessionCalendarResponse{}, ErrInvalidRequest
 	}
 
-	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, s.loc)
-	end := start.AddDate(0, 1, 0)
+	start := time.Date(year, time.January, 1, 0, 0, 0, 0, s.loc)
+	end := start.AddDate(1, 0, 0)
+	if month > 0 {
+		start = time.Date(year, time.Month(month), 1, 0, 0, 0, 0, s.loc)
+		end = start.AddDate(0, 1, 0)
+	}
 	days, err := s.repo.CalendarDays(userID, start, end)
 	if err != nil {
 		return model.SessionCalendarResponse{}, err
