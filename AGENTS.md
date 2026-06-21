@@ -291,6 +291,7 @@ GET /api/home/summary?year=2026&month=6
 - 本月打球次数
 - 本月累计时长
 - 本月打球消费
+- 本月平均时长
 - 今年打球次数 `yearCount`
 - 历史全部记录数 `totalCount`
 - 本月球拍购买费用
@@ -391,6 +392,7 @@ GET /api/home/summary
     "monthCount": 8,
     "monthMinutes": 960,
     "monthCost": 320,
+    "monthAverageMinutes": 120,
     "yearCount": 28,
     "totalCount": 42
   },
@@ -412,6 +414,7 @@ GET /api/home/summary
 | `monthCount` | 查询月份打球记录数 |
 | `monthMinutes` | 查询月份打球总分钟数 |
 | `monthCost` | 查询月份 `tennis_sessions.cost` 合计 |
+| `monthAverageMinutes` | 查询月份单次打球平均时长，单位分钟，按 `AVG(duration_minutes)` 计算，保留 1 位小数 |
 | `yearCount` | 查询年份打球记录数 |
 | `totalCount` | 历史累计所有未删除打球记录数 |
 | `sessionCost` | 同 `monthCost` |

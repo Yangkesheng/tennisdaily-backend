@@ -1,5 +1,54 @@
 # Change Log
 
+## 2026-06-21 日历统计概览确认花费和平均时长字段
+
+### 需求/变更内容
+
+- 确认需求为日历页面统计概览展示花费和平均时长，不是首页统计概览。
+- `GET /api/sessions/calendar` 的 `summary` 已支持：
+  - `averageMinutes`：查询范围内平均单次打球时长。
+  - `sessionCost`：查询范围内打球消费。
+  - `racketCost`：查询范围内球拍购买费用。
+  - `stringingCost`：查询范围内穿线费用。
+  - `totalCost`：查询范围内总消费。
+- 撤回对首页聚合接口和旧月统计接口新增平均时长字段的改动，避免扩大接口变更范围。
+
+### 修改文件
+
+- `internal/model/home.go`
+- `internal/model/stats.go`
+- `internal/repository/session_repository.go`
+- `internal/service/home_service.go`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无新增接口字段。
+- 日历页面继续使用：`GET /api/sessions/calendar?year=YYYY&month=M` 或 `GET /api/sessions/calendar?year=YYYY`。
+- 前端展示字段应从响应中的 `summary` 读取：
+  - 平均时长：`summary.averageMinutes`
+  - 总花费：`summary.totalCost`
+  - 打球花费：`summary.sessionCost`
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 首页聚合接口未新增字段。
+- 旧统计接口 `/api/stats/month` 未新增字段。
+- 日历接口已有字段保持兼容。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/home.go internal/model/stats.go internal/repository/session_repository.go internal/service/home_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-06-16 日历接口支持按年查询
 
 ### 需求/变更内容
