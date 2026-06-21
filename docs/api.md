@@ -813,16 +813,68 @@ Authorization: Bearer <token>
       "sessionCost": 240,
       "racketCost": 1599,
       "stringingCost": 80,
-      "totalCost": 1919
+      "totalCost": 1919,
+      "trainingCount": 1,
+      "singlesCount": 0,
+      "doublesCount": 1,
+      "matchCount": 1
     },
     "charts": {
       "weeklySessions": [],
       "ratingTrend": [],
-      "expenseBreakdown": []
+      "expenseBreakdown": [],
+      "sessionTypeBreakdown": [
+        {
+          "key": "training",
+          "label": "训练",
+          "value": 1,
+          "percent": 33.3
+        },
+        {
+          "key": "singles",
+          "label": "单打",
+          "value": 0,
+          "percent": 0
+        },
+        {
+          "key": "doubles",
+          "label": "双打",
+          "value": 1,
+          "percent": 33.3
+        },
+        {
+          "key": "match",
+          "label": "比赛",
+          "value": 1,
+          "percent": 33.3
+        }
+      ]
     }
   }
 }
 ```
+
+#### 日历统计字段说明
+
+`summary` 字段：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| sessionCount | number | 查询范围内打球记录数 |
+| activeDayCount | number | 查询范围内有打球记录的天数 |
+| totalMinutes | number | 查询范围内累计打球分钟数 |
+| averageMinutes | number | 查询范围内平均单次打球时长，单位分钟，保留 1 位小数 |
+| averageRating | number | 查询范围内平均评分，保留 1 位小数 |
+| sessionCost | number | 查询范围内打球消费合计 |
+| racketCost | number | 查询范围内球拍购买费用合计 |
+| stringingCost | number | 查询范围内穿线费用合计 |
+| totalCost | number | `sessionCost + racketCost + stringingCost` |
+| trainingCount | number | 查询范围内训练记录数 |
+| singlesCount | number | 查询范围内单打记录数 |
+| doublesCount | number | 查询范围内双打记录数 |
+| matchCount | number | 查询范围内比赛记录数，包含单打比赛和双打比赛 |
+
+`charts.sessionTypeBreakdown` 用于训练/单打/双打/比赛占比展示，固定返回 4 项；无记录时 `value` 和 `percent` 为 `0`。
 
 ---
 

@@ -65,6 +65,10 @@ type SessionCalendarSummaryResponse struct {
 	RacketCost     float64 `json:"racketCost"`
 	StringingCost  float64 `json:"stringingCost"`
 	TotalCost      float64 `json:"totalCost"`
+	TrainingCount  int64   `json:"trainingCount"`
+	SinglesCount   int64   `json:"singlesCount"`
+	DoublesCount   int64   `json:"doublesCount"`
+	MatchCount     int64   `json:"matchCount"`
 }
 
 type CalendarWeeklySessionChartItemResponse struct {
@@ -83,9 +87,10 @@ type CalendarExpenseChartItemResponse struct {
 }
 
 type SessionCalendarChartsResponse struct {
-	WeeklySessions   []CalendarWeeklySessionChartItemResponse `json:"weeklySessions"`
-	RatingTrend      []CalendarRatingTrendChartItemResponse   `json:"ratingTrend"`
-	ExpenseBreakdown []CalendarExpenseChartItemResponse       `json:"expenseBreakdown"`
+	WeeklySessions       []CalendarWeeklySessionChartItemResponse `json:"weeklySessions"`
+	RatingTrend          []CalendarRatingTrendChartItemResponse   `json:"ratingTrend"`
+	ExpenseBreakdown     []CalendarExpenseChartItemResponse       `json:"expenseBreakdown"`
+	SessionTypeBreakdown []StatsBreakdownItemResponse             `json:"sessionTypeBreakdown"`
 }
 
 type SessionCalendarResponse struct {

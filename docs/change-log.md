@@ -1,5 +1,49 @@
 # Change Log
 
+## 2026-06-21 修复日历接口训练比赛占比数据
+
+### 需求/变更内容
+
+- 修复 `GET /api/sessions/calendar` 中训练/单打/双打/比赛占比数据缺失问题。
+- 日历接口只补充统计字段，不改变原有查询范围、日期标记、费用统计和趋势逻辑。
+- 恢复/补充 `charts.sessionTypeBreakdown`，用于前端展示训练比赛占比。
+- 在 `summary` 中同步返回 `trainingCount`、`singlesCount`、`doublesCount`、`matchCount`，方便前端直接读取计数。
+
+### 修改文件
+
+- `internal/model/session.go`
+- `internal/service/session_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/sessions/calendar` 的 `summary` 增加字段：
+  - `trainingCount`
+  - `singlesCount`
+  - `doublesCount`
+  - `matchCount`
+- `GET /api/sessions/calendar` 的 `charts` 增加/恢复字段：
+  - `sessionTypeBreakdown`
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增/恢复 JSON 字段，不删除或改名已有字段。
+- 日历接口原有 `weeklySessions`、`ratingTrend`、`expenseBreakdown` 保持不变。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/session.go internal/service/session_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-06-21 日历统计概览确认花费和平均时长字段
 
 ### 需求/变更内容

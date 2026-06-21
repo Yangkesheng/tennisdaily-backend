@@ -212,9 +212,10 @@ func (s *SessionService) Calendar(userID int64, year, month int) (model.SessionC
 		Days:           days,
 		Summary:        summary,
 		Charts: model.SessionCalendarChartsResponse{
-			WeeklySessions:   s.calendarWeeklySessions(start, end, days),
-			RatingTrend:      ratingTrend,
-			ExpenseBreakdown: calendarExpenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+			WeeklySessions:       s.calendarWeeklySessions(start, end, days),
+			RatingTrend:          ratingTrend,
+			ExpenseBreakdown:     calendarExpenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+			SessionTypeBreakdown: calendarSessionTypeBreakdown(summary),
 		},
 	}, nil
 }
@@ -245,6 +246,10 @@ func (s *SessionService) calendarSummary(userID int64, start, end time.Time) (mo
 		RacketCost:     racketCost,
 		StringingCost:  stringingCost,
 		TotalCost:      sessionStats.SessionCost + racketCost + stringingCost,
+		TrainingCount:  sessionStats.TrainingCount,
+		SinglesCount:   sessionStats.SinglesCount,
+		DoublesCount:   sessionStats.DoublesCount,
+		MatchCount:     sessionStats.MatchCount,
 	}, nil
 }
 
@@ -299,6 +304,16 @@ func calendarExpenseBreakdown(sessionCost, racketCost, stringingCost float64) []
 		{Label: "打球", Value: sessionCost},
 		{Label: "球拍", Value: racketCost},
 		{Label: "穿线", Value: stringingCost},
+	}
+}
+
+func calendarSessionTypeBreakdown(summary model.SessionCalendarSummaryResponse) []model.StatsBreakdownItemResponse {
+	total := float64(summary.SessionCount)
+	return []model.StatsBreakdownItemResponse{
+		{Key: "training", Label: "训练", Value: float64(summary.TrainingCount), Percent: percent(float64(summary.TrainingCount), total)},
+		{Key: "singles", Label: "单打", Value: float64(summary.SinglesCount), Percent: percent(float64(summary.SinglesCount), total)},
+		{Key: "doubles", Label: "双打", Value: float64(summary.DoublesCount), Percent: percent(float64(summary.DoublesCount), total)},
+		{Key: "match", Label: "比赛", Value: float64(summary.MatchCount), Percent: percent(float64(summary.MatchCount), total)},
 	}
 }
 
