@@ -1,6 +1,6 @@
 ALTER TABLE tennis_sessions
-  ADD COLUMN category ENUM('1','2','3') NOT NULL DEFAULT '1' COMMENT '一级类型:1日常球局 2训练 3比赛' AFTER type,
-  ADD COLUMN sub_category ENUM('1','2','3','4') NOT NULL DEFAULT '2' COMMENT '二级类型:1单打/打单 2双打 3发球 4其他' AFTER category;
+  ADD COLUMN category SMALLINT NOT NULL DEFAULT 1 COMMENT '一级类型:1日常球局 2训练 3比赛' AFTER type,
+  ADD COLUMN sub_category SMALLINT NOT NULL DEFAULT 2 COMMENT '二级类型:1单打/打单 2双打 3发球 4其他' AFTER category;
 
 UPDATE tennis_sessions
 SET category = CASE type

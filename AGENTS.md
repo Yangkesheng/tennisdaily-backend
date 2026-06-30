@@ -279,7 +279,15 @@ POST /api/auth/logout
 PUT  /api/auth/profile
 ```
 
-### 7.3 首页聚合
+### 7.3 枚举值
+
+```http
+GET /api/enums
+```
+
+用于前端获取打球类型、比赛成绩、球拍状态等枚举值和展示文案。
+
+### 7.4 首页聚合
 
 ```http
 GET /api/home/summary
@@ -300,7 +308,7 @@ GET /api/home/summary?year=2026&month=6
 - 最近一次打球
 - 最近评分趋势
 
-### 7.4 打球记录
+### 7.5 打球记录
 
 ```http
 GET    /api/sessions
@@ -320,7 +328,7 @@ DELETE /api/sessions/:id
 - `GET /api/sessions/calendar` 用于日历页显示有记录的日期。
 - 删除为逻辑删除。
 
-### 7.5 统计
+### 7.6 统计
 
 ```http
 GET /api/stats/month
@@ -332,7 +340,7 @@ GET /api/stats/month
 GET /api/home/summary
 ```
 
-### 7.6 球拍与穿线
+### 7.7 球拍与穿线
 
 ```http
 GET    /api/racket-library

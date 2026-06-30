@@ -77,6 +77,7 @@ Content-Type: application/json
 
 - `GET /health`
 - `POST /api/auth/wechat-login`
+- `POST /api/auth/phone-login`
 
 登录后请求头携带：
 
@@ -294,6 +295,8 @@ Authorization: Bearer <token>
 |---|---|---|---|
 | GET | `/health` | 否 | 健康检查 |
 | POST | `/api/auth/wechat-login` | 否 | 微信登录 |
+| POST | `/api/auth/phone-login` | 否 | 手机号登录 |
+| GET | `/api/enums` | 是 | 获取前端枚举值和展示文案 |
 | GET | `/api/sessions` | 是 | 获取打球记录列表 |
 | POST | `/api/sessions` | 是 | 新增打球记录 |
 | GET | `/api/sessions/latest` | 是 | 获取最近一次打球记录 |
@@ -306,9 +309,135 @@ Authorization: Bearer <token>
 
 ---
 
-## 6. 健康检查
+## 6. 枚举值
 
-### 6.1 GET /health
+### 6.1 GET /api/enums
+
+获取前端展示和表单选择所需的枚举值及含义。
+
+#### 请求
+
+```http
+GET /api/enums
+Authorization: Bearer <token>
+```
+
+#### 响应 data
+
+```json
+{
+  "session": {
+    "categories": [
+      {
+        "value": 1,
+        "label": "日常球局",
+        "subCategories": [
+          {
+            "value": 1,
+            "label": "打单",
+            "category": 1,
+            "typeText": "日常球局 · 打单",
+            "legacyType": 2
+          },
+          {
+            "value": 2,
+            "label": "双打",
+            "category": 1,
+            "typeText": "日常球局 · 双打",
+            "legacyType": 1
+          }
+        ]
+      },
+      {
+        "value": 2,
+        "label": "训练",
+        "subCategories": [
+          {
+            "value": 3,
+            "label": "发球",
+            "category": 2,
+            "typeText": "训练 · 发球",
+            "legacyType": 3
+          },
+          {
+            "value": 4,
+            "label": "其他",
+            "category": 2,
+            "typeText": "训练 · 其他",
+            "legacyType": 3
+          }
+        ]
+      },
+      {
+        "value": 3,
+        "label": "比赛",
+        "subCategories": [
+          {
+            "value": 1,
+            "label": "单打",
+            "category": 3,
+            "typeText": "比赛 · 单打",
+            "legacyType": 4
+          },
+          {
+            "value": 2,
+            "label": "双打",
+            "category": 3,
+            "typeText": "比赛 · 双打",
+            "legacyType": 5
+          }
+        ]
+      }
+    ],
+    "legacyTypes": [
+      { "value": 1, "label": "双打" },
+      { "value": 2, "label": "单打" },
+      { "value": 3, "label": "训练" },
+      { "value": 4, "label": "单打比赛" },
+      { "value": 5, "label": "双打比赛" }
+    ],
+    "matchRanks": [
+      { "value": 0, "label": "" },
+      { "value": 1, "label": "冠军" },
+      { "value": 2, "label": "亚军" },
+      { "value": 3, "label": "四强" },
+      { "value": 4, "label": "八强" },
+      { "value": 5, "label": "小组赛" }
+    ],
+    "defaultValues": {
+      "category": 1,
+      "subCategory": 2,
+      "durationMinutes": 120,
+      "rating": 3,
+      "matchRank": 0
+    }
+  },
+  "racket": {
+    "statuses": [
+      { "value": 1, "label": "主力拍" },
+      { "value": 2, "label": "在用" },
+      { "value": 3, "label": "已退役" }
+    ]
+  }
+}
+```
+
+#### 字段说明
+
+| 字段 | 说明 |
+|---|---|
+| `session.categories` | 打球记录两级分类，前端可直接用于一级/二级联动选择 |
+| `subCategories[].legacyType` | 当前二级分类对应的旧 `type`，用于旧客户端兼容展示 |
+| `session.legacyTypes` | 旧打球类型枚举，兼容保留 |
+| `session.matchRanks` | 比赛成绩枚举 |
+| `session.defaultValues` | 新增打球记录推荐默认值 |
+| `racket.statuses` | 球拍状态枚举 |
+
+---
+
+## 7. 健康检查
+
+### 7.1 GET /health
 
 用于确认服务是否可访问。
 
@@ -338,9 +467,9 @@ curl http://localhost:8081/health
 
 ---
 
-## 7. 微信登录
+## 8. 微信登录
 
-### 7.1 POST /api/auth/wechat-login
+### 8.1 POST /api/auth/wechat-login
 
 使用微信小程序 `wx.login()` 获取的 code 换取后端 JWT。
 
@@ -395,9 +524,9 @@ curl -X POST http://localhost:8081/api/auth/wechat-login \
 
 ---
 
-## 8. 获取打球记录列表
+## 9. 获取打球记录列表
 
-### 8.1 GET /api/sessions
+### 9.1 GET /api/sessions
 
 获取当前登录用户的未删除打球记录。支持通过 `date` 查询某一天的打球记录。
 
@@ -469,9 +598,9 @@ curl 'http://localhost:8081/api/sessions?date=2026-01-15' \
 
 ---
 
-## 9. 新增打球记录
+## 10. 新增打球记录
 
-### 9.1 POST /api/sessions
+### 10.1 POST /api/sessions
 
 新增一条打球记录。
 
@@ -567,9 +696,9 @@ curl -X POST http://localhost:8081/api/sessions \
 
 ---
 
-## 10. 获取单条打球记录
+## 11. 获取单条打球记录
 
-### 10.1 GET /api/sessions/:id
+### 11.1 GET /api/sessions/:id
 
 获取当前登录用户的一条未删除打球记录。
 
@@ -625,9 +754,9 @@ Authorization: Bearer <token>
 
 ---
 
-## 11. 更新打球记录
+## 12. 更新打球记录
 
-### 11.1 PUT /api/sessions/:id
+### 12.1 PUT /api/sessions/:id
 
 更新当前登录用户的一条未删除打球记录。
 
@@ -701,9 +830,9 @@ curl -X PUT http://localhost:8081/api/sessions/1 \
 
 ---
 
-## 12. 删除打球记录
+## 13. 删除打球记录
 
-### 12.1 DELETE /api/sessions/:id
+### 13.1 DELETE /api/sessions/:id
 
 删除当前登录用户的一条打球记录。
 
@@ -745,9 +874,9 @@ curl -X DELETE http://localhost:8081/api/sessions/1 \
 
 ---
 
-## 13. 获取最近一次打球记录
+## 14. 获取最近一次打球记录
 
-### 13.1 GET /api/sessions/latest
+### 14.1 GET /api/sessions/latest
 
 获取当前登录用户最近一次未删除打球记录。
 
@@ -801,9 +930,9 @@ Authorization: Bearer <token>
 
 ---
 
-## 13.2 获取日历记录标记
+## 15. 获取日历记录标记
 
-### GET /api/sessions/calendar
+### 15.1 GET /api/sessions/calendar
 
 获取当前登录用户在指定月份或指定年份内有打球记录的日期、统计摘要和图表数据。
 
@@ -931,9 +1060,9 @@ Authorization: Bearer <token>
 
 ---
 
-## 14. 获取本月统计
+## 16. 获取本月统计
 
-### 14.1 GET /api/stats/month
+### 16.1 GET /api/stats/month
 
 获取当前登录用户当前自然月统计。
 
@@ -995,9 +1124,9 @@ curl http://localhost:8081/api/stats/month \
 
 ---
 
-## 15. 前端联调建议
+## 17. 前端联调建议
 
-### 15.1 小程序开发者工具
+### 17.1 小程序开发者工具
 
 本地 HTTP 调试需要在微信开发者工具中开启：
 
@@ -1005,7 +1134,7 @@ curl http://localhost:8081/api/stats/month \
 详情 -> 本地设置 -> 不校验合法域名、web-view、TLS 版本以及 HTTPS 证书
 ```
 
-### 15.2 真机调试
+### 17.2 真机调试
 
 真机不能访问电脑的 `localhost`。
 
@@ -1021,7 +1150,7 @@ curl http://localhost:8081/api/stats/month \
 http://192.168.1.8:8081
 ```
 
-### 15.3 登录后保存 token
+### 17.3 登录后保存 token
 
 前端登录成功后需要保存：
 
@@ -1037,9 +1166,9 @@ Authorization: Bearer <token>
 
 ---
 
-## 16. 完整联调流程示例
+## 18. 完整联调流程示例
 
-### 16.1 获取 token
+### 18.1 获取 token
 
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
@@ -1047,7 +1176,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
   -d '{"code":"test_code"}' | jq -r '.data.token')
 ```
 
-### 16.2 新增记录
+### 18.2 新增记录
 
 ```bash
 curl -X POST http://localhost:8081/api/sessions \
@@ -1056,14 +1185,14 @@ curl -X POST http://localhost:8081/api/sessions \
   -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
-### 16.3 查看列表
+### 18.3 查看列表
 
 ```bash
 curl http://localhost:8081/api/sessions \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### 16.4 查看本月统计
+### 18.4 查看本月统计
 
 ```bash
 curl http://localhost:8081/api/stats/month \
@@ -1072,7 +1201,7 @@ curl http://localhost:8081/api/stats/month \
 
 ---
 
-## 17. 注意事项
+## 19. 注意事项
 
 1. `date` 字段必须使用 `YYYY-MM-DD`。
 2. `createdAt` 和 `updatedAt` 为服务端时间。
@@ -1083,9 +1212,9 @@ curl http://localhost:8081/api/stats/month \
 
 ---
 
-## 18. 球拍管理接口
+## 20. 球拍管理接口
 
-### 18.1 球拍状态
+### 20.1 球拍状态
 
 | 值 | 含义 |
 |---:|---|
@@ -1093,7 +1222,7 @@ curl http://localhost:8081/api/stats/month \
 | 2 | 在用 |
 | 3 | 已退役 |
 
-### 18.2 RacketResponse
+### 20.2 RacketResponse
 
 ```json
 {
@@ -1126,7 +1255,7 @@ curl http://localhost:8081/api/stats/month \
 - `totalMinutes`、`totalHours` 为兼容旧前端保留，当前与 `usageMinutes`、`usageHours` 一致。
 - 默认列表不返回已退役球拍。
 
-### 18.3 获取球拍列表
+### 20.3 获取球拍列表
 
 ```http
 GET /api/rackets
@@ -1181,7 +1310,7 @@ Authorization: Bearer <token>
 | totalMinutes | number | 兼容旧字段，等于 `usageMinutes` |
 | totalHours | number | 兼容旧字段，等于 `usageHours` |
 
-### 18.4 获取球拍统计
+### 20.4 获取球拍统计
 
 统计当前登录用户的球拍数量和球拍相关消费。
 
@@ -1231,7 +1360,7 @@ curl http://localhost:8081/api/rackets/stats \
   -H 'Authorization: Bearer <token>'
 ```
 
-### 18.5 获取可选球拍列表
+### 20.5 获取可选球拍列表
 
 新增打球记录时使用，只返回：
 
@@ -1246,7 +1375,7 @@ GET /api/rackets/selectable
 Authorization: Bearer <token>
 ```
 
-### 18.6 添加球拍
+### 20.6 添加球拍
 
 ```http
 POST /api/rackets
@@ -1277,7 +1406,7 @@ Content-Type: application/json
 - 新增球拍默认 `status = 2`，表示在用。
 - 如果传入穿线相关字段，会自动创建一条穿线记录。
 
-### 18.7 获取球拍详情
+### 20.7 获取球拍详情
 
 ```http
 GET /api/rackets/:id
@@ -1349,7 +1478,7 @@ Authorization: Bearer <token>
 | afterStringingUsageMinutes | number | 最近一次穿线后累计使用分钟数 |
 | afterStringingUsageHours | number | 最近一次穿线后累计使用小时数，当前向下取整 |
 
-### 18.8 编辑球拍
+### 20.8 编辑球拍
 
 ```http
 PUT /api/rackets/:id
@@ -1380,7 +1509,7 @@ Content-Type: application/json
 - `status = 1` 时会自动将其他主力拍改为在用。
 - 传入穿线相关字段时，会新增一条穿线记录。
 
-### 18.9 设置主力拍
+### 20.9 设置主力拍
 
 ```http
 POST /api/rackets/:id/set-primary
@@ -1392,7 +1521,7 @@ Authorization: Bearer <token>
 - 系统只允许当前用户存在一支主力拍。
 - 设置成功后，原主力拍会自动变成在用。
 
-### 18.10 退役球拍
+### 20.10 退役球拍
 
 ```http
 POST /api/rackets/:id/retire
@@ -1406,7 +1535,7 @@ Authorization: Bearer <token>
 - `/api/rackets/selectable` 不返回退役球拍。
 - 历史打球记录和统计不受影响。
 
-### 18.11 新增穿线记录
+### 20.11 新增穿线记录
 
 ```http
 POST /api/rackets/:id/stringing-records
@@ -1425,7 +1554,7 @@ Content-Type: application/json
 }
 ```
 
-### 18.12 打球记录关联球拍
+### 20.12 打球记录关联球拍
 
 新增/编辑打球记录支持传入：
 
@@ -1440,9 +1569,9 @@ Content-Type: application/json
 
 ---
 
-## 19. 球拍库与添加球拍选择接口
+## 21. 球拍库与添加球拍选择接口
 
-### 19.1 获取球拍库，按品牌分类
+### 21.1 获取球拍库，按品牌分类
 
 添加球拍页面使用。返回系统球拍库中的球拍，并按品牌分组。
 
@@ -1486,7 +1615,7 @@ Authorization: Bearer <token>
 ]
 ```
 
-### 19.2 从球拍库添加到我的球拍
+### 21.2 从球拍库添加到我的球拍
 
 用户选择球拍库中的球拍后，新增我的球拍时传 `libraryId`。
 
@@ -1517,7 +1646,7 @@ Content-Type: application/json
 - 如果请求体里也传了 `brand`、`model`、`imageUrl`，以前端传入值为准。
 - `name` 仍可自定义，比如“EZONE 主力拍”。
 
-### 19.3 添加库中没有的球拍
+### 21.3 添加库中没有的球拍
 
 如果球拍库没有对应球拍，用户可以手动输入。
 
@@ -1544,7 +1673,7 @@ Content-Type: application/json
 - `name` 必填。
 - `brand`、`model` 可选。
 
-### 19.4 获取我的球拍，用于新增打球记录时选择
+### 21.4 获取我的球拍，用于新增打球记录时选择
 
 新增打球记录页面使用。只返回当前用户未退役球拍：
 
@@ -1589,9 +1718,9 @@ Authorization: Bearer <token>
 
 ---
 
-## 20. 球拍接口重构说明
+## 22. 球拍接口重构说明
 
-### 20.1 添加球拍不再包含穿线信息
+### 22.1 添加球拍不再包含穿线信息
 
 添加球拍只维护球拍本体信息，不创建穿线记录。
 
@@ -1623,7 +1752,7 @@ Content-Type: application/json
 - 库中没有的球拍，用户可不传 `libraryId`，直接手动输入 `name`、`brand`、`model`。
 - 当前接口不再接收/处理 `stringName`、`tension`、`lastStringDate`、`lastStringCost`。
 
-### 20.2 编辑球拍，支持主力/在用/退役
+### 22.2 编辑球拍，支持主力/在用/退役
 
 ```http
 PUT /api/rackets/:id
@@ -1653,7 +1782,7 @@ Content-Type: application/json
 - `status = 3`：退役。
 - 编辑球拍不再接收/处理穿线信息。
 
-### 20.3 删除球拍
+### 22.3 删除球拍
 
 ```http
 DELETE /api/rackets/:id
@@ -1674,7 +1803,7 @@ Authorization: Bearer <token>
 - 删除后默认列表、我的球拍列表不再返回。
 - 历史打球记录中的 `racketId` 不会被清空。
 
-### 20.4 新增穿线记录
+### 22.4 新增穿线记录
 
 穿线信息通过独立接口维护。
 
@@ -1701,7 +1830,7 @@ Content-Type: application/json
 - `stringDate` 必填，格式 `YYYY-MM-DD`。
 - 球拍列表和详情中的当前球线信息来自最近一条穿线记录。
 
-### 20.5 保留我的球拍接口
+### 22.5 保留我的球拍接口
 
 新增打球记录选择球拍时继续使用：
 

@@ -13,8 +13,8 @@ type TennisSession struct {
 	DurationMinutes int                `json:"durationMinutes" gorm:"not null;default:120"`
 	Rating          int16              `json:"rating" gorm:"not null;default:3"`
 	Type            SessionType        `json:"type" gorm:"not null;default:1"`
-	Category        SessionCategory    `json:"category" gorm:"type:enum('1','2','3');not null;default:'1'"`
-	SubCategory     SessionSubCategory `json:"subCategory" gorm:"column:sub_category;type:enum('1','2','3','4');not null;default:'2'"`
+	Category        SessionCategory    `json:"category" gorm:"not null;default:1"`
+	SubCategory     SessionSubCategory `json:"subCategory" gorm:"column:sub_category;not null;default:2"`
 	MatchRank       MatchRank          `json:"matchRank" gorm:"not null;default:0"`
 	CourtName       string             `json:"courtName" gorm:"size:128;not null;default:''"`
 	Partner         string             `json:"partner" gorm:"size:128;not null;default:''"`

@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
   rating SMALLINT NOT NULL DEFAULT 3 COMMENT '手感评分，范围1-5',
 
   type SMALLINT NOT NULL DEFAULT 1 COMMENT '打球类型:1双打 2单打 3训练 4单打比赛 5双打比赛',
-  category ENUM('1','2','3') NOT NULL DEFAULT '1' COMMENT '一级类型:1日常球局 2训练 3比赛',
-  sub_category ENUM('1','2','3','4') NOT NULL DEFAULT '2' COMMENT '二级类型:1单打/打单 2双打 3发球 4其他',
+  category SMALLINT NOT NULL DEFAULT 1 COMMENT '一级类型:1日常球局 2训练 3比赛',
+  sub_category SMALLINT NOT NULL DEFAULT 2 COMMENT '二级类型:1单打/打单 2双打 3发球 4其他',
   match_rank SMALLINT NOT NULL DEFAULT 0 COMMENT '比赛成绩:0无 1冠军 2亚军 3四强 4八强 5小组赛',
 
   court_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '球场名称',
@@ -66,9 +66,9 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
   CONSTRAINT tennis_sessions_type_check
     CHECK (type IN (1, 2, 3, 4, 5)),
   CONSTRAINT tennis_sessions_category_check
-    CHECK (category IN ('1', '2', '3')),
+    CHECK (category IN (1, 2, 3)),
   CONSTRAINT tennis_sessions_sub_category_check
-    CHECK (sub_category IN ('1', '2', '3', '4')),
+    CHECK (sub_category IN (1, 2, 3, 4)),
   CONSTRAINT tennis_sessions_match_rank_check
     CHECK (match_rank IN (0, 1, 2, 3, 4, 5)),
   CONSTRAINT tennis_sessions_rating_check
@@ -198,8 +198,8 @@ ALTER TABLE users MODIFY COLUMN openid VARCHAR(128) DEFAULT NULL COMMENT '微信
 
 -- 兼容已存在的旧 tennis_sessions 表。
 CALL ensure_column('tennis_sessions', 'partner', '`partner` VARCHAR(128) NOT NULL DEFAULT '''' COMMENT ''搭档''', 'court_name');
-CALL ensure_column('tennis_sessions', 'category', '`category` ENUM(''1'',''2'',''3'') NOT NULL DEFAULT ''1'' COMMENT ''一级类型:1日常球局 2训练 3比赛''', 'type');
-CALL ensure_column('tennis_sessions', 'sub_category', '`sub_category` ENUM(''1'',''2'',''3'',''4'') NOT NULL DEFAULT ''2'' COMMENT ''二级类型:1单打/打单 2双打 3发球 4其他''', 'category');
+CALL ensure_column('tennis_sessions', 'category', '`category` SMALLINT NOT NULL DEFAULT 1 COMMENT ''一级类型:1日常球局 2训练 3比赛''', 'type');
+CALL ensure_column('tennis_sessions', 'sub_category', '`sub_category` SMALLINT NOT NULL DEFAULT 2 COMMENT ''二级类型:1单打/打单 2双打 3发球 4其他''', 'category');
 UPDATE tennis_sessions
 SET category = CASE category
     WHEN 'training' THEN '2'
@@ -226,8 +226,8 @@ SET category = CASE category
       ELSE '2'
     END
   END;
-ALTER TABLE tennis_sessions MODIFY COLUMN category ENUM('1','2','3') NOT NULL DEFAULT '1' COMMENT '一级类型:1日常球局 2训练 3比赛';
-ALTER TABLE tennis_sessions MODIFY COLUMN sub_category ENUM('1','2','3','4') NOT NULL DEFAULT '2' COMMENT '二级类型:1单打/打单 2双打 3发球 4其他';
+ALTER TABLE tennis_sessions MODIFY COLUMN category SMALLINT NOT NULL DEFAULT 1 COMMENT '一级类型:1日常球局 2训练 3比赛';
+ALTER TABLE tennis_sessions MODIFY COLUMN sub_category SMALLINT NOT NULL DEFAULT 2 COMMENT '二级类型:1单打/打单 2双打 3发球 4其他';
 UPDATE tennis_sessions
 SET category = CASE type
     WHEN 3 THEN 2
@@ -243,9 +243,9 @@ SET category = CASE type
     WHEN 5 THEN 2
     ELSE 2
   END
-WHERE category NOT IN ('1', '2', '3')
-  OR sub_category NOT IN ('1', '2', '3', '4')
-  OR (category = '1' AND sub_category = '2');
+WHERE category NOT IN (1, 2, 3)
+  OR sub_category NOT IN (1, 2, 3, 4)
+  OR (category = 1 AND sub_category = 2);
 CALL ensure_column('tennis_sessions', 'racket_id', '`racket_id` BIGINT NOT NULL DEFAULT 0 COMMENT ''使用球拍ID''', 'cost');
 CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_date', 'INDEX `idx_tennis_sessions_user_deleted_date` (`user_id`, `deleted_at`, `date` DESC)');
 CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_created', 'INDEX `idx_tennis_sessions_user_deleted_created` (`user_id`, `deleted_at`, `created_at` DESC)');

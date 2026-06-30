@@ -14,6 +14,19 @@ const (
 	RacketStatusRetired RacketStatus = 3
 )
 
+func (s RacketStatus) Label() string {
+	switch s {
+	case RacketStatusPrimary:
+		return "主力拍"
+	case RacketStatusActive:
+		return "在用"
+	case RacketStatusRetired:
+		return "已退役"
+	default:
+		return "未知"
+	}
+}
+
 type Racket struct {
 	ID                         int64          `json:"id" gorm:"primaryKey"`
 	UserID                     int64          `json:"userId" gorm:"not null;index"`

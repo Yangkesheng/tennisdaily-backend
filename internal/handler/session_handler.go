@@ -139,7 +139,7 @@ func (h *SessionHandler) Latest(c *gin.Context) {
 
 	session, err := h.sessionService.Latest(userID)
 	if err != nil {
-		response.Error(c, 500, response.CodeInternalError, "internal error")
+		handleServiceError(c, err)
 		return
 	}
 	if session == nil {
@@ -210,6 +210,7 @@ func handleServiceError(c *gin.Context, err error) {
 	case errors.Is(err, service.ErrNotFound):
 		response.Error(c, 404, response.CodeNotFound, "not found")
 	default:
+		logger.Debug("service internal error path=%s error=%v", c.FullPath(), err)
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 	}
 }

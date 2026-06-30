@@ -8,12 +8,18 @@
 - 新客户端可提交一级类型和二级类型，后端校验合法组合并同步旧 `type` 字段。
 - 旧客户端仍可只提交 `type`，后端自动映射为新两级分类。
 - 响应新增 `category`、`categoryText`、`subCategory`、`subCategoryText`、`typeText`，方便列表、详情、首页最近记录展示。
+- 新增 `GET /api/enums`，为前端提供打球类型、旧类型、比赛成绩和球拍状态枚举值及展示文案。
 - 历史数据通过迁移按旧 `type` 回填新字段，旧训练统一归为 `2 / 4`。
 
 ### 修改文件
 
+- `cmd/api/main.go`
+- `internal/handler/enum_handler.go`
 - `internal/model/enum.go`
+- `internal/model/enums.go`
+- `internal/model/racket.go`
 - `internal/model/session.go`
+- `internal/service/enum_service.go`
 - `internal/service/session_service.go`
 - `internal/repository/session_repository.go`
 - `migrations/init.sql`
@@ -26,6 +32,12 @@
 
 ### 接口变化
 
+- `GET /api/enums` 新增响应，返回前端枚举值：
+  - `session.categories`
+  - `session.legacyTypes`
+  - `session.matchRanks`
+  - `session.defaultValues`
+  - `racket.statuses`
 - `POST /api/sessions` 支持新增请求字段：
   - `category`
   - `subCategory`
@@ -43,14 +55,15 @@
 ### 数据库变化
 
 - `tennis_sessions` 新增字段：
-  - `category ENUM('1','2','3') NOT NULL DEFAULT '1'`
-  - `sub_category ENUM('1','2','3','4') NOT NULL DEFAULT '2'`
+  - `category SMALLINT NOT NULL DEFAULT 1`
+  - `sub_category SMALLINT NOT NULL DEFAULT 2`
 - 新增迁移：`migrations/002_add_session_category.sql`。
 - 新增兼容转换迁移：`migrations/003_convert_session_category_to_numeric.sql`。
-- `migrations/init.sql` 同步新增字段、旧数据回填逻辑和字符串版迁移兼容转换逻辑。
+- `migrations/init.sql` 同步新增字段、旧数据回填逻辑和字符串版迁移兼容转换逻辑；`category` / `sub_category` 使用 `SMALLINT`，避免 MySQL `ENUM` 扫描到 Go 数字枚举时触发 500。
 
 ### 兼容性说明
 
+- 新增接口不涉及数据库读写，仅返回后端静态枚举定义。
 - 旧客户端继续提交 `type` 可正常新增/编辑。
 - 新客户端优先提交 `category` / `subCategory`。
 - 新字段优先级高于旧 `type`；后端会根据新字段同步生成旧 `type`。
@@ -58,7 +71,7 @@
 
 ### 已执行检查命令
 
-- `gofmt -w internal/model/enum.go internal/model/session.go internal/service/session_service.go internal/repository/session_repository.go`
+- `gofmt -w cmd/api/main.go internal/handler/enum_handler.go internal/handler/session_handler.go internal/model/enum.go internal/model/enums.go internal/model/racket.go internal/model/session.go internal/service/enum_service.go internal/service/session_service.go internal/repository/session_repository.go`
 - `go test ./...`
 
 ### 测试结果
