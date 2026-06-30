@@ -1,5 +1,106 @@
 # Change Log
 
+## 2026-06-27 打球记录新增两级分类字段
+
+### 需求/变更内容
+
+- 在打球记录中新增 `category` / `subCategory` 两级分类字段。
+- 新客户端可提交一级类型和二级类型，后端校验合法组合并同步旧 `type` 字段。
+- 旧客户端仍可只提交 `type`，后端自动映射为新两级分类。
+- 响应新增 `category`、`categoryText`、`subCategory`、`subCategoryText`、`typeText`，方便列表、详情、首页最近记录展示。
+- 历史数据通过迁移按旧 `type` 回填新字段，旧训练统一归为 `2 / 4`。
+
+### 修改文件
+
+- `internal/model/enum.go`
+- `internal/model/session.go`
+- `internal/service/session_service.go`
+- `internal/repository/session_repository.go`
+- `migrations/init.sql`
+- `migrations/002_add_session_category.sql`
+- `migrations/003_convert_session_category_to_numeric.sql`
+- `docs/api.md`
+- `docs/session-type-redesign.md`
+- `docs/change-log.md`
+- `AGENTS.md`
+
+### 接口变化
+
+- `POST /api/sessions` 支持新增请求字段：
+  - `category`
+  - `subCategory`
+- `PUT /api/sessions/:id` 支持新增请求字段：
+  - `category`
+  - `subCategory`
+- `GET /api/sessions`、`GET /api/sessions/:id`、`GET /api/sessions/latest`、`GET /api/home/summary` 中的 `SessionResponse` 新增响应字段：
+  - `category`
+  - `categoryText`
+  - `subCategory`
+  - `subCategoryText`
+  - `typeText`
+- `type` 和 `typeLabel` 保留，用于兼容旧客户端。
+
+### 数据库变化
+
+- `tennis_sessions` 新增字段：
+  - `category ENUM('1','2','3') NOT NULL DEFAULT '1'`
+  - `sub_category ENUM('1','2','3','4') NOT NULL DEFAULT '2'`
+- 新增迁移：`migrations/002_add_session_category.sql`。
+- 新增兼容转换迁移：`migrations/003_convert_session_category_to_numeric.sql`。
+- `migrations/init.sql` 同步新增字段、旧数据回填逻辑和字符串版迁移兼容转换逻辑。
+
+### 兼容性说明
+
+- 旧客户端继续提交 `type` 可正常新增/编辑。
+- 新客户端优先提交 `category` / `subCategory`。
+- 新字段优先级高于旧 `type`；后端会根据新字段同步生成旧 `type`。
+- 旧训练数据无法识别是否为发球训练，统一回填为 `2 / 4`。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/enum.go internal/model/session.go internal/service/session_service.go internal/repository/session_repository.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-06-27 打球记录类型两级分类设计文档
+
+### 需求/变更内容
+
+- 新增打球记录类型两级分类改造设计文档，供设计、产品和前端评审使用。
+- 明确一级类型为“日常球局、训练、比赛”。
+- 明确二级类型联动规则：日常球局包含“打单、双打”，训练包含“发球、其他”，比赛包含“单打、双打”。
+- 补充新增/编辑页交互、展示文案、接口影响、旧数据兼容映射和验收点。
+
+### 修改文件
+
+- `docs/session-type-redesign.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 本次仅新增设计文档，未实际修改接口实现。
+- 文档建议后续调整 `POST /api/sessions`、`PUT /api/sessions/:id`、`GET /api/sessions/:id`、`GET /api/sessions`、`GET /api/sessions/latest` 和 `GET /api/home/summary` 的类型字段。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 无代码变更，不影响现有接口。
+- 文档中提供旧 `type` 到新两级分类的兼容映射建议。
+
+### 已执行检查命令
+
+- 未执行，原因：本次仅新增 Markdown 文档。
+
+### 测试结果
+
+- 未执行，原因：无代码变更。
+
 ## 2026-06-21 修复日历接口训练比赛占比数据
 
 ### 需求/变更内容

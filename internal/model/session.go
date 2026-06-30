@@ -7,23 +7,25 @@ import (
 )
 
 type TennisSession struct {
-	ID              int64          `json:"id" gorm:"primaryKey"`
-	UserID          int64          `json:"userId" gorm:"not null;index"`
-	Date            time.Time      `json:"date" gorm:"type:date;not null"`
-	DurationMinutes int            `json:"durationMinutes" gorm:"not null;default:120"`
-	Rating          int16          `json:"rating" gorm:"not null;default:3"`
-	Type            SessionType    `json:"type" gorm:"not null;default:1"`
-	MatchRank       MatchRank      `json:"matchRank" gorm:"not null;default:0"`
-	CourtName       string         `json:"courtName" gorm:"size:128;not null;default:''"`
-	Partner         string         `json:"partner" gorm:"size:128;not null;default:''"`
-	Cost            float64        `json:"cost" gorm:"type:decimal(10,2);not null;default:0"`
-	RacketID        int64          `json:"racketId" gorm:"not null;default:0;index"`
-	RacketName      string         `json:"racketName" gorm:"size:128;not null;default:''"`
-	ShoeName        string         `json:"shoeName" gorm:"size:128;not null;default:''"`
-	Note            string         `json:"note" gorm:"not null;default:''"`
-	CreatedAt       time.Time      `json:"createdAt"`
-	UpdatedAt       time.Time      `json:"updatedAt"`
-	DeletedAt       gorm.DeletedAt `json:"-" gorm:"index"`
+	ID              int64              `json:"id" gorm:"primaryKey"`
+	UserID          int64              `json:"userId" gorm:"not null;index"`
+	Date            time.Time          `json:"date" gorm:"type:date;not null"`
+	DurationMinutes int                `json:"durationMinutes" gorm:"not null;default:120"`
+	Rating          int16              `json:"rating" gorm:"not null;default:3"`
+	Type            SessionType        `json:"type" gorm:"not null;default:1"`
+	Category        SessionCategory    `json:"category" gorm:"type:enum('1','2','3');not null;default:'1'"`
+	SubCategory     SessionSubCategory `json:"subCategory" gorm:"column:sub_category;type:enum('1','2','3','4');not null;default:'2'"`
+	MatchRank       MatchRank          `json:"matchRank" gorm:"not null;default:0"`
+	CourtName       string             `json:"courtName" gorm:"size:128;not null;default:''"`
+	Partner         string             `json:"partner" gorm:"size:128;not null;default:''"`
+	Cost            float64            `json:"cost" gorm:"type:decimal(10,2);not null;default:0"`
+	RacketID        int64              `json:"racketId" gorm:"not null;default:0;index"`
+	RacketName      string             `json:"racketName" gorm:"size:128;not null;default:''"`
+	ShoeName        string             `json:"shoeName" gorm:"size:128;not null;default:''"`
+	Note            string             `json:"note" gorm:"not null;default:''"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	UpdatedAt       time.Time          `json:"updatedAt"`
+	DeletedAt       gorm.DeletedAt     `json:"-" gorm:"index"`
 }
 
 func (TennisSession) TableName() string {
@@ -31,23 +33,28 @@ func (TennisSession) TableName() string {
 }
 
 type SessionResponse struct {
-	ID              int64       `json:"id"`
-	Date            string      `json:"date"`
-	DurationMinutes int         `json:"durationMinutes"`
-	Rating          int16       `json:"rating"`
-	Type            SessionType `json:"type"`
-	TypeLabel       string      `json:"typeLabel"`
-	MatchRank       MatchRank   `json:"matchRank"`
-	MatchRankLabel  string      `json:"matchRankLabel"`
-	CourtName       string      `json:"courtName"`
-	Partner         string      `json:"partner"`
-	Cost            float64     `json:"cost"`
-	RacketID        int64       `json:"racketId"`
-	RacketName      string      `json:"racketName"`
-	ShoeName        string      `json:"shoeName"`
-	Note            string      `json:"note"`
-	CreatedAt       time.Time   `json:"createdAt"`
-	UpdatedAt       time.Time   `json:"updatedAt"`
+	ID              int64              `json:"id"`
+	Date            string             `json:"date"`
+	DurationMinutes int                `json:"durationMinutes"`
+	Rating          int16              `json:"rating"`
+	Type            SessionType        `json:"type"`
+	TypeLabel       string             `json:"typeLabel"`
+	Category        SessionCategory    `json:"category"`
+	CategoryText    string             `json:"categoryText"`
+	SubCategory     SessionSubCategory `json:"subCategory"`
+	SubCategoryText string             `json:"subCategoryText"`
+	TypeText        string             `json:"typeText"`
+	MatchRank       MatchRank          `json:"matchRank"`
+	MatchRankLabel  string             `json:"matchRankLabel"`
+	CourtName       string             `json:"courtName"`
+	Partner         string             `json:"partner"`
+	Cost            float64            `json:"cost"`
+	RacketID        int64              `json:"racketId"`
+	RacketName      string             `json:"racketName"`
+	ShoeName        string             `json:"shoeName"`
+	Note            string             `json:"note"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	UpdatedAt       time.Time          `json:"updatedAt"`
 }
 
 type SessionCalendarDay struct {
@@ -103,6 +110,11 @@ type SessionCalendarResponse struct {
 }
 
 func NewSessionResponse(session TennisSession) SessionResponse {
+	category, subCategory := session.Category, session.SubCategory
+	if !category.IsValid() || !category.IsValidSubCategory(subCategory) {
+		category, subCategory = session.Type.ToCategoryPair()
+	}
+
 	return SessionResponse{
 		ID:              session.ID,
 		Date:            session.Date.Format("2006-01-02"),
@@ -110,6 +122,11 @@ func NewSessionResponse(session TennisSession) SessionResponse {
 		Rating:          session.Rating,
 		Type:            session.Type,
 		TypeLabel:       session.Type.Label(),
+		Category:        category,
+		CategoryText:    category.Label(),
+		SubCategory:     subCategory,
+		SubCategoryText: subCategory.Label(category),
+		TypeText:        category.TypeText(subCategory),
 		MatchRank:       session.MatchRank,
 		MatchRankLabel:  session.MatchRank.Label(),
 		CourtName:       session.CourtName,
@@ -140,31 +157,35 @@ type SessionListPageResponse struct {
 }
 
 type CreateSessionRequest struct {
-	Date            string      `json:"date" binding:"required"`
-	DurationMinutes int         `json:"durationMinutes"`
-	Rating          int16       `json:"rating"`
-	Type            SessionType `json:"type" binding:"required"`
-	MatchRank       MatchRank   `json:"matchRank"`
-	CourtName       string      `json:"courtName"`
-	Partner         string      `json:"partner"`
-	Cost            float64     `json:"cost"`
-	RacketID        int64       `json:"racketId"`
-	RacketName      string      `json:"racketName"`
-	ShoeName        string      `json:"shoeName"`
-	Note            string      `json:"note"`
+	Date            string             `json:"date" binding:"required"`
+	DurationMinutes int                `json:"durationMinutes"`
+	Rating          int16              `json:"rating"`
+	Type            SessionType        `json:"type"`
+	Category        SessionCategory    `json:"category"`
+	SubCategory     SessionSubCategory `json:"subCategory"`
+	MatchRank       MatchRank          `json:"matchRank"`
+	CourtName       string             `json:"courtName"`
+	Partner         string             `json:"partner"`
+	Cost            float64            `json:"cost"`
+	RacketID        int64              `json:"racketId"`
+	RacketName      string             `json:"racketName"`
+	ShoeName        string             `json:"shoeName"`
+	Note            string             `json:"note"`
 }
 
 type UpdateSessionRequest struct {
-	Date            string      `json:"date" binding:"required"`
-	DurationMinutes int         `json:"durationMinutes"`
-	Rating          int16       `json:"rating"`
-	Type            SessionType `json:"type" binding:"required"`
-	MatchRank       MatchRank   `json:"matchRank"`
-	CourtName       string      `json:"courtName"`
-	Partner         string      `json:"partner"`
-	Cost            float64     `json:"cost"`
-	RacketID        int64       `json:"racketId"`
-	RacketName      string      `json:"racketName"`
-	ShoeName        string      `json:"shoeName"`
-	Note            string      `json:"note"`
+	Date            string             `json:"date" binding:"required"`
+	DurationMinutes int                `json:"durationMinutes"`
+	Rating          int16              `json:"rating"`
+	Type            SessionType        `json:"type"`
+	Category        SessionCategory    `json:"category"`
+	SubCategory     SessionSubCategory `json:"subCategory"`
+	MatchRank       MatchRank          `json:"matchRank"`
+	CourtName       string             `json:"courtName"`
+	Partner         string             `json:"partner"`
+	Cost            float64            `json:"cost"`
+	RacketID        int64              `json:"racketId"`
+	RacketName      string             `json:"racketName"`
+	ShoeName        string             `json:"shoeName"`
+	Note            string             `json:"note"`
 }

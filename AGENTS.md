@@ -426,7 +426,7 @@ GET /api/home/summary
 
 ## 9. 数据模型与枚举
 
-### 9.1 打球类型 `SessionType`
+### 9.1 打球类型两级分类
 
 定义在：
 
@@ -434,17 +434,38 @@ GET /api/home/summary
 internal/model/enum.go
 ```
 
-当前枚举：
+一级类型 `SessionCategory`：
 
 | 值 | 含义 |
 |---:|---|
-| `1` | 双打 |
-| `2` | 单打 |
-| `3` | 训练 |
-| `4` | 单打比赛 |
-| `5` | 双打比赛 |
+| `1` | 日常球局 |
+| `2` | 训练 |
+| `3` | 比赛 |
 
-### 9.2 比赛成绩 `MatchRank`
+二级类型 `SessionSubCategory`：
+
+| 一级类型 | 二级值 | 含义 |
+|---:|---:|---|
+| `1` | `1` | 打单 |
+| `1` | `2` | 双打 |
+| `2` | `3` | 发球 |
+| `2` | `4` | 其他 |
+| `3` | `1` | 单打 |
+| `3` | `2` | 双打 |
+
+### 9.2 旧打球类型 `SessionType`
+
+`SessionType` 当前保留用于兼容旧客户端和旧统计映射，新接口优先使用 `category` / `subCategory`。
+
+| 值 | 含义 | 映射 |
+|---:|---|---|
+| `1` | 双打 | `1 / 2` |
+| `2` | 单打 | `1 / 1` |
+| `3` | 训练 | `2 / 4` |
+| `4` | 单打比赛 | `3 / 1` |
+| `5` | 双打比赛 | `3 / 2` |
+
+### 9.3 比赛成绩 `MatchRank`
 
 | 值 | 含义 |
 |---:|---|
@@ -457,10 +478,10 @@ internal/model/enum.go
 
 业务规则：
 
-- 只有单打比赛、双打比赛可以保留 `matchRank`
-- 普通双打、单打、训练会强制 `matchRank = 0`
+- 只有 `category = 3` 可以保留 `matchRank`
+- `category = 1` 或 `category = 2` 会强制 `matchRank = 0`
 
-### 9.3 球拍状态
+### 9.4 球拍状态
 
 定义在：
 
@@ -561,6 +582,8 @@ racket_stringing_record.deleted_at
 ```text
 users
 tennis_sessions
+  category
+  sub_category
 racket
 racket_stringing_record
 racket_library
@@ -599,6 +622,8 @@ API JSON 字段使用 camelCase：
 
 ```text
 duration_minutes
+category
+sub_category
 match_rank
 court_name
 racket_id
@@ -617,9 +642,10 @@ racket_id
 - `durationMinutes` 必须 `> 0` 且不超过 `600`
 - `rating` 默认 `3`
 - `rating` 范围 `1-5`
-- `type` 必须是合法 `SessionType`
-- `matchRank` 必须是合法 `MatchRank`
-- 非比赛类型强制 `matchRank = 0`
+- `category` 和 `subCategory` 新客户端必填；旧客户端可继续传 `type`
+- `category` 必须是合法 `SessionCategory`
+- `subCategory` 必须是合法 `SessionSubCategory`，且必须属于当前 `category`
+- 仅 `category = 3` 可保留 `matchRank`；其他类型强制 `matchRank = 0`
 
 ### 14.2 球拍
 

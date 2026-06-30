@@ -140,11 +140,11 @@ func (r *SessionRepository) StatsAggregate(userID int64, start, end time.Time) (
 			COALESCE(AVG(duration_minutes), 0) AS average_minutes,
 			COALESCE(AVG(rating), 0) AS average_rating,
 			COALESCE(SUM(cost), 0) AS session_cost,
-			COALESCE(SUM(CASE WHEN type = ? THEN 1 ELSE 0 END), 0) AS training_count,
-			COALESCE(SUM(CASE WHEN type = ? THEN 1 ELSE 0 END), 0) AS singles_count,
-			COALESCE(SUM(CASE WHEN type = ? THEN 1 ELSE 0 END), 0) AS doubles_count,
-			COALESCE(SUM(CASE WHEN type IN ? THEN 1 ELSE 0 END), 0) AS match_count
-		`, model.SessionTypeTraining, model.SessionTypeSingles, model.SessionTypeDoubles, []model.SessionType{model.SessionTypeSinglesMatch, model.SessionTypeDoublesMatch}).
+			COALESCE(SUM(CASE WHEN category = ? THEN 1 ELSE 0 END), 0) AS training_count,
+			COALESCE(SUM(CASE WHEN category = ? AND sub_category = ? THEN 1 ELSE 0 END), 0) AS singles_count,
+			COALESCE(SUM(CASE WHEN category = ? AND sub_category = ? THEN 1 ELSE 0 END), 0) AS doubles_count,
+			COALESCE(SUM(CASE WHEN category = ? THEN 1 ELSE 0 END), 0) AS match_count
+		`, model.SessionCategoryTraining, model.SessionCategoryDaily, model.SessionSubCategorySingles, model.SessionCategoryDaily, model.SessionSubCategoryDoubles, model.SessionCategoryMatch).
 		Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).
 		Scan(&stats).Error
 	return stats, err

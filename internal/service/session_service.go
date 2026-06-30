@@ -102,7 +102,7 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
-	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
+	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
@@ -132,7 +132,7 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 		return model.SessionResponse{}, ErrNotFound
 	}
 
-	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
+	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
@@ -141,6 +141,8 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	existing.DurationMinutes = updated.DurationMinutes
 	existing.Rating = updated.Rating
 	existing.Type = updated.Type
+	existing.Category = updated.Category
+	existing.SubCategory = updated.SubCategory
 	existing.MatchRank = updated.MatchRank
 	existing.CourtName = updated.CourtName
 	existing.Partner = updated.Partner
@@ -317,7 +319,7 @@ func calendarSessionTypeBreakdown(summary model.SessionCalendarSummaryResponse) 
 	}
 }
 
-func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {
+func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, category model.SessionCategory, subCategory model.SessionSubCategory, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {
 	sessionDate, err := time.ParseInLocation("2006-01-02", date, s.loc)
 	if err != nil {
 		return model.TennisSession{}, ErrInvalidRequest
@@ -337,10 +339,15 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		return model.TennisSession{}, ErrInvalidRequest
 	}
 
-	if !sessionType.IsValid() || !matchRank.IsValid() {
+	if !matchRank.IsValid() {
 		return model.TennisSession{}, ErrInvalidRequest
 	}
-	if !sessionType.IsMatch() {
+
+	resolvedType, resolvedCategory, resolvedSubCategory, err := resolveSessionType(category, subCategory, sessionType)
+	if err != nil {
+		return model.TennisSession{}, err
+	}
+	if !resolvedType.IsMatch() {
 		matchRank = model.MatchRankNone
 	}
 
@@ -349,7 +356,9 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		Date:            sessionDate,
 		DurationMinutes: duration,
 		Rating:          rating,
-		Type:            sessionType,
+		Type:            resolvedType,
+		Category:        resolvedCategory,
+		SubCategory:     resolvedSubCategory,
 		MatchRank:       matchRank,
 		CourtName:       courtName,
 		Partner:         partner,
@@ -359,6 +368,25 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		ShoeName:        shoeName,
 		Note:            note,
 	}, nil
+}
+
+func resolveSessionType(category model.SessionCategory, subCategory model.SessionSubCategory, sessionType model.SessionType) (model.SessionType, model.SessionCategory, model.SessionSubCategory, error) {
+	if category != 0 || subCategory != 0 {
+		if !category.IsValid() || !subCategory.IsValid() || !category.IsValidSubCategory(subCategory) {
+			return 0, 0, 0, ErrInvalidRequest
+		}
+		resolvedType, ok := category.ToSessionType(subCategory)
+		if !ok {
+			return 0, 0, 0, ErrInvalidRequest
+		}
+		return resolvedType, category, subCategory, nil
+	}
+
+	if !sessionType.IsValid() {
+		return 0, 0, 0, ErrInvalidRequest
+	}
+	resolvedCategory, resolvedSubCategory := sessionType.ToCategoryPair()
+	return sessionType, resolvedCategory, resolvedSubCategory, nil
 }
 
 func toSessionResponses(sessions []model.TennisSession) []model.SessionResponse {

@@ -133,17 +133,36 @@ Authorization: Bearer <token>
 
 ## 3. 枚举定义
 
-### 3.1 打球类型 type
+### 3.1 打球类型 category / subCategory
 
-| 值 | 含义 | typeLabel |
-|---:|---|---|
-| 1 | 双打 | 双打 |
-| 2 | 单打 | 单打 |
-| 3 | 训练 | 训练 |
-| 4 | 单打比赛 | 单打比赛 |
-| 5 | 双打比赛 | 双打比赛 |
+新增和编辑打球记录推荐使用两级分类字段：
 
-### 3.2 比赛成绩 matchRank
+| category | categoryText | subCategory | subCategoryText | typeText |
+|---:|---|---:|---|---|
+| 1 | 日常球局 | 1 | 打单 | 日常球局 · 打单 |
+| 1 | 日常球局 | 2 | 双打 | 日常球局 · 双打 |
+| 2 | 训练 | 3 | 发球 | 训练 · 发球 |
+| 2 | 训练 | 4 | 其他 | 训练 · 其他 |
+| 3 | 比赛 | 1 | 单打 | 比赛 · 单打 |
+| 3 | 比赛 | 2 | 双打 | 比赛 · 双打 |
+
+后端会校验 `category` 和 `subCategory` 组合是否合法。
+
+### 3.2 旧打球类型 type
+
+`type` 为兼容旧客户端和旧统计逻辑保留。新客户端优先提交和展示 `category` / `subCategory`。
+
+| 值 | 含义 | typeLabel | 映射 category | 映射 subCategory |
+|---:|---|---|---:|---:|
+| 1 | 双打 | 双打 | 1 | 2 |
+| 2 | 单打 | 单打 | 1 | 1 |
+| 3 | 训练 | 训练 | 2 | 4 |
+| 4 | 单打比赛 | 单打比赛 | 3 | 1 |
+| 5 | 双打比赛 | 双打比赛 | 3 | 2 |
+
+说明：旧训练数据统一映射为 `2 / 4`（训练 / 其他），无法自动识别为发球训练。
+
+### 3.3 比赛成绩 matchRank
 
 | 值 | 含义 | matchRankLabel |
 |---:|---|---|
@@ -156,8 +175,9 @@ Authorization: Bearer <token>
 
 说明：
 
-- 当 `type` 为 `4` 或 `5` 时，`matchRank` 可以为 `1-5`
-- 当 `type` 为 `1`、`2`、`3` 时，后端会强制将 `matchRank` 处理为 `0`
+- 当 `category` 为 `3` 时，`matchRank` 可以为 `1-5`
+- 当 `category` 为 `1` 或 `2` 时，后端会强制将 `matchRank` 处理为 `0`
+- 旧客户端仍可通过 `type = 4` 或 `type = 5` 提交比赛成绩
 
 ---
 
@@ -175,6 +195,11 @@ Authorization: Bearer <token>
   "rating": 3,
   "type": 5,
   "typeLabel": "双打比赛",
+  "category": 3,
+  "categoryText": "比赛",
+  "subCategory": 2,
+  "subCategoryText": "双打",
+  "typeText": "比赛 · 双打",
   "matchRank": 1,
   "matchRankLabel": "冠军",
   "courtName": "奥森网球场",
@@ -196,8 +221,13 @@ Authorization: Bearer <token>
 | date | string | 打球日期，格式 `YYYY-MM-DD` |
 | durationMinutes | number | 打球时长，单位分钟 |
 | rating | number | 今日手感，1-5 |
-| type | number | 打球类型枚举 |
-| typeLabel | string | 打球类型中文文案 |
+| type | number | 旧打球类型枚举，兼容保留 |
+| typeLabel | string | 旧打球类型中文文案 |
+| category | number | 一级类型枚举：`1` 日常球局、`2` 训练、`3` 比赛 |
+| categoryText | string | 一级类型中文文案 |
+| subCategory | number | 二级类型枚举：`1` 单打/打单、`2` 双打、`3` 发球、`4` 其他 |
+| subCategoryText | string | 二级类型中文文案 |
+| typeText | string | 两级类型组合展示文案 |
 | matchRank | number | 比赛成绩枚举 |
 | matchRankLabel | string | 比赛成绩中文文案 |
 | courtName | string | 场地名称 |
@@ -218,7 +248,8 @@ Authorization: Bearer <token>
   "date": "2026-01-15",
   "durationMinutes": 120,
   "rating": 3,
-  "type": 5,
+  "category": 3,
+  "subCategory": 2,
   "matchRank": 1,
   "courtName": "奥森网球场",
   "partner": "张三",
@@ -236,7 +267,9 @@ Authorization: Bearer <token>
 | date | 是 | 格式 `YYYY-MM-DD` |
 | durationMinutes | 否 | 默认 120；必须大于 0，最大 600 |
 | rating | 否 | 默认 3；范围 1-5 |
-| type | 是 | 允许 1-5 |
+| category | 新客户端必填 | 一级类型，允许 `1`、`2`、`3` |
+| subCategory | 新客户端必填 | 二级类型，允许 `1`、`2`、`3`、`4`；必须属于当前 `category` |
+| type | 旧客户端必填 | 旧类型枚举，允许 1-5；未传新字段时后端按旧类型映射 |
 | matchRank | 否 | 允许 0-5；非比赛类型会被强制改为 0 |
 | courtName | 否 | 字符串 |
 | partner | 否 | 字符串，搭档名称 |
@@ -247,6 +280,8 @@ Authorization: Bearer <token>
 
 注意：
 
+- 新客户端应提交 `category` 和 `subCategory`，后端会同步生成兼容旧字段 `type`
+- 旧客户端仍可只提交 `type`，后端会自动映射出 `category` 和 `subCategory`
 - `date` 必须是 `YYYY-MM-DD`，不是完整 ISO 时间
 - `durationMinutes` 传 `0` 时后端会使用默认值 `120`
 - `rating` 传 `0` 时后端会使用默认值 `3`
@@ -402,6 +437,11 @@ Authorization: Bearer <token>
     "rating": 3,
     "type": 5,
     "typeLabel": "双打比赛",
+    "category": 3,
+    "categoryText": "比赛",
+    "subCategory": 2,
+    "subCategoryText": "双打",
+    "typeText": "比赛 · 双打",
     "matchRank": 1,
     "matchRankLabel": "冠军",
     "courtName": "奥森网球场",
@@ -443,14 +483,15 @@ Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
-#### 请求体示例：普通双打
+#### 请求体示例：日常球局双打
 
 ```json
 {
   "date": "2026-01-15",
   "durationMinutes": 120,
   "rating": 4,
-  "type": 1,
+  "category": 1,
+  "subCategory": 2,
   "matchRank": 0,
   "courtName": "奥森网球场",
   "partner": "张三",
@@ -468,7 +509,8 @@ Content-Type: application/json
   "date": "2026-01-15",
   "durationMinutes": 120,
   "rating": 5,
-  "type": 5,
+  "category": 3,
+  "subCategory": 2,
   "matchRank": 1,
   "courtName": "奥森网球场",
   "partner": "张三",
@@ -496,6 +538,11 @@ Content-Type: application/json
     "rating": 5,
     "type": 5,
     "typeLabel": "双打比赛",
+    "category": 3,
+    "categoryText": "比赛",
+    "subCategory": 2,
+    "subCategoryText": "双打",
+    "typeText": "比赛 · 双打",
     "matchRank": 1,
     "matchRankLabel": "冠军",
     "courtName": "奥森网球场",
@@ -515,7 +562,7 @@ Content-Type: application/json
 curl -X POST http://localhost:8081/api/sessions \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"type":5,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ---
@@ -550,6 +597,11 @@ Authorization: Bearer <token>
     "rating": 5,
     "type": 5,
     "typeLabel": "双打比赛",
+    "category": 3,
+    "categoryText": "比赛",
+    "subCategory": 2,
+    "subCategoryText": "双打",
+    "typeText": "比赛 · 双打",
     "matchRank": 1,
     "matchRankLabel": "冠军",
     "courtName": "奥森网球场",
@@ -596,7 +648,8 @@ Content-Type: application/json
   "date": "2026-01-16",
   "durationMinutes": 90,
   "rating": 4,
-  "type": 4,
+  "category": 3,
+  "subCategory": 1,
   "matchRank": 2,
   "courtName": "国家网球中心",
   "partner": "李四",
@@ -643,7 +696,7 @@ Content-Type: application/json
 curl -X PUT http://localhost:8081/api/sessions/1 \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"type":4,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"racketName":"Babolat Pure Drive","shoeName":"Nike Vapor","note":"更新后的记录"}'
+  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"category":3,"subCategory":1,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"racketName":"Babolat Pure Drive","shoeName":"Nike Vapor","note":"更新后的记录"}'
 ```
 
 ---
@@ -1000,7 +1053,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
 curl -X POST http://localhost:8081/api/sessions \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"type":5,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ### 16.3 查看列表
@@ -1025,8 +1078,8 @@ curl http://localhost:8081/api/stats/month \
 2. `createdAt` 和 `updatedAt` 为服务端时间。
 3. 删除接口是软删除，普通列表和统计不会返回已删除数据。
 4. 普通查询只能访问当前 token 对应用户的数据。
-5. 当前列表接口暂不支持分页、日期筛选和近 30 天筛选。
-6. 如果小程序当前内部仍使用字符串类型，需要在前端 service 层做枚举 mapper。
+5. 当前列表接口支持分页和按日期筛选。
+6. 新客户端优先使用 `category`、`subCategory`、`typeText`；`type` 和 `typeLabel` 为兼容旧客户端保留。
 
 ---
 
