@@ -1,5 +1,47 @@
 # Change Log
 
+## 2026-06-27 统计图表新增打球费用类型占比
+
+### 需求/变更内容
+
+- 修改 `GET /api/stats/charts`，新增打球费用按一级类型和二级类型维度的占比统计。
+- 一级类型按 `category` 聚合，固定返回日常球局、训练、比赛。
+- 二级类型按 `category + sub_category` 聚合，固定返回 6 个合法类型组合。
+- 占比分母为查询范围内 `tennis_sessions.cost` 合计，即 `summary.sessionCost`。
+- 保留原有 `expenseBreakdown` 和 `sessionTypeBreakdown` 字段，避免影响现有前端展示。
+
+### 修改文件
+
+- `internal/model/stats.go`
+- `internal/repository/session_repository.go`
+- `internal/service/stats_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/stats/charts` 的 `charts` 新增字段：
+  - `sessionCategoryCostBreakdown`
+  - `sessionSubCategoryCostBreakdown`
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增 JSON 字段，不删除或改名已有字段。
+- 无打球费用时新增占比字段仍固定返回类型项，`value` 和 `percent` 为 `0`。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/stats.go internal/repository/session_repository.go internal/service/stats_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-06-27 打球记录新增两级分类字段
 
 ### 需求/变更内容

@@ -52,11 +52,19 @@ type StatsBreakdownItemResponse struct {
 	Percent float64 `json:"percent"`
 }
 
+type StatsSessionCostBreakdownRow struct {
+	Category    SessionCategory    `gorm:"column:category"`
+	SubCategory SessionSubCategory `gorm:"column:sub_category"`
+	Cost        float64            `gorm:"column:cost"`
+}
+
 type StatsChartsResponse struct {
-	Frequency            []StatsFrequencyChartItemResponse `json:"frequency"`
-	RatingTrend          []StatsRatingTrendItemResponse    `json:"ratingTrend"`
-	ExpenseBreakdown     []StatsBreakdownItemResponse      `json:"expenseBreakdown"`
-	SessionTypeBreakdown []StatsBreakdownItemResponse      `json:"sessionTypeBreakdown"`
+	Frequency                       []StatsFrequencyChartItemResponse `json:"frequency"`
+	RatingTrend                     []StatsRatingTrendItemResponse    `json:"ratingTrend"`
+	ExpenseBreakdown                []StatsBreakdownItemResponse      `json:"expenseBreakdown"`
+	SessionTypeBreakdown            []StatsBreakdownItemResponse      `json:"sessionTypeBreakdown"`
+	SessionCategoryCostBreakdown    []StatsBreakdownItemResponse      `json:"sessionCategoryCostBreakdown"`
+	SessionSubCategoryCostBreakdown []StatsBreakdownItemResponse      `json:"sessionSubCategoryCostBreakdown"`
 }
 
 type StatsChartsResultResponse struct {

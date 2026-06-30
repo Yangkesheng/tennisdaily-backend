@@ -150,6 +150,16 @@ func (r *SessionRepository) StatsAggregate(userID int64, start, end time.Time) (
 	return stats, err
 }
 
+func (r *SessionRepository) SessionCostBreakdownByCategory(userID int64, start, end time.Time) ([]model.StatsSessionCostBreakdownRow, error) {
+	var rows []model.StatsSessionCostBreakdownRow
+	err := r.db.Model(&model.TennisSession{}).
+		Select("category, sub_category, COALESCE(SUM(cost), 0) AS cost").
+		Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).
+		Group("category, sub_category").
+		Scan(&rows).Error
+	return rows, err
+}
+
 func (r *SessionRepository) ListRatingTrendByRange(userID int64, start, end time.Time, limit int) ([]model.TennisSession, error) {
 	var sessions []model.TennisSession
 	err := r.db.Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).

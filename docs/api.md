@@ -1122,6 +1122,73 @@ curl http://localhost:8081/api/stats/month \
   -H 'Authorization: Bearer <token>'
 ```
 
+### 16.2 GET /api/stats/charts
+
+获取统计图表数据，支持按月或按年查询。
+
+统计口径：
+
+- 使用服务器 `Asia/Shanghai` 时区
+- 按 `tennis_sessions.date` 统计
+- 默认只统计未删除记录
+- `charts.sessionCategoryCostBreakdown` 按一级类型统计打球费用占比
+- `charts.sessionSubCategoryCostBreakdown` 按一级类型 + 二级类型统计打球费用占比
+- 类型费用占比分母为查询范围内 `summary.sessionCost`
+
+#### 请求
+
+```http
+GET /api/stats/charts?period=month&year=2026&month=6
+Authorization: Bearer <token>
+```
+
+| 参数 | 类型 | 必填 | 示例 | 说明 |
+|---|---|---|---|---|
+| period | string | 是 | `month` | `month` 或 `year` |
+| year | number | 是 | `2026` | 查询年份，范围 `2000-2100` |
+| month | number | period=month 时是 | `6` | 查询月份，范围 `1-12` |
+
+#### 响应 data 关键字段
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| period | string | 查询周期，`month` 或 `year` |
+| year | number | 查询年份 |
+| month | number | 查询月份；按年查询时为 `0` |
+| rangeText | string | 查询范围展示文案 |
+| summary.sessionCost | number | 查询范围内打球费用合计 |
+| charts.expenseBreakdown | array | 打球、球拍、穿线总消费占比 |
+| charts.sessionTypeBreakdown | array | 兼容旧统计的训练/单打/双打/比赛次数占比 |
+| charts.sessionCategoryCostBreakdown | array | 按一级类型统计打球费用占比，固定返回日常球局、训练、比赛 |
+| charts.sessionSubCategoryCostBreakdown | array | 按二级类型统计打球费用占比，固定返回 6 个合法类型组合 |
+
+#### 类型费用占比示例
+
+```json
+{
+  "sessionCategoryCostBreakdown": [
+    { "key": "daily", "label": "日常球局", "value": 180, "percent": 60 },
+    { "key": "training", "label": "训练", "value": 60, "percent": 20 },
+    { "key": "match", "label": "比赛", "value": 60, "percent": 20 }
+  ],
+  "sessionSubCategoryCostBreakdown": [
+    { "key": "daily_singles", "label": "日常球局 · 打单", "value": 100, "percent": 33.3 },
+    { "key": "daily_doubles", "label": "日常球局 · 双打", "value": 80, "percent": 26.7 },
+    { "key": "training_serve", "label": "训练 · 发球", "value": 60, "percent": 20 },
+    { "key": "training_other", "label": "训练 · 其他", "value": 0, "percent": 0 },
+    { "key": "match_singles", "label": "比赛 · 单打", "value": 60, "percent": 20 },
+    { "key": "match_doubles", "label": "比赛 · 双打", "value": 0, "percent": 0 }
+  ]
+}
+```
+
+#### curl 示例
+
+```bash
+curl 'http://localhost:8081/api/stats/charts?period=month&year=2026&month=6' \
+  -H 'Authorization: Bearer <token>'
+```
+
 ---
 
 ## 17. 前端联调建议
