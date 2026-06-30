@@ -52,19 +52,25 @@ type StatsBreakdownItemResponse struct {
 	Percent float64 `json:"percent"`
 }
 
-type StatsSessionCostBreakdownRow struct {
+type StatsSessionBreakdownRow struct {
 	Category    SessionCategory    `gorm:"column:category"`
 	SubCategory SessionSubCategory `gorm:"column:sub_category"`
+	Count       int64              `gorm:"column:count"`
+	Minutes     int64              `gorm:"column:minutes"`
 	Cost        float64            `gorm:"column:cost"`
 }
 
 type StatsChartsResponse struct {
-	Frequency                       []StatsFrequencyChartItemResponse `json:"frequency"`
-	RatingTrend                     []StatsRatingTrendItemResponse    `json:"ratingTrend"`
-	ExpenseBreakdown                []StatsBreakdownItemResponse      `json:"expenseBreakdown"`
-	SessionTypeBreakdown            []StatsBreakdownItemResponse      `json:"sessionTypeBreakdown"`
-	SessionCategoryCostBreakdown    []StatsBreakdownItemResponse      `json:"sessionCategoryCostBreakdown"`
-	SessionSubCategoryCostBreakdown []StatsBreakdownItemResponse      `json:"sessionSubCategoryCostBreakdown"`
+	Frequency                           []StatsFrequencyChartItemResponse `json:"frequency"`
+	RatingTrend                         []StatsRatingTrendItemResponse    `json:"ratingTrend"`
+	ExpenseBreakdown                    []StatsBreakdownItemResponse      `json:"expenseBreakdown"`
+	SessionTypeBreakdown                []StatsBreakdownItemResponse      `json:"sessionTypeBreakdown"`
+	SessionCategoryCountBreakdown       []StatsBreakdownItemResponse      `json:"sessionCategoryCountBreakdown"`
+	SessionSubCategoryCountBreakdown    []StatsBreakdownItemResponse      `json:"sessionSubCategoryCountBreakdown"`
+	SessionCategoryDurationBreakdown    []StatsBreakdownItemResponse      `json:"sessionCategoryDurationBreakdown"`
+	SessionSubCategoryDurationBreakdown []StatsBreakdownItemResponse      `json:"sessionSubCategoryDurationBreakdown"`
+	SessionCategoryCostBreakdown        []StatsBreakdownItemResponse      `json:"sessionCategoryCostBreakdown"`
+	SessionSubCategoryCostBreakdown     []StatsBreakdownItemResponse      `json:"sessionSubCategoryCostBreakdown"`
 }
 
 type StatsChartsResultResponse struct {

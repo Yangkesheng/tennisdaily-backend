@@ -65,7 +65,7 @@ func (s *StatsService) monthCharts(userID int64, year, month int) (model.StatsCh
 		return model.StatsChartsResultResponse{}, err
 	}
 
-	costRows, err := s.sessionRepo.SessionCostBreakdownByCategory(userID, start, end)
+	breakdownRows, err := s.sessionRepo.SessionBreakdownByCategory(userID, start, end)
 	if err != nil {
 		return model.StatsChartsResultResponse{}, err
 	}
@@ -77,12 +77,16 @@ func (s *StatsService) monthCharts(userID int64, year, month int) (model.StatsCh
 		RangeText: fmt.Sprintf("%d年%d月", year, month),
 		Summary:   summary,
 		Charts: model.StatsChartsResponse{
-			Frequency:                       s.weeklyFrequency(start, end, days),
-			RatingTrend:                     ratingTrend,
-			ExpenseBreakdown:                expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
-			SessionTypeBreakdown:            sessionTypeBreakdown(summary),
-			SessionCategoryCostBreakdown:    sessionCategoryCostBreakdown(costRows, summary.SessionCost),
-			SessionSubCategoryCostBreakdown: sessionSubCategoryCostBreakdown(costRows, summary.SessionCost),
+			Frequency:                           s.weeklyFrequency(start, end, days),
+			RatingTrend:                         ratingTrend,
+			ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+			SessionTypeBreakdown:                sessionTypeBreakdown(summary),
+			SessionCategoryCountBreakdown:       sessionCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
+			SessionSubCategoryCountBreakdown:    sessionSubCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
+			SessionCategoryDurationBreakdown:    sessionCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
+			SessionSubCategoryDurationBreakdown: sessionSubCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
+			SessionCategoryCostBreakdown:        sessionCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
+			SessionSubCategoryCostBreakdown:     sessionSubCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
 		},
 	}, nil
 }
@@ -110,7 +114,7 @@ func (s *StatsService) yearCharts(userID int64, year int) (model.StatsChartsResu
 		return model.StatsChartsResultResponse{}, err
 	}
 
-	costRows, err := s.sessionRepo.SessionCostBreakdownByCategory(userID, start, end)
+	breakdownRows, err := s.sessionRepo.SessionBreakdownByCategory(userID, start, end)
 	if err != nil {
 		return model.StatsChartsResultResponse{}, err
 	}
@@ -122,12 +126,16 @@ func (s *StatsService) yearCharts(userID int64, year int) (model.StatsChartsResu
 		RangeText: fmt.Sprintf("%d年", year),
 		Summary:   summary,
 		Charts: model.StatsChartsResponse{
-			Frequency:                       frequency,
-			RatingTrend:                     ratingTrend,
-			ExpenseBreakdown:                expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
-			SessionTypeBreakdown:            sessionTypeBreakdown(summary),
-			SessionCategoryCostBreakdown:    sessionCategoryCostBreakdown(costRows, summary.SessionCost),
-			SessionSubCategoryCostBreakdown: sessionSubCategoryCostBreakdown(costRows, summary.SessionCost),
+			Frequency:                           frequency,
+			RatingTrend:                         ratingTrend,
+			ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+			SessionTypeBreakdown:                sessionTypeBreakdown(summary),
+			SessionCategoryCountBreakdown:       sessionCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
+			SessionSubCategoryCountBreakdown:    sessionSubCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
+			SessionCategoryDurationBreakdown:    sessionCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
+			SessionSubCategoryDurationBreakdown: sessionSubCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
+			SessionCategoryCostBreakdown:        sessionCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
+			SessionSubCategoryCostBreakdown:     sessionSubCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
 		},
 	}, nil
 }
@@ -269,13 +277,21 @@ func sessionTypeBreakdown(summary model.StatsChartsSummaryResponse) []model.Stat
 	}
 }
 
-func sessionCategoryCostBreakdown(rows []model.StatsSessionCostBreakdownRow, totalCost float64) []model.StatsBreakdownItemResponse {
-	costByCategory := make(map[model.SessionCategory]float64, len(rows))
+type sessionBreakdownMetric string
+
+const (
+	sessionBreakdownMetricCount   sessionBreakdownMetric = "count"
+	sessionBreakdownMetricMinutes sessionBreakdownMetric = "minutes"
+	sessionBreakdownMetricCost    sessionBreakdownMetric = "cost"
+)
+
+func sessionCategoryBreakdown(rows []model.StatsSessionBreakdownRow, total float64, metric sessionBreakdownMetric) []model.StatsBreakdownItemResponse {
+	valueByCategory := make(map[model.SessionCategory]float64, len(rows))
 	for _, row := range rows {
 		if !row.Category.IsValid() {
 			continue
 		}
-		costByCategory[row.Category] += row.Cost
+		valueByCategory[row.Category] += sessionBreakdownValue(row, metric)
 	}
 
 	categories := []model.SessionCategory{
@@ -285,24 +301,24 @@ func sessionCategoryCostBreakdown(rows []model.StatsSessionCostBreakdownRow, tot
 	}
 	breakdown := make([]model.StatsBreakdownItemResponse, 0, len(categories))
 	for _, category := range categories {
-		cost := costByCategory[category]
+		value := valueByCategory[category]
 		breakdown = append(breakdown, model.StatsBreakdownItemResponse{
 			Key:     sessionCategoryKey(category),
 			Label:   category.Label(),
-			Value:   cost,
-			Percent: percent(cost, totalCost),
+			Value:   value,
+			Percent: percent(value, total),
 		})
 	}
 	return breakdown
 }
 
-func sessionSubCategoryCostBreakdown(rows []model.StatsSessionCostBreakdownRow, totalCost float64) []model.StatsBreakdownItemResponse {
-	costBySub := make(map[string]float64, len(rows))
+func sessionSubCategoryBreakdown(rows []model.StatsSessionBreakdownRow, total float64, metric sessionBreakdownMetric) []model.StatsBreakdownItemResponse {
+	valueBySub := make(map[string]float64, len(rows))
 	for _, row := range rows {
 		if !row.Category.IsValid() || !row.Category.IsValidSubCategory(row.SubCategory) {
 			continue
 		}
-		costBySub[sessionSubCategoryKey(row.Category, row.SubCategory)] += row.Cost
+		valueBySub[sessionSubCategoryKey(row.Category, row.SubCategory)] += sessionBreakdownValue(row, metric)
 	}
 
 	types := []struct {
@@ -320,15 +336,28 @@ func sessionSubCategoryCostBreakdown(rows []model.StatsSessionCostBreakdownRow, 
 	breakdown := make([]model.StatsBreakdownItemResponse, 0, len(types))
 	for _, item := range types {
 		key := sessionSubCategoryKey(item.category, item.subCategory)
-		cost := costBySub[key]
+		value := valueBySub[key]
 		breakdown = append(breakdown, model.StatsBreakdownItemResponse{
 			Key:     key,
 			Label:   item.category.TypeText(item.subCategory),
-			Value:   cost,
-			Percent: percent(cost, totalCost),
+			Value:   value,
+			Percent: percent(value, total),
 		})
 	}
 	return breakdown
+}
+
+func sessionBreakdownValue(row model.StatsSessionBreakdownRow, metric sessionBreakdownMetric) float64 {
+	switch metric {
+	case sessionBreakdownMetricCount:
+		return float64(row.Count)
+	case sessionBreakdownMetricMinutes:
+		return float64(row.Minutes)
+	case sessionBreakdownMetricCost:
+		return row.Cost
+	default:
+		return 0
+	}
 }
 
 func sessionCategoryKey(category model.SessionCategory) string {

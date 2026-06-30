@@ -1131,9 +1131,12 @@ curl http://localhost:8081/api/stats/month \
 - 使用服务器 `Asia/Shanghai` 时区
 - 按 `tennis_sessions.date` 统计
 - 默认只统计未删除记录
-- `charts.sessionCategoryCostBreakdown` 按一级类型统计打球费用占比
-- `charts.sessionSubCategoryCostBreakdown` 按一级类型 + 二级类型统计打球费用占比
-- 类型费用占比分母为查询范围内 `summary.sessionCost`
+- `charts.sessionCategoryCountBreakdown` 按一级类型统计打球次数占比，分母为 `summary.sessionCount`
+- `charts.sessionSubCategoryCountBreakdown` 按一级类型 + 二级类型统计打球次数占比，分母为 `summary.sessionCount`
+- `charts.sessionCategoryDurationBreakdown` 按一级类型统计打球时长占比，分母为 `summary.totalMinutes`
+- `charts.sessionSubCategoryDurationBreakdown` 按一级类型 + 二级类型统计打球时长占比，分母为 `summary.totalMinutes`
+- `charts.sessionCategoryCostBreakdown` 按一级类型统计打球费用占比，分母为 `summary.sessionCost`
+- `charts.sessionSubCategoryCostBreakdown` 按一级类型 + 二级类型统计打球费用占比，分母为 `summary.sessionCost`
 
 #### 请求
 
@@ -1157,15 +1160,47 @@ Authorization: Bearer <token>
 | month | number | 查询月份；按年查询时为 `0` |
 | rangeText | string | 查询范围展示文案 |
 | summary.sessionCost | number | 查询范围内打球费用合计 |
+| summary.totalMinutes | number | 查询范围内打球总分钟数 |
+| summary.sessionCount | number | 查询范围内打球记录数 |
 | charts.expenseBreakdown | array | 打球、球拍、穿线总消费占比 |
 | charts.sessionTypeBreakdown | array | 兼容旧统计的训练/单打/双打/比赛次数占比 |
+| charts.sessionCategoryCountBreakdown | array | 按一级类型统计打球次数占比，固定返回日常球局、训练、比赛 |
+| charts.sessionSubCategoryCountBreakdown | array | 按二级类型统计打球次数占比，固定返回 6 个合法类型组合 |
+| charts.sessionCategoryDurationBreakdown | array | 按一级类型统计打球时长占比，固定返回日常球局、训练、比赛 |
+| charts.sessionSubCategoryDurationBreakdown | array | 按二级类型统计打球时长占比，固定返回 6 个合法类型组合 |
 | charts.sessionCategoryCostBreakdown | array | 按一级类型统计打球费用占比，固定返回日常球局、训练、比赛 |
 | charts.sessionSubCategoryCostBreakdown | array | 按二级类型统计打球费用占比，固定返回 6 个合法类型组合 |
 
-#### 类型费用占比示例
+#### 类型占比示例
 
 ```json
 {
+  "sessionCategoryCountBreakdown": [
+    { "key": "daily", "label": "日常球局", "value": 6, "percent": 60 },
+    { "key": "training", "label": "训练", "value": 2, "percent": 20 },
+    { "key": "match", "label": "比赛", "value": 2, "percent": 20 }
+  ],
+  "sessionSubCategoryCountBreakdown": [
+    { "key": "daily_singles", "label": "日常球局 · 打单", "value": 3, "percent": 30 },
+    { "key": "daily_doubles", "label": "日常球局 · 双打", "value": 3, "percent": 30 },
+    { "key": "training_serve", "label": "训练 · 发球", "value": 1, "percent": 10 },
+    { "key": "training_other", "label": "训练 · 其他", "value": 1, "percent": 10 },
+    { "key": "match_singles", "label": "比赛 · 单打", "value": 1, "percent": 10 },
+    { "key": "match_doubles", "label": "比赛 · 双打", "value": 1, "percent": 10 }
+  ],
+  "sessionCategoryDurationBreakdown": [
+    { "key": "daily", "label": "日常球局", "value": 720, "percent": 60 },
+    { "key": "training", "label": "训练", "value": 240, "percent": 20 },
+    { "key": "match", "label": "比赛", "value": 240, "percent": 20 }
+  ],
+  "sessionSubCategoryDurationBreakdown": [
+    { "key": "daily_singles", "label": "日常球局 · 打单", "value": 360, "percent": 30 },
+    { "key": "daily_doubles", "label": "日常球局 · 双打", "value": 360, "percent": 30 },
+    { "key": "training_serve", "label": "训练 · 发球", "value": 120, "percent": 10 },
+    { "key": "training_other", "label": "训练 · 其他", "value": 120, "percent": 10 },
+    { "key": "match_singles", "label": "比赛 · 单打", "value": 120, "percent": 10 },
+    { "key": "match_doubles", "label": "比赛 · 双打", "value": 120, "percent": 10 }
+  ],
   "sessionCategoryCostBreakdown": [
     { "key": "daily", "label": "日常球局", "value": 180, "percent": 60 },
     { "key": "training", "label": "训练", "value": 60, "percent": 20 },
