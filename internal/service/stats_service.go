@@ -80,7 +80,6 @@ func (s *StatsService) monthCharts(userID int64, year, month int) (model.StatsCh
 			Frequency:                           s.weeklyFrequency(start, end, days),
 			RatingTrend:                         ratingTrend,
 			ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
-			SessionTypeBreakdown:                sessionTypeBreakdown(summary),
 			SessionCategoryCountBreakdown:       sessionCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
 			SessionSubCategoryCountBreakdown:    sessionSubCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
 			SessionCategoryDurationBreakdown:    sessionCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
@@ -129,7 +128,6 @@ func (s *StatsService) yearCharts(userID int64, year int) (model.StatsChartsResu
 			Frequency:                           frequency,
 			RatingTrend:                         ratingTrend,
 			ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
-			SessionTypeBreakdown:                sessionTypeBreakdown(summary),
 			SessionCategoryCountBreakdown:       sessionCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
 			SessionSubCategoryCountBreakdown:    sessionSubCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
 			SessionCategoryDurationBreakdown:    sessionCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
@@ -264,16 +262,6 @@ func expenseBreakdown(sessionCost, racketCost, stringingCost float64) []model.St
 		{Key: "session", Label: "打球", Value: sessionCost, Percent: percent(sessionCost, totalCost)},
 		{Key: "racket", Label: "球拍", Value: racketCost, Percent: percent(racketCost, totalCost)},
 		{Key: "stringing", Label: "穿线", Value: stringingCost, Percent: percent(stringingCost, totalCost)},
-	}
-}
-
-func sessionTypeBreakdown(summary model.StatsChartsSummaryResponse) []model.StatsBreakdownItemResponse {
-	total := float64(summary.SessionCount)
-	return []model.StatsBreakdownItemResponse{
-		{Key: "training", Label: "训练", Value: float64(summary.TrainingCount), Percent: percent(float64(summary.TrainingCount), total)},
-		{Key: "singles", Label: "单打", Value: float64(summary.SinglesCount), Percent: percent(float64(summary.SinglesCount), total)},
-		{Key: "doubles", Label: "双打", Value: float64(summary.DoublesCount), Percent: percent(float64(summary.DoublesCount), total)},
-		{Key: "match", Label: "比赛", Value: float64(summary.MatchCount), Percent: percent(float64(summary.MatchCount), total)},
 	}
 }
 

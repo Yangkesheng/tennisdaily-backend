@@ -64,7 +64,6 @@ type StatsChartsResponse struct {
 	Frequency                           []StatsFrequencyChartItemResponse `json:"frequency"`
 	RatingTrend                         []StatsRatingTrendItemResponse    `json:"ratingTrend"`
 	ExpenseBreakdown                    []StatsBreakdownItemResponse      `json:"expenseBreakdown"`
-	SessionTypeBreakdown                []StatsBreakdownItemResponse      `json:"sessionTypeBreakdown"`
 	SessionCategoryCountBreakdown       []StatsBreakdownItemResponse      `json:"sessionCategoryCountBreakdown"`
 	SessionSubCategoryCountBreakdown    []StatsBreakdownItemResponse      `json:"sessionSubCategoryCountBreakdown"`
 	SessionCategoryDurationBreakdown    []StatsBreakdownItemResponse      `json:"sessionCategoryDurationBreakdown"`

@@ -1163,7 +1163,6 @@ Authorization: Bearer <token>
 | summary.totalMinutes | number | 查询范围内打球总分钟数 |
 | summary.sessionCount | number | 查询范围内打球记录数 |
 | charts.expenseBreakdown | array | 打球、球拍、穿线总消费占比 |
-| charts.sessionTypeBreakdown | array | 兼容旧统计的训练/单打/双打/比赛次数占比 |
 | charts.sessionCategoryCountBreakdown | array | 按一级类型统计打球次数占比，固定返回日常球局、训练、比赛 |
 | charts.sessionSubCategoryCountBreakdown | array | 按二级类型统计打球次数占比，固定返回 6 个合法类型组合 |
 | charts.sessionCategoryDurationBreakdown | array | 按一级类型统计打球时长占比，固定返回日常球局、训练、比赛 |

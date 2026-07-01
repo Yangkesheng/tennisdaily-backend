@@ -8,7 +8,8 @@
 - 修改 `GET /api/stats/charts`，新增打球时长按一级类型和二级类型维度的占比统计。
 - 复用类型聚合查询，同时返回次数、分钟数和费用，避免重复 SQL。
 - 一级类型固定返回日常球局、训练、比赛；二级类型固定返回 6 个合法类型组合。
-- 保留原有费用占比、消费占比和兼容旧统计的 `sessionTypeBreakdown` 字段。
+- 保留原有费用占比和消费占比字段。
+- 按需求取消 `GET /api/stats/charts` 的 `charts.sessionTypeBreakdown` 返回，前端应改用新增的 `sessionCategoryCountBreakdown` / `sessionSubCategoryCountBreakdown`。
 
 ### 修改文件
 
@@ -25,6 +26,8 @@
   - `sessionSubCategoryCountBreakdown`
   - `sessionCategoryDurationBreakdown`
   - `sessionSubCategoryDurationBreakdown`
+- `GET /api/stats/charts` 的 `charts` 不再返回字段：
+  - `sessionTypeBreakdown`
 
 ### 数据库变化
 
