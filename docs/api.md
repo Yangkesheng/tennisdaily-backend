@@ -1336,7 +1336,8 @@ curl http://localhost:8081/api/stats/month \
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
-  "tension": 48,
+  "verticalTension": 48,
+  "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
   "lastStringCost": 80,
   "usageCount": 12,
@@ -1351,7 +1352,7 @@ curl http://localhost:8081/api/stats/month \
 
 说明：
 
-- `stringName`、`tension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
+- `stringName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
 - `usageCount`、`usageMinutes`、`usageHours` 通过打球记录中的 `racketId` 实时统计。
 - `totalMinutes`、`totalHours` 为兼容旧前端保留，当前与 `usageMinutes`、`usageHours` 一致。
 - 默认列表不返回已退役球拍。
@@ -1380,7 +1381,8 @@ Authorization: Bearer <token>
     "model": "EZONE 100",
     "status": 1,
     "stringName": "Poly Tour Pro",
-    "tension": 48,
+    "verticalTension": 48,
+    "horizontalTension": 46,
     "lastStringDate": "2026-05-10",
     "lastStringCost": 80,
     "usageCount": 12,
@@ -1495,7 +1497,8 @@ Content-Type: application/json
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
-  "tension": 48,
+  "verticalTension": 48,
+  "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
   "lastStringCost": 80
 }
@@ -1529,7 +1532,8 @@ Authorization: Bearer <token>
     "purchaseDate": "2026-01-01",
     "purchasePrice": 1599,
     "stringName": "Poly Tour Pro",
-    "tension": 48,
+    "verticalTension": 48,
+    "horizontalTension": 46,
     "lastStringDate": "2026-05-10",
     "lastStringCost": 80,
     "usageCount": 12,
@@ -1548,9 +1552,10 @@ Authorization: Bearer <token>
       "id": 1,
       "racketId": 1,
       "stringName": "Poly Tour Pro",
-      "tension": 48,
+    "verticalTension": 48,
+    "horizontalTension": 46,
       "cost": 80,
-      "stringDate": "2026-05-10",
+      "stringDate": "2026-05-10 19:30",
       "createdAt": "2026-05-30T12:00:00+08:00",
       "updatedAt": "2026-05-30T12:00:00+08:00"
     }
@@ -1564,7 +1569,7 @@ Authorization: Bearer <token>
 - `usageCount = COUNT(tennis_sessions.id)`。
 - `usageMinutes = COALESCE(SUM(tennis_sessions.duration_minutes), 0)`。
 - `usageHours = usageMinutes / 60`，当前向下取整。
-- 最近一次穿线按 `string_date DESC, id DESC` 取第一条未删除穿线记录。
+- 最近一次穿线按 `string_date DESC, id DESC` 取第一条未删除穿线记录，`string_date` 精确到分钟。
 - 如果存在最近一次穿线记录，穿线后使用统计按 `tennis_sessions.date >= lastStringDate` 统计，包含穿线当天。
 - 如果没有穿线记录，`afterStringingUsageCount`、`afterStringingUsageMinutes`、`afterStringingUsageHours` 均为 `0`。
 
@@ -1599,7 +1604,8 @@ Content-Type: application/json
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
-  "tension": 48,
+  "verticalTension": 48,
+  "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
   "lastStringCost": 80
 }
@@ -1649,9 +1655,10 @@ Content-Type: application/json
 ```json
 {
   "stringName": "Poly Tour Pro",
-  "tension": 48,
+  "verticalTension": 48,
+  "horizontalTension": 46,
   "cost": 80,
-  "stringDate": "2026-05-10"
+  "stringDate": "2026-05-10 19:30"
 }
 ```
 
@@ -1735,7 +1742,8 @@ Content-Type: application/json
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
-  "tension": 48,
+  "verticalTension": 48,
+  "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
   "lastStringCost": 80
 }
@@ -1801,7 +1809,8 @@ Authorization: Bearer <token>
     "model": "EZONE 100",
     "status": 1,
     "stringName": "Poly Tour Pro",
-    "tension": 48,
+    "verticalTension": 48,
+    "horizontalTension": 46,
     "lastStringDate": "2026-05-10",
     "totalHours": 86
   }
@@ -1851,7 +1860,7 @@ Content-Type: application/json
 - `libraryId` 可选。
 - 从球拍库选择时，后端可根据 `libraryId` 补全 `brand`、`model`、`imageUrl`。
 - 库中没有的球拍，用户可不传 `libraryId`，直接手动输入 `name`、`brand`、`model`。
-- 当前接口不再接收/处理 `stringName`、`tension`、`lastStringDate`、`lastStringCost`。
+- 当前接口不再接收/处理 `stringName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost`。
 
 ### 22.2 编辑球拍，支持主力/在用/退役
 
@@ -1919,16 +1928,18 @@ Content-Type: application/json
 ```json
 {
   "stringName": "Poly Tour Pro",
-  "tension": 48,
+  "verticalTension": 48,
+  "horizontalTension": 46,
   "cost": 80,
-  "stringDate": "2026-05-10"
+  "stringDate": "2026-05-10 19:30"
 }
 ```
 
 说明：
 
 - `stringName` 必填。
-- `stringDate` 必填，格式 `YYYY-MM-DD`。
+- `verticalTension` 表示竖线磅数，`horizontalTension` 表示横线磅数。
+- `stringDate` 必填，格式 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理。
 - 球拍列表和详情中的当前球线信息来自最近一条穿线记录。
 
 ### 22.5 保留我的球拍接口

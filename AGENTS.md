@@ -666,7 +666,8 @@ racket_id
 ### 14.3 穿线记录
 
 - `stringName` 必填
-- `stringDate` 必填，格式 `YYYY-MM-DD`
+- `verticalTension` 表示竖线磅数，`horizontalTension` 表示横线磅数
+- `stringDate` 必填，格式 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理
 - `cost` 数字，允许 0
 - 穿线记录归属当前用户和指定球拍
 

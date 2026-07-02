@@ -1,5 +1,98 @@
 # Change Log
 
+## 2026-07-01 球拍穿线记录支持横竖线磅数
+
+### 需求/变更内容
+
+- 新增球拍穿线记录支持分别填写竖线磅数 `verticalTension` 和横线磅数 `horizontalTension`。
+- 接口不再接收或返回旧字段 `tension`。
+- 球拍列表、详情和穿线记录响应新增 `verticalTension` / `horizontalTension`。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `migrations/init.sql`
+- `migrations/005_add_stringing_split_tension.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+- `AGENTS.md`
+
+### 接口变化
+
+- `POST /api/rackets/:id/stringing-records` 新增请求字段：
+  - `verticalTension`
+  - `horizontalTension`
+- `RacketResponse` 和 `StringingRecordResponse` 新增响应字段：
+  - `verticalTension`
+  - `horizontalTension`
+
+### 数据库变化
+
+- `racket_stringing_record` 新增字段：
+  - `vertical_tension DECIMAL(4,1) DEFAULT NULL`
+  - `horizontal_tension DECIMAL(4,1) DEFAULT NULL`
+- 新增迁移：`migrations/005_add_stringing_split_tension.sql`。
+
+### 兼容性说明
+
+- API 不再兼容旧字段 `tension`；客户端需提交 `verticalTension` / `horizontalTension`。
+- 本次迁移只新增字段，不再对历史数据执行回填兜底。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-01 球拍穿线记录支持小时分钟
+
+### 需求/变更内容
+
+- 新增球拍穿线记录时，`stringDate` 支持 `YYYY-MM-DD HH:mm`，可精确到小时分钟。
+- 兼容旧格式 `YYYY-MM-DD`，按当天 `00:00` 处理。
+- 穿线记录响应中的 `stringDate` 统一返回 `YYYY-MM-DD HH:mm`。
+- 数据库字段 `racket_stringing_record.string_date` 从 `DATE` 调整为 `DATETIME`，避免丢失时分。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `migrations/init.sql`
+- `migrations/004_change_stringing_date_to_datetime.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+- `AGENTS.md`
+
+### 接口变化
+
+- `POST /api/rackets/:id/stringing-records` 的请求字段 `stringDate` 支持：
+  - `YYYY-MM-DD HH:mm`
+  - `YYYY-MM-DD`（兼容旧客户端）
+- `StringingRecordResponse.stringDate` 返回格式调整为 `YYYY-MM-DD HH:mm`。
+
+### 数据库变化
+
+- `racket_stringing_record.string_date` 修改为 `DATETIME NOT NULL COMMENT '穿线时间'`。
+- 新增迁移：`migrations/004_change_stringing_date_to_datetime.sql`。
+
+### 兼容性说明
+
+- 旧客户端继续传 `YYYY-MM-DD` 可正常新增穿线记录。
+- 历史日期数据迁移为 `DATETIME` 后时间默认为 `00:00:00`。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-06-27 统计图表新增打球次数和时长类型占比
 
 ### 需求/变更内容

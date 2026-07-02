@@ -255,17 +255,18 @@ func (s *RacketService) AddStringingRecord(userID, racketID int64, req model.Cre
 	if _, err := s.requireRacket(userID, racketID); err != nil {
 		return err
 	}
-	stringDate, err := time.ParseInLocation("2006-01-02", req.StringDate, s.loc)
+	stringDate, err := s.parseStringingDate(req.StringDate)
 	if err != nil {
 		return ErrInvalidRequest
 	}
 	record := model.RacketStringingRecord{
-		UserID:     userID,
-		RacketID:   racketID,
-		StringName: req.StringName,
-		Tension:    req.Tension,
-		Cost:       req.Cost,
-		StringDate: stringDate,
+		UserID:            userID,
+		RacketID:          racketID,
+		StringName:        req.StringName,
+		VerticalTension:   req.VerticalTension,
+		HorizontalTension: req.HorizontalTension,
+		Cost:              req.Cost,
+		StringDate:        stringDate,
 	}
 	return s.repo.CreateStringingRecord(&record)
 }
@@ -277,17 +278,18 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 	if _, err := s.requireRacket(userID, racketID); err != nil {
 		return model.StringingRecordResponse{}, err
 	}
-	stringDate, err := time.ParseInLocation("2006-01-02", req.StringDate, s.loc)
+	stringDate, err := s.parseStringingDate(req.StringDate)
 	if err != nil {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
 	record := model.RacketStringingRecord{
-		UserID:     userID,
-		RacketID:   racketID,
-		StringName: req.StringName,
-		Tension:    req.Tension,
-		Cost:       req.Cost,
-		StringDate: stringDate,
+		UserID:            userID,
+		RacketID:          racketID,
+		StringName:        req.StringName,
+		VerticalTension:   req.VerticalTension,
+		HorizontalTension: req.HorizontalTension,
+		Cost:              req.Cost,
+		StringDate:        stringDate,
 	}
 	if err := s.repo.CreateStringingRecord(&record); err != nil {
 		return model.StringingRecordResponse{}, err
@@ -324,7 +326,8 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 	for _, racket := range rackets {
 		if record, ok := latest[racket.ID]; ok {
 			racket.StringName = record.StringName
-			racket.Tension = record.Tension
+			racket.VerticalTension = record.VerticalTension
+			racket.HorizontalTension = record.HorizontalTension
 			racket.LastStringDate = record.StringDate.Format("2006-01-02")
 			racket.LastStringCost = &record.Cost
 		}
@@ -372,6 +375,17 @@ func (s *RacketService) applyLibraryDefaults(libraryID *int64, name *string, bra
 		*name = item.Brand + " " + item.Model
 	}
 	return nil
+}
+
+func (s *RacketService) parseStringingDate(value string) (time.Time, error) {
+	layouts := []string{"2006-01-02 15:04", "2006-01-02"}
+	for _, layout := range layouts {
+		parsed, err := time.ParseInLocation(layout, value, s.loc)
+		if err == nil {
+			return parsed, nil
+		}
+	}
+	return time.Time{}, ErrInvalidRequest
 }
 
 func (s *RacketService) parseOptionalDate(value string) (*time.Time, error) {

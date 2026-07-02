@@ -110,9 +110,10 @@ CREATE TABLE IF NOT EXISTS racket_stringing_record (
   racket_id BIGINT NOT NULL COMMENT '球拍ID',
 
   string_name VARCHAR(100) NOT NULL COMMENT '球线名称',
-  tension DECIMAL(4,1) DEFAULT NULL COMMENT '磅数',
+  vertical_tension DECIMAL(4,1) DEFAULT NULL COMMENT '竖线磅数',
+  horizontal_tension DECIMAL(4,1) DEFAULT NULL COMMENT '横线磅数',
   cost DECIMAL(10,2) NOT NULL COMMENT '穿线费用',
-  string_date DATE NOT NULL COMMENT '穿线日期',
+  string_date DATETIME NOT NULL COMMENT '穿线时间',
 
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -256,6 +257,11 @@ CALL ensure_column('racket', 'library_id', '`library_id` BIGINT NOT NULL DEFAULT
 CALL ensure_index('racket', 'idx_racket_user_deleted_status', 'INDEX `idx_racket_user_deleted_status` (`user_id`, `deleted_at`, `status`)');
 CALL ensure_index('racket', 'idx_racket_user_deleted_created', 'INDEX `idx_racket_user_deleted_created` (`user_id`, `deleted_at`, `created_at`)');
 CALL ensure_index('racket', 'idx_racket_user_library', 'INDEX `idx_racket_user_library` (`user_id`, `library_id`)');
+
+-- 兼容旧版本 racket_stringing_record.string_date 只存日期。
+ALTER TABLE racket_stringing_record MODIFY COLUMN string_date DATETIME NOT NULL COMMENT '穿线时间';
+CALL ensure_column('racket_stringing_record', 'vertical_tension', '`vertical_tension` DECIMAL(4,1) DEFAULT NULL COMMENT ''竖线磅数''', 'string_name');
+CALL ensure_column('racket_stringing_record', 'horizontal_tension', '`horizontal_tension` DECIMAL(4,1) DEFAULT NULL COMMENT ''横线磅数''', 'vertical_tension');
 
 -- 兼容已存在但索引不完整的表。
 CALL ensure_index('user_wechat_identities', 'idx_user_wechat_appid_openid', 'UNIQUE INDEX `idx_user_wechat_appid_openid` (`appid`, `openid`)');

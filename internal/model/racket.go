@@ -39,7 +39,8 @@ type Racket struct {
 	PurchaseDate               *time.Time     `json:"purchaseDate" gorm:"type:date"`
 	PurchasePrice              *float64       `json:"purchasePrice" gorm:"type:decimal(10,2)"`
 	StringName                 string         `json:"stringName" gorm:"-"`
-	Tension                    *float64       `json:"tension" gorm:"-"`
+	VerticalTension            *float64       `json:"verticalTension" gorm:"-"`
+	HorizontalTension          *float64       `json:"horizontalTension" gorm:"-"`
 	LastStringDate             string         `json:"lastStringDate" gorm:"-"`
 	LastStringCost             *float64       `json:"lastStringCost" gorm:"-"`
 	UsageCount                 int            `json:"usageCount" gorm:"-"`
@@ -60,16 +61,17 @@ func (Racket) TableName() string {
 }
 
 type RacketStringingRecord struct {
-	ID         int64          `json:"id" gorm:"primaryKey"`
-	UserID     int64          `json:"userId" gorm:"not null;index"`
-	RacketID   int64          `json:"racketId" gorm:"not null;index"`
-	StringName string         `json:"stringName" gorm:"size:100;not null"`
-	Tension    *float64       `json:"tension" gorm:"type:decimal(4,1)"`
-	Cost       float64        `json:"cost" gorm:"type:decimal(10,2);not null"`
-	StringDate time.Time      `json:"stringDate" gorm:"type:date;not null"`
-	CreatedAt  time.Time      `json:"createdAt"`
-	UpdatedAt  time.Time      `json:"updatedAt"`
-	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                int64          `json:"id" gorm:"primaryKey"`
+	UserID            int64          `json:"userId" gorm:"not null;index"`
+	RacketID          int64          `json:"racketId" gorm:"not null;index"`
+	StringName        string         `json:"stringName" gorm:"size:100;not null"`
+	VerticalTension   *float64       `json:"verticalTension" gorm:"column:vertical_tension;type:decimal(4,1)"`
+	HorizontalTension *float64       `json:"horizontalTension" gorm:"column:horizontal_tension;type:decimal(4,1)"`
+	Cost              float64        `json:"cost" gorm:"type:decimal(10,2);not null"`
+	StringDate        time.Time      `json:"stringDate" gorm:"type:datetime;not null"`
+	CreatedAt         time.Time      `json:"createdAt"`
+	UpdatedAt         time.Time      `json:"updatedAt"`
+	DeletedAt         gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func (RacketStringingRecord) TableName() string {
@@ -93,7 +95,8 @@ type RacketResponse struct {
 	PurchaseDate               string       `json:"purchaseDate"`
 	PurchasePrice              *float64     `json:"purchasePrice"`
 	StringName                 string       `json:"stringName"`
-	Tension                    *float64     `json:"tension"`
+	VerticalTension            *float64     `json:"verticalTension"`
+	HorizontalTension          *float64     `json:"horizontalTension"`
 	LastStringDate             string       `json:"lastStringDate"`
 	LastStringCost             *float64     `json:"lastStringCost"`
 	UsageCount                 int          `json:"usageCount"`
@@ -109,14 +112,16 @@ type RacketResponse struct {
 }
 
 type StringingRecordResponse struct {
-	ID         int64     `json:"id"`
-	RacketID   int64     `json:"racketId"`
-	StringName string    `json:"stringName"`
-	Tension    *float64  `json:"tension"`
-	Cost       float64   `json:"cost"`
-	StringDate string    `json:"stringDate"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	ID         int64  `json:"id"`
+	RacketID   int64  `json:"racketId"`
+	StringName string `json:"stringName"`
+
+	VerticalTension   *float64  `json:"verticalTension"`
+	HorizontalTension *float64  `json:"horizontalTension"`
+	Cost              float64   `json:"cost"`
+	StringDate        string    `json:"stringDate"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
 }
 
 type RacketDetailResponse struct {
@@ -156,10 +161,12 @@ type UpdateRacketRequest struct {
 }
 
 type CreateStringingRecordRequest struct {
-	StringName string   `json:"stringName" binding:"required"`
-	Tension    *float64 `json:"tension"`
-	Cost       float64  `json:"cost"`
-	StringDate string   `json:"stringDate" binding:"required"`
+	StringName string `json:"stringName" binding:"required"`
+
+	VerticalTension   *float64 `json:"verticalTension"`
+	HorizontalTension *float64 `json:"horizontalTension"`
+	Cost              float64  `json:"cost"`
+	StringDate        string   `json:"stringDate" binding:"required"`
 }
 
 func NewRacketResponse(racket Racket) RacketResponse {
@@ -179,7 +186,8 @@ func NewRacketResponse(racket Racket) RacketResponse {
 		PurchaseDate:               purchaseDate,
 		PurchasePrice:              racket.PurchasePrice,
 		StringName:                 racket.StringName,
-		Tension:                    racket.Tension,
+		VerticalTension:            racket.VerticalTension,
+		HorizontalTension:          racket.HorizontalTension,
 		LastStringDate:             racket.LastStringDate,
 		LastStringCost:             racket.LastStringCost,
 		UsageCount:                 racket.UsageCount,
@@ -197,13 +205,14 @@ func NewRacketResponse(racket Racket) RacketResponse {
 
 func NewStringingRecordResponse(record RacketStringingRecord) StringingRecordResponse {
 	return StringingRecordResponse{
-		ID:         record.ID,
-		RacketID:   record.RacketID,
-		StringName: record.StringName,
-		Tension:    record.Tension,
-		Cost:       record.Cost,
-		StringDate: record.StringDate.Format("2006-01-02"),
-		CreatedAt:  record.CreatedAt,
-		UpdatedAt:  record.UpdatedAt,
+		ID:                record.ID,
+		RacketID:          record.RacketID,
+		StringName:        record.StringName,
+		VerticalTension:   record.VerticalTension,
+		HorizontalTension: record.HorizontalTension,
+		Cost:              record.Cost,
+		StringDate:        record.StringDate.Format("2006-01-02 15:04"),
+		CreatedAt:         record.CreatedAt,
+		UpdatedAt:         record.UpdatedAt,
 	}
 }
