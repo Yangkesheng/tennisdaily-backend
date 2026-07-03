@@ -8,6 +8,7 @@
 - 保留旧格式 `YYYY-MM-DD` 兼容，按当天 `00:00` 处理。
 - 打球记录响应中的 `date` 统一返回 `YYYY-MM-DD HH:mm`。
 - 日历和按日期查询仍按自然日聚合/筛选。
+- 修复日历天数聚合 SQL，避免 `SELECT DATE_FORMAT(date, ...)` 与 `GROUP BY DATE(date)` 表达式不一致在 MySQL `ONLY_FULL_GROUP_BY` 下触发 500。
 
 ### 修改文件
 
@@ -42,6 +43,7 @@
 
 - `gofmt -w internal/model/session.go internal/service/session_service.go internal/repository/session_repository.go`
 - `go test ./...`
+- 检查所有仓储日期聚合 SQL，确认仅日历天数聚合存在同类表达式不一致问题。
 
 ### 测试结果
 
