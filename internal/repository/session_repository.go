@@ -89,11 +89,12 @@ func (r *SessionRepository) Latest(userID int64) (*model.TennisSession, error) {
 
 func (r *SessionRepository) CalendarDays(userID int64, start, end time.Time) ([]model.SessionCalendarDay, error) {
 	var days []model.SessionCalendarDay
+	dateExpr := "DATE_FORMAT(date, '%Y-%m-%d')"
 	err := r.db.Model(&model.TennisSession{}).
-		Select("DATE_FORMAT(date, '%Y-%m-%d') AS date, COUNT(*) AS count").
+		Select(dateExpr+" AS date, COUNT(*) AS count").
 		Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).
-		Group("DATE(date)").
-		Order("date ASC").
+		Group(dateExpr).
+		Order(dateExpr + " ASC").
 		Scan(&days).Error
 	return days, err
 }
