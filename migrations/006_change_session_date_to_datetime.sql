@@ -1,0 +1,2 @@
+ALTER TABLE tennis_sessions
+  MODIFY COLUMN date DATETIME NOT NULL COMMENT '打球开始时间';

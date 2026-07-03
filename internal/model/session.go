@@ -9,7 +9,7 @@ import (
 type TennisSession struct {
 	ID              int64              `json:"id" gorm:"primaryKey"`
 	UserID          int64              `json:"userId" gorm:"not null;index"`
-	Date            time.Time          `json:"date" gorm:"type:date;not null"`
+	Date            time.Time          `json:"date" gorm:"type:datetime;not null"`
 	DurationMinutes int                `json:"durationMinutes" gorm:"not null;default:120"`
 	Rating          int16              `json:"rating" gorm:"not null;default:3"`
 	Type            SessionType        `json:"type" gorm:"not null;default:1"`
@@ -117,7 +117,7 @@ func NewSessionResponse(session TennisSession) SessionResponse {
 
 	return SessionResponse{
 		ID:              session.ID,
-		Date:            session.Date.Format("2006-01-02"),
+		Date:            session.Date.Format("2006-01-02 15:04"),
 		DurationMinutes: session.DurationMinutes,
 		Rating:          session.Rating,
 		Type:            session.Type,

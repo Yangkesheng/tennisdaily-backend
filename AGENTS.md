@@ -509,29 +509,31 @@ internal/model/racket.go
 
 ### 10.1 API 日期格式
 
-对外日期字段使用：
+打球记录 `date` 字段使用：
 
 ```text
-YYYY-MM-DD
+YYYY-MM-DD HH:mm
 ```
 
 例如：
 
 ```json
 {
-  "date": "2026-06-13"
+  "date": "2026-06-13 19:30"
 }
 ```
 
-不要让前端传 RFC3339 作为打球日期。
+旧格式 `YYYY-MM-DD` 仍兼容，并按当天 `00:00` 处理。`GET /api/sessions?date=YYYY-MM-DD` 保持按自然日查询。不要让前端传 RFC3339 作为打球时间。
 
 ### 10.2 Go 解析日期
 
-Service 层使用：
+Service 层解析打球记录时间使用：
 
 ```go
-time.ParseInLocation("2006-01-02", date, loc)
+layouts := []string{"2006-01-02 15:04", "2006-01-02"}
 ```
+
+按自然日查询和统计时，先用 `YYYY-MM-DD` 得到当天 `start`，再使用 `[start, start+1day)` 范围。
 
 ### 10.3 统计时区
 
@@ -645,7 +647,7 @@ racket_id
 
 ### 14.1 打球记录
 
-- `date` 必填，格式 `YYYY-MM-DD`
+- `date` 必填，格式 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理
 - `durationMinutes` 默认 `120`
 - `durationMinutes` 必须 `> 0` 且不超过 `600`
 - `rating` 默认 `3`

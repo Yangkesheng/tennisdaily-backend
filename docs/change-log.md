@@ -1,5 +1,52 @@
 # Change Log
 
+## 2026-07-01 打球记录支持开始时间到分钟
+
+### 需求/变更内容
+
+- 新增打球记录 `date` 支持 `YYYY-MM-DD HH:mm`，用于记录开始时间到分钟。
+- 保留旧格式 `YYYY-MM-DD` 兼容，按当天 `00:00` 处理。
+- 打球记录响应中的 `date` 统一返回 `YYYY-MM-DD HH:mm`。
+- 日历和按日期查询仍按自然日聚合/筛选。
+
+### 修改文件
+
+- `internal/model/session.go`
+- `internal/service/session_service.go`
+- `internal/repository/session_repository.go`
+- `migrations/init.sql`
+- `migrations/006_change_session_date_to_datetime.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+- `AGENTS.md`
+
+### 接口变化
+
+- `POST /api/sessions` 和 `PUT /api/sessions/:id` 的请求字段 `date` 支持：
+  - `YYYY-MM-DD HH:mm`
+  - `YYYY-MM-DD`（兼容旧客户端）
+- `SessionResponse.date` 返回格式调整为 `YYYY-MM-DD HH:mm`。
+- `GET /api/sessions?date=YYYY-MM-DD` 仍按自然日查询当天记录。
+
+### 数据库变化
+
+- `tennis_sessions.date` 修改为 `DATETIME NOT NULL COMMENT '打球开始时间'`。
+- 新增迁移：`migrations/006_change_session_date_to_datetime.sql`。
+
+### 兼容性说明
+
+- 历史日期数据迁移为 `DATETIME` 后时间默认为 `00:00:00`。
+- 日期范围统计、首页统计和日历接口继续使用自然日/月/年范围。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/session.go internal/service/session_service.go internal/repository/session_repository.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-01 球拍穿线记录支持横竖线磅数
 
 ### 需求/变更内容

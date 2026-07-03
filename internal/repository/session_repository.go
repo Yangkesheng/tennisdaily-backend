@@ -39,9 +39,9 @@ func (r *SessionRepository) ListPage(userID int64, page, pageSize int) ([]model.
 	return sessions, total, err
 }
 
-func (r *SessionRepository) ListByDate(userID int64, date time.Time) ([]model.TennisSession, error) {
+func (r *SessionRepository) ListByDate(userID int64, start, end time.Time) ([]model.TennisSession, error) {
 	var sessions []model.TennisSession
-	err := r.db.Where("user_id = ? AND date = ?", userID, date).Order("created_at DESC").Find(&sessions).Error
+	err := r.db.Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).Order("date DESC, created_at DESC").Find(&sessions).Error
 	return sessions, err
 }
 
@@ -92,7 +92,7 @@ func (r *SessionRepository) CalendarDays(userID int64, start, end time.Time) ([]
 	err := r.db.Model(&model.TennisSession{}).
 		Select("DATE_FORMAT(date, '%Y-%m-%d') AS date, COUNT(*) AS count").
 		Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).
-		Group("date").
+		Group("DATE(date)").
 		Order("date ASC").
 		Scan(&days).Error
 	return days, err
@@ -135,7 +135,7 @@ func (r *SessionRepository) StatsAggregate(userID int64, start, end time.Time) (
 	err := r.db.Model(&model.TennisSession{}).
 		Select(`
 			COUNT(*) AS session_count,
-			COUNT(DISTINCT date) AS active_day_count,
+			COUNT(DISTINCT DATE(date)) AS active_day_count,
 			COALESCE(SUM(duration_minutes), 0) AS total_minutes,
 			COALESCE(AVG(duration_minutes), 0) AS average_minutes,
 			COALESCE(AVG(rating), 0) AS average_rating,

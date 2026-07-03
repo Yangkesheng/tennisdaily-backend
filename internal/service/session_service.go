@@ -94,7 +94,9 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 		return nil, ErrInvalidRequest
 	}
 
-	sessions, err := s.repo.ListByDate(userID, sessionDate)
+	start := sessionDate
+	end := start.AddDate(0, 0, 1)
+	sessions, err := s.repo.ListByDate(userID, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +296,7 @@ func (s *SessionService) calendarRatingTrend(userID int64, start, end time.Time)
 	for index := len(sessions) - 1; index >= 0; index-- {
 		session := sessions[index]
 		trend = append(trend, model.CalendarRatingTrendChartItemResponse{
-			Date:   session.Date.Format("2006-01-02"),
+			Date:   session.Date.Format("2006-01-02 15:04"),
 			Rating: session.Rating,
 		})
 	}
@@ -320,7 +322,7 @@ func calendarSessionTypeBreakdown(summary model.SessionCalendarSummaryResponse) 
 }
 
 func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, category model.SessionCategory, subCategory model.SessionSubCategory, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {
-	sessionDate, err := time.ParseInLocation("2006-01-02", date, s.loc)
+	sessionDate, err := s.parseSessionDateTime(date)
 	if err != nil {
 		return model.TennisSession{}, ErrInvalidRequest
 	}
@@ -368,6 +370,17 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		ShoeName:        shoeName,
 		Note:            note,
 	}, nil
+}
+
+func (s *SessionService) parseSessionDateTime(value string) (time.Time, error) {
+	layouts := []string{"2006-01-02 15:04", "2006-01-02"}
+	for _, layout := range layouts {
+		parsed, err := time.ParseInLocation(layout, value, s.loc)
+		if err == nil {
+			return parsed, nil
+		}
+	}
+	return time.Time{}, ErrInvalidRequest
 }
 
 func resolveSessionType(category model.SessionCategory, subCategory model.SessionSubCategory, sessionType model.SessionType) (model.SessionType, model.SessionCategory, model.SessionSubCategory, error) {

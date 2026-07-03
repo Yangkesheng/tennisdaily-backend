@@ -191,7 +191,7 @@ Authorization: Bearer <token>
 ```json
 {
   "id": 1,
-  "date": "2026-01-15",
+  "date": "2026-01-15 19:30",
   "durationMinutes": 120,
   "rating": 3,
   "type": 5,
@@ -219,7 +219,7 @@ Authorization: Bearer <token>
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | id | number | 记录 ID |
-| date | string | 打球日期，格式 `YYYY-MM-DD` |
+| date | string | 打球开始时间，格式 `YYYY-MM-DD HH:mm` |
 | durationMinutes | number | 打球时长，单位分钟 |
 | rating | number | 今日手感，1-5 |
 | type | number | 旧打球类型枚举，兼容保留 |
@@ -246,7 +246,7 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "date": "2026-01-15",
+  "date": "2026-01-15 19:30",
   "durationMinutes": 120,
   "rating": 3,
   "category": 3,
@@ -265,7 +265,7 @@ Authorization: Bearer <token>
 
 | 字段 | 是否必填 | 规则 |
 |---|---|---|
-| date | 是 | 格式 `YYYY-MM-DD` |
+| date | 是 | 格式 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理 |
 | durationMinutes | 否 | 默认 120；必须大于 0，最大 600 |
 | rating | 否 | 默认 3；范围 1-5 |
 | category | 新客户端必填 | 一级类型，允许 `1`、`2`、`3` |
@@ -283,7 +283,7 @@ Authorization: Bearer <token>
 
 - 新客户端应提交 `category` 和 `subCategory`，后端会同步生成兼容旧字段 `type`
 - 旧客户端仍可只提交 `type`，后端会自动映射出 `category` 和 `subCategory`
-- `date` 必须是 `YYYY-MM-DD`，不是完整 ISO 时间
+- `date` 必须是 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理，不要传完整 ISO 时间
 - `durationMinutes` 传 `0` 时后端会使用默认值 `120`
 - `rating` 传 `0` 时后端会使用默认值 `3`
 
@@ -546,7 +546,7 @@ Authorization: Bearer <token>
 
 | 参数 | 类型 | 必填 | 示例 | 说明 |
 |---|---|---:|---|---|
-| `date` | string | 否 | `2026-01-15` | 打球日期，格式 `YYYY-MM-DD` |
+| `date` | string | 否 | `2026-01-15` | 按自然日筛选，格式 `YYYY-MM-DD` |
 
 #### 按日期查询示例
 
@@ -561,7 +561,7 @@ Authorization: Bearer <token>
 [
   {
     "id": 1,
-    "date": "2026-01-15",
+    "date": "2026-01-15 19:30",
     "durationMinutes": 120,
     "rating": 3,
     "type": 5,
@@ -616,7 +616,7 @@ Content-Type: application/json
 
 ```json
 {
-  "date": "2026-01-15",
+  "date": "2026-01-15 19:30",
   "durationMinutes": 120,
   "rating": 4,
   "category": 1,
@@ -635,7 +635,7 @@ Content-Type: application/json
 
 ```json
 {
-  "date": "2026-01-15",
+  "date": "2026-01-15 19:30",
   "durationMinutes": 120,
   "rating": 5,
   "category": 3,
@@ -662,7 +662,7 @@ Content-Type: application/json
   "message": "ok",
   "data": {
     "id": 1,
-    "date": "2026-01-15",
+    "date": "2026-01-15 19:30",
     "durationMinutes": 120,
     "rating": 5,
     "type": 5,
@@ -721,7 +721,7 @@ Authorization: Bearer <token>
   "message": "ok",
   "data": {
     "id": 1,
-    "date": "2026-01-15",
+    "date": "2026-01-15 19:30",
     "durationMinutes": 120,
     "rating": 5,
     "type": 5,
@@ -774,7 +774,7 @@ Content-Type: application/json
 
 ```json
 {
-  "date": "2026-01-16",
+  "date": "2026-01-16 19:30",
   "durationMinutes": 90,
   "rating": 4,
   "category": 3,
@@ -801,7 +801,7 @@ Content-Type: application/json
   "message": "ok",
   "data": {
     "id": 1,
-    "date": "2026-01-16",
+    "date": "2026-01-16 19:30",
     "durationMinutes": 90,
     "rating": 4,
     "type": 4,
@@ -900,7 +900,7 @@ Authorization: Bearer <token>
   "message": "ok",
   "data": {
     "id": 1,
-    "date": "2026-01-16",
+    "date": "2026-01-16 19:30",
     "durationMinutes": 90,
     "rating": 4,
     "type": 4,
@@ -1283,7 +1283,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
 curl -X POST http://localhost:8081/api/sessions \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date": "2026-01-15 19:30","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ### 18.3 查看列表
@@ -1304,7 +1304,7 @@ curl http://localhost:8081/api/stats/month \
 
 ## 19. 注意事项
 
-1. `date` 字段必须使用 `YYYY-MM-DD`。
+1. 新增/编辑记录的 `date` 字段推荐使用 `YYYY-MM-DD HH:mm`；旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理。
 2. `createdAt` 和 `updatedAt` 为服务端时间。
 3. 删除接口是软删除，普通列表和统计不会返回已删除数据。
 4. 普通查询只能访问当前 token 对应用户的数据。

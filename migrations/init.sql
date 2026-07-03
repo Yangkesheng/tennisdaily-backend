@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '打球记录ID',
   user_id BIGINT NOT NULL COMMENT '用户ID',
 
-  date DATE NOT NULL COMMENT '打球日期',
+  date DATETIME NOT NULL COMMENT '打球开始时间',
   duration_minutes INT NOT NULL DEFAULT 120 COMMENT '打球时长，单位分钟',
   rating SMALLINT NOT NULL DEFAULT 3 COMMENT '手感评分，范围1-5',
 
@@ -247,6 +247,7 @@ SET category = CASE type
 WHERE category NOT IN (1, 2, 3)
   OR sub_category NOT IN (1, 2, 3, 4)
   OR (category = 1 AND sub_category = 2);
+ALTER TABLE tennis_sessions MODIFY COLUMN date DATETIME NOT NULL COMMENT '打球开始时间';
 CALL ensure_column('tennis_sessions', 'racket_id', '`racket_id` BIGINT NOT NULL DEFAULT 0 COMMENT ''使用球拍ID''', 'cost');
 CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_date', 'INDEX `idx_tennis_sessions_user_deleted_date` (`user_id`, `deleted_at`, `date` DESC)');
 CALL ensure_index('tennis_sessions', 'idx_tennis_sessions_user_deleted_created', 'INDEX `idx_tennis_sessions_user_deleted_created` (`user_id`, `deleted_at`, `created_at` DESC)');
