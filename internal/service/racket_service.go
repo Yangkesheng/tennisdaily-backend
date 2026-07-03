@@ -321,6 +321,10 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 	if err != nil {
 		return nil, err
 	}
+	afterStringingUsage, err := s.repo.UsageStatsSince(userID, latest)
+	if err != nil {
+		return nil, err
+	}
 
 	responses := make([]model.RacketResponse, 0, len(rackets))
 	for _, racket := range rackets {
@@ -337,14 +341,10 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 		racket.UsageHours = stats.Hours
 		racket.TotalMinutes = stats.Minutes
 		racket.TotalHours = stats.Hours
-		if racket.LastStringDate != "" {
-			afterStringingStats, err := s.repo.UsageStatsSince(userID, racket.ID, racket.LastStringDate)
-			if err != nil {
-				return nil, err
-			}
-			racket.AfterStringingUsageCount = afterStringingStats.Count
-			racket.AfterStringingUsageMinutes = afterStringingStats.Minutes
-			racket.AfterStringingUsageHours = afterStringingStats.Hours
+		if stats, ok := afterStringingUsage[racket.ID]; ok {
+			racket.AfterStringingUsageCount = stats.Count
+			racket.AfterStringingUsageMinutes = stats.Minutes
+			racket.AfterStringingUsageHours = stats.Hours
 		}
 		responses = append(responses, model.NewRacketResponse(racket))
 	}

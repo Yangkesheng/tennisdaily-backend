@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"tennisdaily-backend/internal/model"
@@ -239,23 +240,41 @@ func (r *RacketRepository) UsageStats(userID int64, racketIDs []int64) (map[int6
 	return usage, nil
 }
 
-func (r *RacketRepository) UsageStatsSince(userID int64, racketID int64, startDate string) (model.RacketUsageStats, error) {
-	type row struct {
-		Count   int `gorm:"column:count"`
-		Minutes int `gorm:"column:minutes"`
-	}
-	var usage row
-	err := r.db.Model(&model.TennisSession{}).
-		Select("COUNT(id) AS count, COALESCE(SUM(duration_minutes), 0) AS minutes").
-		Where("user_id = ? AND racket_id = ? AND date >= ? AND deleted_at IS NULL", userID, racketID, startDate).
-		Scan(&usage).Error
-	if err != nil {
-		return model.RacketUsageStats{}, err
+func (r *RacketRepository) UsageStatsSince(userID int64, latestStringing map[int64]model.RacketStringingRecord) (map[int64]model.RacketUsageStats, error) {
+	usage := make(map[int64]model.RacketUsageStats)
+	if len(latestStringing) == 0 {
+		return usage, nil
 	}
 
-	return model.RacketUsageStats{
-		Count:   usage.Count,
-		Minutes: usage.Minutes,
-		Hours:   usage.Minutes / 60,
-	}, nil
+	conditions := make([]string, 0, len(latestStringing))
+	args := make([]interface{}, 0, len(latestStringing)*2+1)
+	args = append(args, userID)
+	for racketID, record := range latestStringing {
+		conditions = append(conditions, "(racket_id = ? AND date >= ?)")
+		args = append(args, racketID, record.StringDate)
+	}
+
+	type row struct {
+		RacketID int64 `gorm:"column:racket_id"`
+		Count    int   `gorm:"column:count"`
+		Minutes  int   `gorm:"column:minutes"`
+	}
+	var rows []row
+	err := r.db.Model(&model.TennisSession{}).
+		Select("racket_id, COUNT(id) AS count, COALESCE(SUM(duration_minutes), 0) AS minutes").
+		Where("user_id = ? AND deleted_at IS NULL AND ("+strings.Join(conditions, " OR ")+")", args...).
+		Group("racket_id").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, row := range rows {
+		usage[row.RacketID] = model.RacketUsageStats{
+			Count:   row.Count,
+			Minutes: row.Minutes,
+			Hours:   row.Minutes / 60,
+		}
+	}
+	return usage, nil
 }

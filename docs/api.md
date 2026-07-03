@@ -1570,7 +1570,8 @@ Authorization: Bearer <token>
 - `usageMinutes = COALESCE(SUM(tennis_sessions.duration_minutes), 0)`。
 - `usageHours = usageMinutes / 60`，当前向下取整。
 - 最近一次穿线按 `string_date DESC, id DESC` 取第一条未删除穿线记录，`string_date` 精确到分钟。
-- 如果存在最近一次穿线记录，穿线后使用统计按 `tennis_sessions.date >= lastStringDate` 统计，包含穿线当天。
+- 如果存在最近一次穿线记录，穿线后使用统计按 `tennis_sessions.date >= 最近一次穿线记录的 string_date` 统计，精确到分钟。
+
 - 如果没有穿线记录，`afterStringingUsageCount`、`afterStringingUsageMinutes`、`afterStringingUsageHours` 均为 `0`。
 
 详情新增字段说明：

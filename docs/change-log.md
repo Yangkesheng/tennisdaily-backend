@@ -1,5 +1,43 @@
 # Change Log
 
+## 2026-07-01 优化穿线后使用统计口径
+
+### 需求/变更内容
+
+- 修复球拍穿线后使用次数和使用时间统计只按穿线日期计算的问题。
+- 穿线后使用统计改为按最近一次穿线记录的完整 `string_date` 计算，精确到分钟。
+- 优化球拍列表/详情 enrich 逻辑，将每把球拍一次穿线后统计查询改为批量聚合查询，避免 N+1 查询。
+
+### 修改文件
+
+- `internal/repository/racket_repository.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 响应字段不变。
+- `afterStringingUsageCount`、`afterStringingUsageMinutes`、`afterStringingUsageHours` 的统计口径从“穿线当天及之后”调整为“最近一次穿线时间及之后”。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- JSON 字段名和结构不变。
+- 对于同一天穿线前的打球记录，新口径不再计入穿线后使用统计。
+
+### 已执行检查命令
+
+- `gofmt -w internal/repository/racket_repository.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-01 打球记录支持开始时间到分钟
 
 ### 需求/变更内容
