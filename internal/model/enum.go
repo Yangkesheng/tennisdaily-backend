@@ -172,7 +172,7 @@ func (c SessionCategory) TypeText(subCategory SessionSubCategory) string {
 }
 
 func (r MatchRank) IsValid() bool {
-	return r >= MatchRankNone && r <= MatchRankThirdPlace
+	return r >= MatchRankNone && r <= MatchRankGroupStage
 }
 
 func (r MatchRank) Label() string {

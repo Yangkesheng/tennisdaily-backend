@@ -1,5 +1,38 @@
 # Change Log
 
+## 2026-07-04 修复 matchRank 校验范围
+
+### 需求/变更内容
+
+- 修复比赛成绩重排后 `matchRank=4` 等有效值提交打球记录返回 `invalid request` 的问题。
+- `MatchRank.IsValid()` 校验上限从 `MatchRankThirdPlace` 修正为 `MatchRankGroupStage`。
+
+### 修改文件
+
+- `internal/model/enum.go`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/sessions` 和 `PUT /api/sessions/:id` 支持提交当前全部有效比赛成绩：`0-7`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 无。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/enum.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-04 stats/charts 类型占比改为配置驱动
 
 ### 需求/变更内容
