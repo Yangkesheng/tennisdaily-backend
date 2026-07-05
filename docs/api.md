@@ -389,13 +389,6 @@ GET /api/session-config
       ]
     }
   ],
-  "legacyTypes": [
-    { "value": 1, "label": "双打" },
-    { "value": 2, "label": "单打" },
-    { "value": 3, "label": "训练" },
-    { "value": 4, "label": "单打比赛" },
-    { "value": 5, "label": "双打比赛" }
-  ],
   "matchRanks": [
     { "value": 0, "label": "" },
     { "value": 1, "label": "冠军" },
@@ -405,14 +398,7 @@ GET /api/session-config
     { "value": 5, "label": "八强" },
     { "value": 6, "label": "16强" },
     { "value": 7, "label": "小组赛" }
-  ],
-  "defaultValues": {
-    "category": 1,
-    "subCategory": 2,
-    "durationMinutes": 120,
-    "rating": 3,
-    "matchRank": 0
-  }
+  ]
 }
 ```
 
@@ -422,9 +408,7 @@ GET /api/session-config
 |---|---|
 | `categories` | 打球记录两级分类，前端可直接用于一级/二级联动选择 |
 | `subCategories[].legacyType` | 当前二级分类对应的旧 `type`，用于旧客户端兼容展示 |
-| `legacyTypes` | 旧打球类型枚举，兼容保留 |
 | `matchRanks` | 比赛成绩枚举 |
-| `defaultValues` | 新增打球记录推荐默认值 |
 
 ---
 

@@ -20,16 +20,6 @@ type SessionCategoryEnumItemResponse struct {
 }
 
 type SessionEnumsResponse struct {
-	Categories    []SessionCategoryEnumItemResponse `json:"categories"`
-	LegacyTypes   []EnumItemResponse                `json:"legacyTypes"`
-	MatchRanks    []EnumItemResponse                `json:"matchRanks"`
-	DefaultValues SessionDefaultEnumsResponse       `json:"defaultValues"`
-}
-
-type SessionDefaultEnumsResponse struct {
-	Category        int16 `json:"category"`
-	SubCategory     int16 `json:"subCategory"`
-	DurationMinutes int   `json:"durationMinutes"`
-	Rating          int16 `json:"rating"`
-	MatchRank       int16 `json:"matchRank"`
+	Categories []SessionCategoryEnumItemResponse `json:"categories"`
+	MatchRanks []EnumItemResponse                `json:"matchRanks"`
 }

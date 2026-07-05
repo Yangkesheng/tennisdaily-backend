@@ -16,13 +16,6 @@ func NewEnumService(sessionCategoryResolver *config.SessionCategoryResolver) *En
 func (s *EnumService) SessionConfig() model.SessionEnumsResponse {
 	return model.SessionEnumsResponse{
 		Categories: s.sessionCategories(),
-		LegacyTypes: []model.EnumItemResponse{
-			{Value: int16(model.SessionTypeDoubles), Label: model.SessionTypeDoubles.Label()},
-			{Value: int16(model.SessionTypeSingles), Label: model.SessionTypeSingles.Label()},
-			{Value: int16(model.SessionTypeTraining), Label: model.SessionTypeTraining.Label()},
-			{Value: int16(model.SessionTypeSinglesMatch), Label: model.SessionTypeSinglesMatch.Label()},
-			{Value: int16(model.SessionTypeDoublesMatch), Label: model.SessionTypeDoublesMatch.Label()},
-		},
 		MatchRanks: []model.EnumItemResponse{
 			{Value: int16(model.MatchRankNone), Label: model.MatchRankNone.Label()},
 			{Value: int16(model.MatchRankChampion), Label: model.MatchRankChampion.Label()},
@@ -32,13 +25,6 @@ func (s *EnumService) SessionConfig() model.SessionEnumsResponse {
 			{Value: int16(model.MatchRankQuarterFinal), Label: model.MatchRankQuarterFinal.Label()},
 			{Value: int16(model.MatchRankRoundOf16), Label: model.MatchRankRoundOf16.Label()},
 			{Value: int16(model.MatchRankGroupStage), Label: model.MatchRankGroupStage.Label()},
-		},
-		DefaultValues: model.SessionDefaultEnumsResponse{
-			Category:        int16(model.SessionCategoryDaily),
-			SubCategory:     int16(model.SessionSubCategoryDoubles),
-			DurationMinutes: defaultDurationMinutes,
-			Rating:          defaultRating,
-			MatchRank:       int16(model.MatchRankNone),
 		},
 	}
 }

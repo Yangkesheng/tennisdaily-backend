@@ -1,5 +1,76 @@
 # Change Log
 
+## 2026-07-04 session-config 删除 defaultValues 字段
+
+### 需求/变更内容
+
+- 删除 `GET /api/session-config` 响应中的 `defaultValues` 字段。
+- 删除不再使用的 `SessionDefaultEnumsResponse` DTO。
+
+### 修改文件
+
+- `internal/model/enums.go`
+- `internal/service/enum_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/session-config` 的 `data.defaultValues` 不再返回。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 前端如需默认值，应使用本地表单默认逻辑或独立配置，不再从该接口读取。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/enums.go internal/service/enum_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-04 session-config 删除 legacyTypes 字段
+
+### 需求/变更内容
+
+- 删除 `GET /api/session-config` 响应中的顶层 `legacyTypes` 字段。
+- 保留 `subCategories[].legacyType`，用于现有旧 `type` 字段兼容映射。
+
+### 修改文件
+
+- `internal/model/enums.go`
+- `internal/service/enum_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/session-config` 的 `data.legacyTypes` 不再返回。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 新客户端应使用 `categories` 和 `subCategories` 构建打球类型选择。
+- 旧 `type` 兼容值仍可从每个 `subCategories[].legacyType` 获取。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/enums.go internal/service/enum_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-04 matchRanks 新增季军并重排枚举值
 
 ### 需求/变更内容
@@ -103,7 +174,7 @@
 
 - `GET /api/session-config` 新增公开接口，专用于获取打球记录配置，无需 JWT 鉴权。
 - 原 `GET /api/enums` 不再注册，打球记录配置改由 `GET /api/session-config` 返回。
-- `GET /api/session-config` 响应 `data` 直接返回 `categories`、`legacyTypes`、`matchRanks`、`defaultValues`，不再嵌套 `session` / `racket`。
+- `GET /api/session-config` 响应 `data` 直接返回 `categories`、`matchRanks`，不再嵌套 `session` / `racket`。
 
 ### 数据库变化
 
