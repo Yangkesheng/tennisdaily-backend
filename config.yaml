@@ -64,9 +64,9 @@ sessionEnums:
         - value: 26
           label: 力量
         - value: 27
-          label: 综合 
+          label: 高压
         - value: 28
-          label: 高压  
+          label: 综合 
         - value: 29
           label: 其他
     - value: 3
