@@ -1,5 +1,52 @@
 # Change Log
 
+## 2026-07-04 stats/charts 类型占比改为配置驱动
+
+### 需求/变更内容
+
+- 优化 `GET /api/stats/charts` 的类型占比返回，一级/二级类型改为结合 `sessionEnums` 配置生成。
+- 配置新增二级类型后，`sessionSubCategory*Breakdown` 自动返回对应项，无需再改代码硬编码。
+- 类型占比项新增 `category` / `subCategory` 字段，方便前端按枚举值识别。
+- 类型占比项 `key` 改为稳定数值格式：`category_{category}`、`category_{category}_sub_{subCategory}`。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/model/stats.go`
+- `internal/service/stats_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/stats/charts` 的以下字段改为按配置返回：
+  - `charts.sessionCategoryCountBreakdown`
+  - `charts.sessionSubCategoryCountBreakdown`
+  - `charts.sessionCategoryDurationBreakdown`
+  - `charts.sessionSubCategoryDurationBreakdown`
+  - `charts.sessionCategoryCostBreakdown`
+  - `charts.sessionSubCategoryCostBreakdown`
+- 上述 breakdown item 新增 `category`，二级类型 item 额外新增 `subCategory`。
+- 上述 breakdown item 的 `key` 从旧英文固定值调整为数值组合 key。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 前端不应再依赖旧 `daily`、`training_serve` 等硬编码 key，应优先使用 `category` / `subCategory`。
+- 数据库中已不在当前配置内的历史类型不会出现在 breakdown 明细项中。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/model/stats.go internal/service/stats_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-04 session-config 删除 defaultValues 字段
 
 ### 需求/变更内容

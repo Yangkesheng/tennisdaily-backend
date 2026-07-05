@@ -46,10 +46,12 @@ type StatsRatingTrendItemResponse struct {
 }
 
 type StatsBreakdownItemResponse struct {
-	Key     string  `json:"key"`
-	Label   string  `json:"label"`
-	Value   float64 `json:"value"`
-	Percent float64 `json:"percent"`
+	Key         string  `json:"key"`
+	Label       string  `json:"label"`
+	Value       float64 `json:"value"`
+	Percent     float64 `json:"percent"`
+	Category    int16   `json:"category,omitempty"`
+	SubCategory int16   `json:"subCategory,omitempty"`
 }
 
 type StatsSessionBreakdownRow struct {

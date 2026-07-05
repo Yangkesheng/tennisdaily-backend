@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"tennisdaily-backend/internal/config"
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/repository"
 )
@@ -12,17 +13,18 @@ import (
 const statsRatingTrendLimit = 8
 
 type StatsService struct {
-	sessionRepo *repository.SessionRepository
-	racketRepo  *repository.RacketRepository
-	loc         *time.Location
+	sessionRepo             *repository.SessionRepository
+	racketRepo              *repository.RacketRepository
+	sessionCategoryResolver *config.SessionCategoryResolver
+	loc                     *time.Location
 }
 
-func NewStatsService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository) *StatsService {
+func NewStatsService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver *config.SessionCategoryResolver) *StatsService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &StatsService{sessionRepo: sessionRepo, racketRepo: racketRepo, loc: loc}
+	return &StatsService{sessionRepo: sessionRepo, racketRepo: racketRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
 }
 
 func (s *StatsService) Month(userID int64) (model.SessionStats, error) {
@@ -76,17 +78,7 @@ func (s *StatsService) monthCharts(userID int64, year, month int) (model.StatsCh
 		Month:     month,
 		RangeText: fmt.Sprintf("%d年%d月", year, month),
 		Summary:   summary,
-		Charts: model.StatsChartsResponse{
-			Frequency:                           s.weeklyFrequency(start, end, days),
-			RatingTrend:                         ratingTrend,
-			ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
-			SessionCategoryCountBreakdown:       sessionCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
-			SessionSubCategoryCountBreakdown:    sessionSubCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
-			SessionCategoryDurationBreakdown:    sessionCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
-			SessionSubCategoryDurationBreakdown: sessionSubCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
-			SessionCategoryCostBreakdown:        sessionCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
-			SessionSubCategoryCostBreakdown:     sessionSubCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
-		},
+		Charts:    s.buildCharts(start, end, days, ratingTrend, breakdownRows, summary),
 	}, nil
 }
 
@@ -124,17 +116,7 @@ func (s *StatsService) yearCharts(userID int64, year int) (model.StatsChartsResu
 		Month:     0,
 		RangeText: fmt.Sprintf("%d年", year),
 		Summary:   summary,
-		Charts: model.StatsChartsResponse{
-			Frequency:                           frequency,
-			RatingTrend:                         ratingTrend,
-			ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
-			SessionCategoryCountBreakdown:       sessionCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
-			SessionSubCategoryCountBreakdown:    sessionSubCategoryBreakdown(breakdownRows, float64(summary.SessionCount), sessionBreakdownMetricCount),
-			SessionCategoryDurationBreakdown:    sessionCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
-			SessionSubCategoryDurationBreakdown: sessionSubCategoryBreakdown(breakdownRows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
-			SessionCategoryCostBreakdown:        sessionCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
-			SessionSubCategoryCostBreakdown:     sessionSubCategoryBreakdown(breakdownRows, summary.SessionCost, sessionBreakdownMetricCost),
-		},
+		Charts:    s.buildChartsForFrequency(frequency, ratingTrend, breakdownRows, summary),
 	}, nil
 }
 
@@ -265,6 +247,24 @@ func expenseBreakdown(sessionCost, racketCost, stringingCost float64) []model.St
 	}
 }
 
+func (s *StatsService) buildCharts(start, end time.Time, days []model.SessionCalendarDay, ratingTrend []model.StatsRatingTrendItemResponse, rows []model.StatsSessionBreakdownRow, summary model.StatsChartsSummaryResponse) model.StatsChartsResponse {
+	return s.buildChartsForFrequency(s.weeklyFrequency(start, end, days), ratingTrend, rows, summary)
+}
+
+func (s *StatsService) buildChartsForFrequency(frequency []model.StatsFrequencyChartItemResponse, ratingTrend []model.StatsRatingTrendItemResponse, rows []model.StatsSessionBreakdownRow, summary model.StatsChartsSummaryResponse) model.StatsChartsResponse {
+	return model.StatsChartsResponse{
+		Frequency:                           frequency,
+		RatingTrend:                         ratingTrend,
+		ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+		SessionCategoryCountBreakdown:       s.sessionCategoryBreakdown(rows, float64(summary.SessionCount), sessionBreakdownMetricCount),
+		SessionSubCategoryCountBreakdown:    s.sessionSubCategoryBreakdown(rows, float64(summary.SessionCount), sessionBreakdownMetricCount),
+		SessionCategoryDurationBreakdown:    s.sessionCategoryBreakdown(rows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
+		SessionSubCategoryDurationBreakdown: s.sessionSubCategoryBreakdown(rows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),
+		SessionCategoryCostBreakdown:        s.sessionCategoryBreakdown(rows, summary.SessionCost, sessionBreakdownMetricCost),
+		SessionSubCategoryCostBreakdown:     s.sessionSubCategoryBreakdown(rows, summary.SessionCost, sessionBreakdownMetricCost),
+	}
+}
+
 type sessionBreakdownMetric string
 
 const (
@@ -273,64 +273,52 @@ const (
 	sessionBreakdownMetricCost    sessionBreakdownMetric = "cost"
 )
 
-func sessionCategoryBreakdown(rows []model.StatsSessionBreakdownRow, total float64, metric sessionBreakdownMetric) []model.StatsBreakdownItemResponse {
+func (s *StatsService) sessionCategoryBreakdown(rows []model.StatsSessionBreakdownRow, total float64, metric sessionBreakdownMetric) []model.StatsBreakdownItemResponse {
 	valueByCategory := make(map[model.SessionCategory]float64, len(rows))
 	for _, row := range rows {
-		if !row.Category.IsValid() {
-			continue
-		}
 		valueByCategory[row.Category] += sessionBreakdownValue(row, metric)
 	}
 
-	categories := []model.SessionCategory{
-		model.SessionCategoryDaily,
-		model.SessionCategoryTraining,
-		model.SessionCategoryMatch,
-	}
+	categories := s.sessionCategoryResolver.Categories()
 	breakdown := make([]model.StatsBreakdownItemResponse, 0, len(categories))
 	for _, category := range categories {
-		value := valueByCategory[category]
+		categoryValue := model.SessionCategory(category.Value)
+		value := valueByCategory[categoryValue]
 		breakdown = append(breakdown, model.StatsBreakdownItemResponse{
-			Key:     sessionCategoryKey(category),
-			Label:   category.Label(),
-			Value:   value,
-			Percent: percent(value, total),
+			Key:      sessionCategoryKey(categoryValue),
+			Label:    category.Label,
+			Value:    value,
+			Percent:  percent(value, total),
+			Category: category.Value,
 		})
 	}
 	return breakdown
 }
 
-func sessionSubCategoryBreakdown(rows []model.StatsSessionBreakdownRow, total float64, metric sessionBreakdownMetric) []model.StatsBreakdownItemResponse {
+func (s *StatsService) sessionSubCategoryBreakdown(rows []model.StatsSessionBreakdownRow, total float64, metric sessionBreakdownMetric) []model.StatsBreakdownItemResponse {
 	valueBySub := make(map[string]float64, len(rows))
 	for _, row := range rows {
-		if !row.Category.IsValid() || !row.Category.IsValidSubCategory(row.SubCategory) {
-			continue
-		}
 		valueBySub[sessionSubCategoryKey(row.Category, row.SubCategory)] += sessionBreakdownValue(row, metric)
 	}
 
-	types := []struct {
-		category    model.SessionCategory
-		subCategory model.SessionSubCategory
-	}{
-		{model.SessionCategoryDaily, model.SessionSubCategorySingles},
-		{model.SessionCategoryDaily, model.SessionSubCategoryDoubles},
-		{model.SessionCategoryTraining, model.SessionSubCategoryServe},
-		{model.SessionCategoryTraining, model.SessionSubCategoryOther},
-		{model.SessionCategoryMatch, model.SessionSubCategorySingles},
-		{model.SessionCategoryMatch, model.SessionSubCategoryDoubles},
-	}
-
-	breakdown := make([]model.StatsBreakdownItemResponse, 0, len(types))
-	for _, item := range types {
-		key := sessionSubCategoryKey(item.category, item.subCategory)
-		value := valueBySub[key]
-		breakdown = append(breakdown, model.StatsBreakdownItemResponse{
-			Key:     key,
-			Label:   item.category.TypeText(item.subCategory),
-			Value:   value,
-			Percent: percent(value, total),
-		})
+	categories := s.sessionCategoryResolver.Categories()
+	breakdown := make([]model.StatsBreakdownItemResponse, 0)
+	for _, category := range categories {
+		categoryValue := model.SessionCategory(category.Value)
+		for _, subCategory := range category.SubCategories {
+			subCategoryValue := model.SessionSubCategory(subCategory.Value)
+			key := sessionSubCategoryKey(categoryValue, subCategoryValue)
+			value := valueBySub[key]
+			typeText, _ := s.sessionCategoryResolver.TypeText(categoryValue, subCategoryValue)
+			breakdown = append(breakdown, model.StatsBreakdownItemResponse{
+				Key:         key,
+				Label:       typeText,
+				Value:       value,
+				Percent:     percent(value, total),
+				Category:    category.Value,
+				SubCategory: subCategory.Value,
+			})
+		}
 	}
 	return breakdown
 }
@@ -349,43 +337,11 @@ func sessionBreakdownValue(row model.StatsSessionBreakdownRow, metric sessionBre
 }
 
 func sessionCategoryKey(category model.SessionCategory) string {
-	switch category {
-	case model.SessionCategoryDaily:
-		return "daily"
-	case model.SessionCategoryTraining:
-		return "training"
-	case model.SessionCategoryMatch:
-		return "match"
-	default:
-		return "unknown"
-	}
+	return fmt.Sprintf("category_%d", category)
 }
 
 func sessionSubCategoryKey(category model.SessionCategory, subCategory model.SessionSubCategory) string {
-	switch category {
-	case model.SessionCategoryDaily:
-		switch subCategory {
-		case model.SessionSubCategorySingles:
-			return "daily_singles"
-		case model.SessionSubCategoryDoubles:
-			return "daily_doubles"
-		}
-	case model.SessionCategoryTraining:
-		switch subCategory {
-		case model.SessionSubCategoryServe:
-			return "training_serve"
-		case model.SessionSubCategoryOther:
-			return "training_other"
-		}
-	case model.SessionCategoryMatch:
-		switch subCategory {
-		case model.SessionSubCategorySingles:
-			return "match_singles"
-		case model.SessionSubCategoryDoubles:
-			return "match_doubles"
-		}
-	}
-	return "unknown"
+	return fmt.Sprintf("category_%d_sub_%d", category, subCategory)
 }
 
 func weekdayOffset(date time.Time) int {

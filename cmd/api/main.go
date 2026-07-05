@@ -32,7 +32,7 @@ func main() {
 
 	authService := service.NewAuthService(cfg, userRepo)
 	sessionService := service.NewSessionService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
-	statsService := service.NewStatsService(sessionRepo, racketRepo)
+	statsService := service.NewStatsService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
 	racketService := service.NewRacketService(racketRepo)
 	homeService := service.NewHomeService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
