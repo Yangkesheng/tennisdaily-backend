@@ -16,19 +16,21 @@ import (
 )
 
 type Config struct {
-	Port         string
-	DatabaseDSN  string
-	JWTSecret    string
-	JWTExpire    time.Duration
-	WechatAppID  string
-	WechatSecret string
+	Port                    string
+	DatabaseDSN             string
+	JWTSecret               string
+	JWTExpire               time.Duration
+	WechatAppID             string
+	WechatSecret            string
+	SessionCategoryResolver *SessionCategoryResolver
 }
 
 type fileConfig struct {
-	Server   serverConfig   `yaml:"server"`
-	Database databaseConfig `yaml:"database"`
-	JWT      jwtConfig      `yaml:"jwt"`
-	Wechat   wechatConfig   `yaml:"wechat"`
+	Server       serverConfig       `yaml:"server"`
+	Database     databaseConfig     `yaml:"database"`
+	JWT          jwtConfig          `yaml:"jwt"`
+	Wechat       wechatConfig       `yaml:"wechat"`
+	SessionEnums SessionEnumsConfig `yaml:"sessionEnums"`
 }
 
 type serverConfig struct {
@@ -76,6 +78,11 @@ func Load() Config {
 		jwtExpireHoursSource = "env"
 	}
 
+	sessionCategoryResolver, err := NewSessionCategoryResolver(fc.SessionEnums)
+	if err != nil {
+		panic(fmt.Errorf("invalid sessionEnums config: %w", err))
+	}
+
 	logger.Debug("config loaded server.port source=%s value=%s", portSource, port)
 	logger.Debug("config loaded database.dsn source=%s value=%s", databaseDSNSource, maskDSN(databaseDSN))
 	logger.Debug("config loaded jwt.secret source=%s value=%s", jwtSecretSource, maskSecret(jwtSecret))
@@ -84,12 +91,13 @@ func Load() Config {
 	logger.Debug("config loaded wechat.appSecret source=%s value=%s", wechatSecretSource, maskSecret(wechatSecret))
 
 	return Config{
-		Port:         port,
-		DatabaseDSN:  databaseDSN,
-		JWTSecret:    jwtSecret,
-		JWTExpire:    time.Duration(jwtExpireHours) * time.Hour,
-		WechatAppID:  wechatAppID,
-		WechatSecret: wechatSecret,
+		Port:                    port,
+		DatabaseDSN:             databaseDSN,
+		JWTSecret:               jwtSecret,
+		JWTExpire:               time.Duration(jwtExpireHours) * time.Hour,
+		WechatAppID:             wechatAppID,
+		WechatSecret:            wechatSecret,
+		SessionCategoryResolver: sessionCategoryResolver,
 	}
 }
 

@@ -109,10 +109,18 @@ type SessionCalendarResponse struct {
 	Charts         SessionCalendarChartsResponse  `json:"charts"`
 }
 
-func NewSessionResponse(session TennisSession) SessionResponse {
+type SessionCategoryTextResolver interface {
+	Label(category SessionCategory) (string, bool)
+	SubCategoryLabel(category SessionCategory, subCategory SessionSubCategory) (string, bool)
+	TypeText(category SessionCategory, subCategory SessionSubCategory) (string, bool)
+}
+
+func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResolver) SessionResponse {
 	category, subCategory := session.Category, session.SubCategory
-	if !category.IsValid() || !category.IsValidSubCategory(subCategory) {
+	categoryText, subCategoryText, typeText, ok := sessionCategoryTexts(category, subCategory, resolver)
+	if !ok {
 		category, subCategory = session.Type.ToCategoryPair()
+		categoryText, subCategoryText, typeText, _ = sessionCategoryTexts(category, subCategory, resolver)
 	}
 
 	return SessionResponse{
@@ -123,10 +131,10 @@ func NewSessionResponse(session TennisSession) SessionResponse {
 		Type:            session.Type,
 		TypeLabel:       session.Type.Label(),
 		Category:        category,
-		CategoryText:    category.Label(),
+		CategoryText:    categoryText,
 		SubCategory:     subCategory,
-		SubCategoryText: subCategory.Label(category),
-		TypeText:        category.TypeText(subCategory),
+		SubCategoryText: subCategoryText,
+		TypeText:        typeText,
 		MatchRank:       session.MatchRank,
 		MatchRankLabel:  session.MatchRank.Label(),
 		CourtName:       session.CourtName,
@@ -139,6 +147,22 @@ func NewSessionResponse(session TennisSession) SessionResponse {
 		CreatedAt:       session.CreatedAt,
 		UpdatedAt:       session.UpdatedAt,
 	}
+}
+
+func sessionCategoryTexts(category SessionCategory, subCategory SessionSubCategory, resolver SessionCategoryTextResolver) (string, string, string, bool) {
+	if resolver != nil {
+		categoryText, categoryOK := resolver.Label(category)
+		subCategoryText, subCategoryOK := resolver.SubCategoryLabel(category, subCategory)
+		typeText, typeTextOK := resolver.TypeText(category, subCategory)
+		if categoryOK && subCategoryOK && typeTextOK {
+			return categoryText, subCategoryText, typeText, true
+		}
+	}
+
+	if !category.IsValid() || !category.IsValidSubCategory(subCategory) {
+		return "", "", "", false
+	}
+	return category.Label(), subCategory.Label(category), category.TypeText(subCategory), true
 }
 
 type SessionListQuery struct {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"tennisdaily-backend/internal/config"
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/repository"
 )
@@ -18,17 +19,18 @@ const (
 )
 
 type SessionService struct {
-	repo       *repository.SessionRepository
-	racketRepo *repository.RacketRepository
-	loc        *time.Location
+	repo                    *repository.SessionRepository
+	racketRepo              *repository.RacketRepository
+	sessionCategoryResolver *config.SessionCategoryResolver
+	loc                     *time.Location
 }
 
-func NewSessionService(repo *repository.SessionRepository, racketRepo *repository.RacketRepository) *SessionService {
+func NewSessionService(repo *repository.SessionRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver *config.SessionCategoryResolver) *SessionService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &SessionService{repo: repo, racketRepo: racketRepo, loc: loc}
+	return &SessionService{repo: repo, racketRepo: racketRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
 }
 
 func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
@@ -36,7 +38,7 @@ func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return toSessionResponses(sessions), nil
+	return toSessionResponses(sessions, s.sessionCategoryResolver), nil
 }
 
 func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (model.SessionListPageResponse, error) {
@@ -79,7 +81,7 @@ func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (m
 	}
 
 	return model.SessionListPageResponse{
-		List:       toSessionResponses(sessions),
+		List:       toSessionResponses(sessions, s.sessionCategoryResolver),
 		Total:      total,
 		Page:       page,
 		PageSize:   pageSize,
@@ -100,7 +102,7 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 	if err != nil {
 		return nil, err
 	}
-	return toSessionResponses(sessions), nil
+	return toSessionResponses(sessions, s.sessionCategoryResolver), nil
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
@@ -111,7 +113,7 @@ func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (m
 	if err := s.repo.Create(&session); err != nil {
 		return model.SessionResponse{}, err
 	}
-	return model.NewSessionResponse(session), nil
+	return model.NewSessionResponse(session, s.sessionCategoryResolver), nil
 }
 
 func (s *SessionService) FindByID(userID, id int64) (model.SessionResponse, error) {
@@ -122,7 +124,7 @@ func (s *SessionService) FindByID(userID, id int64) (model.SessionResponse, erro
 	if session == nil {
 		return model.SessionResponse{}, ErrNotFound
 	}
-	return model.NewSessionResponse(*session), nil
+	return model.NewSessionResponse(*session, s.sessionCategoryResolver), nil
 }
 
 func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest) (model.SessionResponse, error) {
@@ -157,7 +159,7 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	if err := s.repo.Update(existing); err != nil {
 		return model.SessionResponse{}, err
 	}
-	return model.NewSessionResponse(*existing), nil
+	return model.NewSessionResponse(*existing, s.sessionCategoryResolver), nil
 }
 
 func (s *SessionService) Delete(userID, id int64) error {
@@ -179,7 +181,7 @@ func (s *SessionService) Latest(userID int64) (*model.SessionResponse, error) {
 	if session == nil {
 		return nil, nil
 	}
-	resp := model.NewSessionResponse(*session)
+	resp := model.NewSessionResponse(*session, s.sessionCategoryResolver)
 	return &resp, nil
 }
 
@@ -345,7 +347,7 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		return model.TennisSession{}, ErrInvalidRequest
 	}
 
-	resolvedType, resolvedCategory, resolvedSubCategory, err := resolveSessionType(category, subCategory, sessionType)
+	resolvedType, resolvedCategory, resolvedSubCategory, err := s.resolveSessionType(category, subCategory, sessionType)
 	if err != nil {
 		return model.TennisSession{}, err
 	}
@@ -383,29 +385,29 @@ func (s *SessionService) parseSessionDateTime(value string) (time.Time, error) {
 	return time.Time{}, ErrInvalidRequest
 }
 
-func resolveSessionType(category model.SessionCategory, subCategory model.SessionSubCategory, sessionType model.SessionType) (model.SessionType, model.SessionCategory, model.SessionSubCategory, error) {
+func (s *SessionService) resolveSessionType(category model.SessionCategory, subCategory model.SessionSubCategory, sessionType model.SessionType) (model.SessionType, model.SessionCategory, model.SessionSubCategory, error) {
 	if category != 0 || subCategory != 0 {
-		if !category.IsValid() || !subCategory.IsValid() || !category.IsValidSubCategory(subCategory) {
-			return 0, 0, 0, ErrInvalidRequest
-		}
-		resolvedType, ok := category.ToSessionType(subCategory)
+		option, ok := s.sessionCategoryResolver.Option(category, subCategory)
 		if !ok {
 			return 0, 0, 0, ErrInvalidRequest
 		}
-		return resolvedType, category, subCategory, nil
+		return option.LegacyType, option.Category, option.SubCategory, nil
 	}
 
 	if !sessionType.IsValid() {
 		return 0, 0, 0, ErrInvalidRequest
 	}
-	resolvedCategory, resolvedSubCategory := sessionType.ToCategoryPair()
-	return sessionType, resolvedCategory, resolvedSubCategory, nil
+	option, ok := s.sessionCategoryResolver.OptionByLegacyType(sessionType)
+	if !ok {
+		return 0, 0, 0, ErrInvalidRequest
+	}
+	return sessionType, option.Category, option.SubCategory, nil
 }
 
-func toSessionResponses(sessions []model.TennisSession) []model.SessionResponse {
+func toSessionResponses(sessions []model.TennisSession, sessionCategoryResolver *config.SessionCategoryResolver) []model.SessionResponse {
 	responses := make([]model.SessionResponse, 0, len(sessions))
 	for _, session := range sessions {
-		responses = append(responses, model.NewSessionResponse(session))
+		responses = append(responses, model.NewSessionResponse(session, sessionCategoryResolver))
 	}
 	return responses
 }

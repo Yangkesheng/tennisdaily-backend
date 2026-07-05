@@ -16,9 +16,9 @@ func NewEnumHandler(enumService *service.EnumService) *EnumHandler {
 	return &EnumHandler{enumService: enumService}
 }
 
-func (h *EnumHandler) All(c *gin.Context) {
-	logger.Debug("GET /api/enums start")
-	enums := h.enumService.All()
-	logger.Debug("GET /api/enums success")
-	response.OK(c, enums)
+func (h *EnumHandler) SessionConfig(c *gin.Context) {
+	logger.Debug("GET /api/session-config start")
+	config := h.enumService.SessionConfig()
+	logger.Debug("GET /api/session-config success")
+	response.OK(c, config)
 }

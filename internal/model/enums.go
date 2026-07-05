@@ -33,12 +33,3 @@ type SessionDefaultEnumsResponse struct {
 	Rating          int16 `json:"rating"`
 	MatchRank       int16 `json:"matchRank"`
 }
-
-type RacketEnumsResponse struct {
-	Statuses []EnumItemResponse `json:"statuses"`
-}
-
-type EnumsResponse struct {
-	Session SessionEnumsResponse `json:"session"`
-	Racket  RacketEnumsResponse  `json:"racket"`
-}

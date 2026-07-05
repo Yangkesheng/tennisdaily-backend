@@ -36,3 +36,43 @@ jwt:
 wechat:
   appId: ""
   appSecret: ""
+
+
+
+sessionEnums:
+  categories:
+    - value: 1
+      label: 日常球局
+      subCategories:
+        - value: 1
+          label: 打单
+        - value: 2
+          label: 双打
+    - value: 2
+      label: 训练
+      subCategories:
+        - value: 21
+          label: 发球
+        - value: 22
+          label: 截击
+        - value: 23
+          label: 正手
+        - value: 24
+          label: 反手
+        - value: 25
+          label: 体能      
+        - value: 26
+          label: 力量
+        - value: 27
+          label: 综合 
+        - value: 28
+          label: 高压  
+        - value: 29
+          label: 其他
+    - value: 3
+      label: 比赛
+      subCategories:
+        - value: 1
+          label: 单打
+        - value: 2
+          label: 双打

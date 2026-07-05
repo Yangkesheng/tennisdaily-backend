@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
   type SMALLINT NOT NULL DEFAULT 1 COMMENT '打球类型:1双打 2单打 3训练 4单打比赛 5双打比赛',
   category SMALLINT NOT NULL DEFAULT 1 COMMENT '一级类型:1日常球局 2训练 3比赛',
   sub_category SMALLINT NOT NULL DEFAULT 2 COMMENT '二级类型:1单打/打单 2双打 3发球 4其他',
-  match_rank SMALLINT NOT NULL DEFAULT 0 COMMENT '比赛成绩:0无 1冠军 2亚军 3四强 4八强 5小组赛',
+  match_rank SMALLINT NOT NULL DEFAULT 0 COMMENT '比赛成绩:0无 1冠军 2亚军 3季军 4四强 5八强 6十六强 7小组赛',
 
   court_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '球场名称',
   partner VARCHAR(128) NOT NULL DEFAULT '' COMMENT '搭档',

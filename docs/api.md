@@ -170,13 +170,15 @@ Authorization: Bearer <token>
 | 0 | 无 | 空字符串 |
 | 1 | 冠军 | 冠军 |
 | 2 | 亚军 | 亚军 |
-| 3 | 四强 | 四强 |
-| 4 | 八强 | 八强 |
-| 5 | 小组赛 | 小组赛 |
+| 3 | 季军 | 季军 |
+| 4 | 四强 | 四强 |
+| 5 | 八强 | 八强 |
+| 6 | 16强 | 16强 |
+| 7 | 小组赛 | 小组赛 |
 
 说明：
 
-- 当 `category` 为 `3` 时，`matchRank` 可以为 `1-5`
+- 当 `category` 为 `3` 时，`matchRank` 可以为 `1-7`
 - 当 `category` 为 `1` 或 `2` 时，后端会强制将 `matchRank` 处理为 `0`
 - 旧客户端仍可通过 `type = 4` 或 `type = 5` 提交比赛成绩
 
@@ -271,7 +273,7 @@ Authorization: Bearer <token>
 | category | 新客户端必填 | 一级类型，允许 `1`、`2`、`3` |
 | subCategory | 新客户端必填 | 二级类型，允许 `1`、`2`、`3`、`4`；必须属于当前 `category` |
 | type | 旧客户端必填 | 旧类型枚举，允许 1-5；未传新字段时后端按旧类型映射 |
-| matchRank | 否 | 允许 0-5；非比赛类型会被强制改为 0 |
+| matchRank | 否 | 允许 0-7；非比赛类型会被强制改为 0 |
 | courtName | 否 | 字符串 |
 | partner | 否 | 字符串，搭档名称 |
 | cost | 否 | 数字 |
@@ -296,7 +298,7 @@ Authorization: Bearer <token>
 | GET | `/health` | 否 | 健康检查 |
 | POST | `/api/auth/wechat-login` | 否 | 微信登录 |
 | POST | `/api/auth/phone-login` | 否 | 手机号登录 |
-| GET | `/api/enums` | 是 | 获取前端枚举值和展示文案 |
+| GET | `/api/session-config` | 否 | 获取打球记录配置 |
 | GET | `/api/sessions` | 是 | 获取打球记录列表 |
 | POST | `/api/sessions` | 是 | 新增打球记录 |
 | GET | `/api/sessions/latest` | 是 | 获取最近一次打球记录 |
@@ -309,115 +311,107 @@ Authorization: Bearer <token>
 
 ---
 
-## 6. 枚举值
+## 6. 打球记录配置
 
-### 6.1 GET /api/enums
+### 6.1 GET /api/session-config
 
-获取前端展示和表单选择所需的枚举值及含义。
+获取打球记录表单和展示所需的分类配置、比赛成绩、默认值等。
 
 #### 请求
 
 ```http
-GET /api/enums
-Authorization: Bearer <token>
+GET /api/session-config
 ```
 
 #### 响应 data
 
 ```json
 {
-  "session": {
-    "categories": [
-      {
-        "value": 1,
-        "label": "日常球局",
-        "subCategories": [
-          {
-            "value": 1,
-            "label": "打单",
-            "category": 1,
-            "typeText": "日常球局 · 打单",
-            "legacyType": 2
-          },
-          {
-            "value": 2,
-            "label": "双打",
-            "category": 1,
-            "typeText": "日常球局 · 双打",
-            "legacyType": 1
-          }
-        ]
-      },
-      {
-        "value": 2,
-        "label": "训练",
-        "subCategories": [
-          {
-            "value": 3,
-            "label": "发球",
-            "category": 2,
-            "typeText": "训练 · 发球",
-            "legacyType": 3
-          },
-          {
-            "value": 4,
-            "label": "其他",
-            "category": 2,
-            "typeText": "训练 · 其他",
-            "legacyType": 3
-          }
-        ]
-      },
-      {
-        "value": 3,
-        "label": "比赛",
-        "subCategories": [
-          {
-            "value": 1,
-            "label": "单打",
-            "category": 3,
-            "typeText": "比赛 · 单打",
-            "legacyType": 4
-          },
-          {
-            "value": 2,
-            "label": "双打",
-            "category": 3,
-            "typeText": "比赛 · 双打",
-            "legacyType": 5
-          }
-        ]
-      }
-    ],
-    "legacyTypes": [
-      { "value": 1, "label": "双打" },
-      { "value": 2, "label": "单打" },
-      { "value": 3, "label": "训练" },
-      { "value": 4, "label": "单打比赛" },
-      { "value": 5, "label": "双打比赛" }
-    ],
-    "matchRanks": [
-      { "value": 0, "label": "" },
-      { "value": 1, "label": "冠军" },
-      { "value": 2, "label": "亚军" },
-      { "value": 3, "label": "四强" },
-      { "value": 4, "label": "八强" },
-      { "value": 5, "label": "小组赛" }
-    ],
-    "defaultValues": {
-      "category": 1,
-      "subCategory": 2,
-      "durationMinutes": 120,
-      "rating": 3,
-      "matchRank": 0
+  "categories": [
+    {
+      "value": 1,
+      "label": "日常球局",
+      "subCategories": [
+        {
+          "value": 1,
+          "label": "打单",
+          "category": 1,
+          "typeText": "日常球局 · 打单",
+          "legacyType": 2
+        },
+        {
+          "value": 2,
+          "label": "双打",
+          "category": 1,
+          "typeText": "日常球局 · 双打",
+          "legacyType": 1
+        }
+      ]
+    },
+    {
+      "value": 2,
+      "label": "训练",
+      "subCategories": [
+        {
+          "value": 3,
+          "label": "发球",
+          "category": 2,
+          "typeText": "训练 · 发球",
+          "legacyType": 3
+        },
+        {
+          "value": 4,
+          "label": "其他",
+          "category": 2,
+          "typeText": "训练 · 其他",
+          "legacyType": 3
+        }
+      ]
+    },
+    {
+      "value": 3,
+      "label": "比赛",
+      "subCategories": [
+        {
+          "value": 1,
+          "label": "单打",
+          "category": 3,
+          "typeText": "比赛 · 单打",
+          "legacyType": 4
+        },
+        {
+          "value": 2,
+          "label": "双打",
+          "category": 3,
+          "typeText": "比赛 · 双打",
+          "legacyType": 5
+        }
+      ]
     }
-  },
-  "racket": {
-    "statuses": [
-      { "value": 1, "label": "主力拍" },
-      { "value": 2, "label": "在用" },
-      { "value": 3, "label": "已退役" }
-    ]
+  ],
+  "legacyTypes": [
+    { "value": 1, "label": "双打" },
+    { "value": 2, "label": "单打" },
+    { "value": 3, "label": "训练" },
+    { "value": 4, "label": "单打比赛" },
+    { "value": 5, "label": "双打比赛" }
+  ],
+  "matchRanks": [
+    { "value": 0, "label": "" },
+    { "value": 1, "label": "冠军" },
+    { "value": 2, "label": "亚军" },
+    { "value": 3, "label": "季军" },
+    { "value": 4, "label": "四强" },
+    { "value": 5, "label": "八强" },
+    { "value": 6, "label": "16强" },
+    { "value": 7, "label": "小组赛" }
+  ],
+  "defaultValues": {
+    "category": 1,
+    "subCategory": 2,
+    "durationMinutes": 120,
+    "rating": 3,
+    "matchRank": 0
   }
 }
 ```
@@ -426,12 +420,11 @@ Authorization: Bearer <token>
 
 | 字段 | 说明 |
 |---|---|
-| `session.categories` | 打球记录两级分类，前端可直接用于一级/二级联动选择 |
+| `categories` | 打球记录两级分类，前端可直接用于一级/二级联动选择 |
 | `subCategories[].legacyType` | 当前二级分类对应的旧 `type`，用于旧客户端兼容展示 |
-| `session.legacyTypes` | 旧打球类型枚举，兼容保留 |
-| `session.matchRanks` | 比赛成绩枚举 |
-| `session.defaultValues` | 新增打球记录推荐默认值 |
-| `racket.statuses` | 球拍状态枚举 |
+| `legacyTypes` | 旧打球类型枚举，兼容保留 |
+| `matchRanks` | 比赛成绩枚举 |
+| `defaultValues` | 新增打球记录推荐默认值 |
 
 ---
 

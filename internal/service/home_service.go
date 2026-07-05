@@ -10,17 +10,18 @@ import (
 const homeRatingTrendLimit = 5
 
 type HomeService struct {
-	sessionRepo *repository.SessionRepository
-	racketRepo  *repository.RacketRepository
-	loc         *time.Location
+	sessionRepo             *repository.SessionRepository
+	racketRepo              *repository.RacketRepository
+	sessionCategoryResolver model.SessionCategoryTextResolver
+	loc                     *time.Location
 }
 
-func NewHomeService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository) *HomeService {
+func NewHomeService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver model.SessionCategoryTextResolver) *HomeService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &HomeService{sessionRepo: sessionRepo, racketRepo: racketRepo, loc: loc}
+	return &HomeService{sessionRepo: sessionRepo, racketRepo: racketRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
 }
 
 func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model.HomeSummaryResponse, error) {
@@ -76,7 +77,7 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 
 	var latestSessionResponse *model.SessionResponse
 	if latestSession != nil {
-		resp := model.NewSessionResponse(*latestSession)
+		resp := model.NewSessionResponse(*latestSession, s.sessionCategoryResolver)
 		latestSessionResponse = &resp
 	}
 

@@ -35,9 +35,11 @@ const (
 	MatchRankNone         MatchRank = 0
 	MatchRankChampion     MatchRank = 1
 	MatchRankRunnerUp     MatchRank = 2
-	MatchRankSemiFinal    MatchRank = 3
-	MatchRankQuarterFinal MatchRank = 4
-	MatchRankGroupStage   MatchRank = 5
+	MatchRankThirdPlace   MatchRank = 3
+	MatchRankSemiFinal    MatchRank = 4
+	MatchRankQuarterFinal MatchRank = 5
+	MatchRankRoundOf16    MatchRank = 6
+	MatchRankGroupStage   MatchRank = 7
 )
 
 func (t SessionType) IsValid() bool {
@@ -170,7 +172,7 @@ func (c SessionCategory) TypeText(subCategory SessionSubCategory) string {
 }
 
 func (r MatchRank) IsValid() bool {
-	return r >= MatchRankNone && r <= MatchRankGroupStage
+	return r >= MatchRankNone && r <= MatchRankThirdPlace
 }
 
 func (r MatchRank) Label() string {
@@ -181,10 +183,14 @@ func (r MatchRank) Label() string {
 		return "冠军"
 	case MatchRankRunnerUp:
 		return "亚军"
+	case MatchRankThirdPlace:
+		return "季军"
 	case MatchRankSemiFinal:
 		return "四强"
 	case MatchRankQuarterFinal:
 		return "八强"
+	case MatchRankRoundOf16:
+		return "16强"
 	case MatchRankGroupStage:
 		return "小组赛"
 	default:

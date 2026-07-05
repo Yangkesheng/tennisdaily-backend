@@ -31,11 +31,11 @@ func main() {
 	racketRepo := repository.NewRacketRepository(db)
 
 	authService := service.NewAuthService(cfg, userRepo)
-	sessionService := service.NewSessionService(sessionRepo, racketRepo)
+	sessionService := service.NewSessionService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
 	statsService := service.NewStatsService(sessionRepo, racketRepo)
 	racketService := service.NewRacketService(racketRepo)
-	homeService := service.NewHomeService(sessionRepo, racketRepo)
-	enumService := service.NewEnumService()
+	homeService := service.NewHomeService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
+	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 
 	authHandler := handler.NewAuthHandler(authService)
 	sessionHandler := handler.NewSessionHandler(sessionService)
@@ -54,6 +54,7 @@ func main() {
 	api := r.Group("/api")
 	api.POST("/auth/wechat-login", authHandler.WechatLogin)
 	api.POST("/auth/phone-login", authHandler.PhoneLogin)
+	api.GET("/session-config", enumHandler.SessionConfig)
 
 	authed := api.Group("")
 	authed.Use(middleware.Auth(authService))
@@ -63,8 +64,6 @@ func main() {
 		authed.PUT("/auth/profile", authHandler.UpdateProfile)
 
 		authed.GET("/home/summary", homeHandler.Summary)
-
-		authed.GET("/enums", enumHandler.All)
 
 		authed.GET("/sessions", sessionHandler.List)
 		authed.POST("/sessions", sessionHandler.Create)

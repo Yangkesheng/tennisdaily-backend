@@ -1,5 +1,130 @@
 # Change Log
 
+## 2026-07-04 matchRanks 新增季军并重排枚举值
+
+### 需求/变更内容
+
+- 比赛成绩 `matchRanks` 新增 `季军`。
+- 按“不追加枚举值、不考虑历史数据”的要求，将 `季军` 插入为 `matchRank=3`。
+- 后续名次顺延为：`四强=4`、`八强=5`、`16强=6`、`小组赛=7`。
+
+### 修改文件
+
+- `internal/model/enum.go`
+- `internal/service/enum_service.go`
+- `migrations/init.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/session-config` 的 `matchRanks` 新增 `季军`，并重排后续枚举值。
+- `POST /api/sessions` 和 `PUT /api/sessions/:id` 的比赛类型记录支持 `matchRank=7`。
+
+### 数据库变化
+
+- 无表结构变化。
+- `migrations/init.sql` 更新 `match_rank` 字段注释。
+
+### 兼容性说明
+
+- 本次按需求不考虑历史数据兼容，既有 `match_rank` 数值会按新枚举含义展示。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/enum.go internal/service/enum_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-04 matchRanks 新增 16 强
+
+### 需求/变更内容
+
+- 比赛成绩 `matchRanks` 新增 `16强`。
+- `GET /api/session-config` 的 `matchRanks` 返回新增 `{ "value": 5, "label": "16强" }`。
+- 原 `小组赛` 顺延为 `matchRank=6`。
+
+### 修改文件
+
+- `internal/model/enum.go`
+- `internal/service/enum_service.go`
+- `migrations/init.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/session-config` 的 `matchRanks` 新增 `16强`，并将 `小组赛` 调整为 `value=6`。
+- `POST /api/sessions` 和 `PUT /api/sessions/:id` 的比赛类型记录支持 `matchRank=6`。
+
+### 数据库变化
+
+- 无表结构变化。
+- `migrations/init.sql` 更新 `match_rank` 字段注释。
+
+### 兼容性说明
+
+- 若已有线上数据使用 `match_rank=5` 表示小组赛，需要执行数据迁移将历史小组赛更新为 `6`，否则会按新枚举显示为 `16强`。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/enum.go internal/service/enum_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-04 打球记录分类枚举改为配置驱动
+
+### 需求/变更内容
+
+- 将打球记录一级/二级分类枚举从纯代码硬编码改为 `config.yaml` 配置驱动。
+- `GET /api/enums` 的 `session.categories` 从配置读取，便于新增“训练-截击”等二级类型。
+- 新增/编辑打球记录时，`category` / `subCategory` 合法组合改为按配置校验。
+- 打球记录响应中的 `categoryText`、`subCategoryText`、`typeText` 优先使用配置文案。
+- `config.yaml` 未配置 `sessionEnums.categories` 时启动直接报错，避免线上枚举来源不明确。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/config/config.go`
+- `internal/config/session_enums.go`
+- `internal/model/session.go`
+- `internal/service/enum_service.go`
+- `internal/service/home_service.go`
+- `internal/service/session_service.go`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/session-config` 新增公开接口，专用于获取打球记录配置，无需 JWT 鉴权。
+- 原 `GET /api/enums` 不再注册，打球记录配置改由 `GET /api/session-config` 返回。
+- `GET /api/session-config` 响应 `data` 直接返回 `categories`、`legacyTypes`、`matchRanks`、`defaultValues`，不再嵌套 `session` / `racket`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- `GET /api/session-config` 为公开配置接口，不依赖当前登录用户。
+- 未配置 `sessionEnums.categories` 时服务启动失败，需显式维护分类配置。
+- 配置新增的训练类二级分类会同步映射到旧 `type=3`，兼容旧字段。
+- 比赛类仍按旧规则映射到旧单打/双打比赛类型，用于保留 `matchRank` 规则。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/handler/enum_handler.go internal/model/enums.go internal/service/enum_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-01 优化穿线后使用统计口径
 
 ### 需求/变更内容
