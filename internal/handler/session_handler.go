@@ -203,6 +203,8 @@ func handleServiceError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrInvalidRequest):
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+	case errors.Is(err, service.ErrSensitiveContent):
+		response.Error(c, 400, response.CodeInvalidRequest, "输入内容包含敏感信息，请修改后重试")
 	case errors.Is(err, service.ErrUnauthorized):
 		response.Error(c, 401, response.CodeUnauthorized, "unauthorized")
 	case errors.Is(err, service.ErrForbidden):

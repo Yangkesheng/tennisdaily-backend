@@ -12,16 +12,18 @@ import (
 )
 
 type RacketService struct {
-	repo *repository.RacketRepository
-	loc  *time.Location
+	repo            *repository.RacketRepository
+	userRepo        *repository.UserRepository
+	contentSecurity *ContentSecurityService
+	loc             *time.Location
 }
 
-func NewRacketService(repo *repository.RacketRepository) *RacketService {
+func NewRacketService(repo *repository.RacketRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService) *RacketService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &RacketService{repo: repo, loc: loc}
+	return &RacketService{repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, loc: loc}
 }
 
 func (s *RacketService) Library() ([]model.RacketLibraryBrandGroupResponse, error) {
@@ -88,6 +90,9 @@ func (s *RacketService) Create(userID int64, req model.CreateRacketRequest) (mod
 	if req.Name == "" {
 		return model.RacketResponse{}, ErrInvalidRequest
 	}
+	if err := s.checkUserInputTexts(userID, req.Name, req.Brand, req.Model); err != nil {
+		return model.RacketResponse{}, err
+	}
 
 	purchaseDate, err := s.parseOptionalDate(req.PurchaseDate)
 	if err != nil {
@@ -148,6 +153,9 @@ func (s *RacketService) Update(userID, id int64, req model.UpdateRacketRequest) 
 	}
 	if req.Name == "" {
 		return model.RacketResponse{}, ErrInvalidRequest
+	}
+	if err := s.checkUserInputTexts(userID, req.Name, req.Brand, req.Model); err != nil {
+		return model.RacketResponse{}, err
 	}
 
 	racket, err := s.repo.FindByID(userID, id)
@@ -252,6 +260,9 @@ func (s *RacketService) AddStringingRecord(userID, racketID int64, req model.Cre
 	if req.StringName == "" || req.StringDate == "" {
 		return ErrInvalidRequest
 	}
+	if err := s.checkUserInputTexts(userID, req.StringName); err != nil {
+		return err
+	}
 	if _, err := s.requireRacket(userID, racketID); err != nil {
 		return err
 	}
@@ -275,6 +286,9 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 	if req.StringName == "" || req.StringDate == "" {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
+	if err := s.checkUserInputTexts(userID, req.StringName); err != nil {
+		return model.StringingRecordResponse{}, err
+	}
 	if _, err := s.requireRacket(userID, racketID); err != nil {
 		return model.StringingRecordResponse{}, err
 	}
@@ -295,6 +309,17 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 		return model.StringingRecordResponse{}, err
 	}
 	return model.NewStringingRecordResponse(record), nil
+}
+
+func (s *RacketService) checkUserInputTexts(userID int64, texts ...string) error {
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUnauthorized
+	}
+	return s.contentSecurity.CheckTexts(user.OpenID, texts...)
 }
 
 func (s *RacketService) requireRacket(userID, racketID int64) (*model.Racket, error) {

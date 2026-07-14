@@ -101,6 +101,10 @@ func handleAuthError(c *gin.Context, err error) {
 		response.Error(c, 400, response.CodeInvalidRequest, "登录参数不完整")
 		return
 	}
+	if errors.Is(err, service.ErrSensitiveContent) {
+		response.Error(c, 400, response.CodeInvalidRequest, "输入内容包含敏感信息，请修改后重试")
+		return
+	}
 	if errors.Is(err, service.ErrWechatLoginCode) {
 		response.Error(c, 400, response.CodeInvalidRequest, "微信登录凭证无效，请重试")
 		return

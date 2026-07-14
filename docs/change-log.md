@@ -1,5 +1,55 @@
 # Change Log
 
+## 2026-07-15 用户输入文本接入微信内容安全检测
+
+### 需求/变更内容
+
+- 新增服务端微信内容安全检测能力，调用 `wxa/msg_sec_check` 检查用户可输入文本是否违法违规。
+- 在用户昵称、打球记录文本字段、球拍文本字段、穿线球线名称保存前执行检测。
+- 检测到敏感内容时阻止保存，并返回友好提示：`输入内容包含敏感信息，请修改后重试`。
+- 本地未配置 `wechat.appId` / `wechat.appSecret` 时跳过真实检测，避免影响开发联调。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/service/content_security_service.go`
+- `internal/service/errors.go`
+- `internal/service/auth_service.go`
+- `internal/service/session_service.go`
+- `internal/service/racket_service.go`
+- `internal/handler/auth_handler.go`
+- `internal/handler/session_handler.go`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无新增接口。
+- 以下接口在保存用户输入文本前会进行内容安全检测：
+  - `PUT /api/auth/profile`
+  - `POST /api/sessions`
+  - `PUT /api/sessions/:id`
+  - `POST /api/rackets`
+  - `PUT /api/rackets/:id`
+  - `POST /api/rackets/:id/stringing-records`
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- API 字段和响应结构不变。
+- 需要线上配置有效 `WECHAT_APP_ID` / `WECHAT_APP_SECRET` 或 `config.yaml` 中的微信配置后，才会调用微信内容安全接口。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/service/content_security_service.go internal/service/errors.go internal/service/auth_service.go internal/service/session_service.go internal/service/racket_service.go internal/handler/auth_handler.go internal/handler/session_handler.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-04 修复 matchRank 校验范围
 
 ### 需求/变更内容

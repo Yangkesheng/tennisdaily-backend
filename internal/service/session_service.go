@@ -20,17 +20,19 @@ const (
 
 type SessionService struct {
 	repo                    *repository.SessionRepository
+	userRepo                *repository.UserRepository
 	racketRepo              *repository.RacketRepository
+	contentSecurity         *ContentSecurityService
 	sessionCategoryResolver *config.SessionCategoryResolver
 	loc                     *time.Location
 }
 
-func NewSessionService(repo *repository.SessionRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver *config.SessionCategoryResolver) *SessionService {
+func NewSessionService(repo *repository.SessionRepository, userRepo *repository.UserRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver *config.SessionCategoryResolver, contentSecurity *ContentSecurityService) *SessionService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &SessionService{repo: repo, racketRepo: racketRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
+	return &SessionService{repo: repo, userRepo: userRepo, racketRepo: racketRepo, contentSecurity: contentSecurity, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
 }
 
 func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
@@ -106,6 +108,10 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
+	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
+		return model.SessionResponse{}, err
+	}
+
 	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
@@ -134,6 +140,10 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	}
 	if existing == nil {
 		return model.SessionResponse{}, ErrNotFound
+	}
+
+	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
+		return model.SessionResponse{}, err
 	}
 
 	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
@@ -402,6 +412,17 @@ func (s *SessionService) resolveSessionType(category model.SessionCategory, subC
 		return 0, 0, 0, ErrInvalidRequest
 	}
 	return sessionType, option.Category, option.SubCategory, nil
+}
+
+func (s *SessionService) checkUserInputTexts(userID int64, texts ...string) error {
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUnauthorized
+	}
+	return s.contentSecurity.CheckTexts(user.OpenID, texts...)
 }
 
 func toSessionResponses(sessions []model.TennisSession, sessionCategoryResolver *config.SessionCategoryResolver) []model.SessionResponse {

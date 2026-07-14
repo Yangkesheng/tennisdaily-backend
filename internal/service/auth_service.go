@@ -15,9 +15,10 @@ import (
 )
 
 type AuthService struct {
-	cfg        config.Config
-	userRepo   *repository.UserRepository
-	httpClient *http.Client
+	cfg             config.Config
+	userRepo        *repository.UserRepository
+	contentSecurity *ContentSecurityService
+	httpClient      *http.Client
 }
 
 type Claims struct {
@@ -55,10 +56,11 @@ type wechatIdentity struct {
 	UnionID string
 }
 
-func NewAuthService(cfg config.Config, userRepo *repository.UserRepository) *AuthService {
+func NewAuthService(cfg config.Config, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService) *AuthService {
 	return &AuthService{
-		cfg:      cfg,
-		userRepo: userRepo,
+		cfg:             cfg,
+		userRepo:        userRepo,
+		contentSecurity: contentSecurity,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -134,14 +136,25 @@ func (s *AuthService) CurrentUser(userID int64) (model.UserResponse, error) {
 }
 
 func (s *AuthService) UpdateProfile(userID int64, req model.UpdateProfileRequest) (model.UserResponse, error) {
-	user, err := s.userRepo.UpdateProfile(userID, req.Nickname, req.AvatarURL)
+	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
 		return model.UserResponse{}, err
 	}
 	if user == nil {
 		return model.UserResponse{}, ErrNotFound
 	}
-	return model.NewUserResponse(*user), nil
+	if err := s.contentSecurity.CheckTexts(user.OpenID, req.Nickname); err != nil {
+		return model.UserResponse{}, err
+	}
+
+	updated, err := s.userRepo.UpdateProfile(userID, req.Nickname, req.AvatarURL)
+	if err != nil {
+		return model.UserResponse{}, err
+	}
+	if updated == nil {
+		return model.UserResponse{}, ErrNotFound
+	}
+	return model.NewUserResponse(*updated), nil
 }
 
 func (s *AuthService) Logout() map[string]bool {

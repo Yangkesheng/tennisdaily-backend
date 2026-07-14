@@ -30,10 +30,11 @@ func main() {
 
 	racketRepo := repository.NewRacketRepository(db)
 
-	authService := service.NewAuthService(cfg, userRepo)
-	sessionService := service.NewSessionService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
+	contentSecurityService := service.NewContentSecurityService(cfg)
+	authService := service.NewAuthService(cfg, userRepo, contentSecurityService)
+	sessionService := service.NewSessionService(sessionRepo, userRepo, racketRepo, cfg.SessionCategoryResolver, contentSecurityService)
 	statsService := service.NewStatsService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
-	racketService := service.NewRacketService(racketRepo)
+	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService)
 	homeService := service.NewHomeService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 
