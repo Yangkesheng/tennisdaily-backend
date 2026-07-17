@@ -45,7 +45,7 @@ sessionEnums:
       label: 日常球局
       subCategories:
         - value: 1
-          label: 打单
+          label: 单打
         - value: 2
           label: 双打
     - value: 2
