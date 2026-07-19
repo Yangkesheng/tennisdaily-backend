@@ -1353,10 +1353,16 @@ Authorization: Bearer <token>
 [
   {
     "id": 1,
+    "libraryId": 1,
     "name": "EZONE 主力拍",
     "brand": "Yonex",
     "model": "EZONE 100",
     "status": 1,
+    "releaseYear": 2025,
+    "weight": 300,
+    "headSize": 100,
+    "stringPattern": "16x19",
+    "fileId": "cloud://tennisdaily/rackets/ezone100.png",
     "stringName": "Poly Tour Pro",
     "verticalTension": 48,
     "horizontalTension": 46,
@@ -1384,6 +1390,11 @@ Authorization: Bearer <token>
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
+| releaseYear | number | 关联球拍库的发布年份，无 `libraryId` 时为 `0` |
+| weight | number | 关联球拍库的重量参数，单位克，无 `libraryId` 时为 `0` |
+| headSize | number | 关联球拍库的拍面大小数值，无 `libraryId` 时为 `0` |
+| stringPattern | string | 关联球拍库的穿线模式，例如 `16x19`，无 `libraryId` 时为空字符串 |
+| fileId | string | 关联球拍库的球拍图片文件 ID，无 `libraryId` 时为空字符串 |
 | usageCount | number | 该球拍关联打球记录次数 |
 | usageMinutes | number | 该球拍累计使用分钟数 |
 | usageHours | number | 该球拍累计使用小时数，当前向下取整 |
@@ -1508,6 +1519,11 @@ Authorization: Bearer <token>
     "imageUrl": "",
     "purchaseDate": "2026-01-01",
     "purchasePrice": 1599,
+    "releaseYear": 2025,
+    "weight": 300,
+    "headSize": 100,
+    "stringPattern": "16x19",
+    "fileId": "cloud://tennisdaily/rackets/ezone100.png",
     "stringName": "Poly Tour Pro",
     "verticalTension": 48,
     "horizontalTension": 46,
@@ -1657,12 +1673,12 @@ Content-Type: application/json
 
 ## 21. 球拍库与添加球拍选择接口
 
-### 21.1 获取球拍库，按品牌分类
+### 21.1 获取球拍品牌
 
-添加球拍页面使用。返回系统球拍库中的球拍，并按品牌分组。
+添加球拍页面使用。返回系统维护的球拍品牌列表。
 
 ```http
-GET /api/racket-library
+GET /api/racket-brands
 Authorization: Bearer <token>
 ```
 
@@ -1671,29 +1687,109 @@ Authorization: Bearer <token>
 ```json
 [
   {
+    "id": 1,
+    "name": "Yonex",
+    "fileId": "cloud://tennisdaily/brands/yonex.png"
+  },
+  {
+    "id": 2,
+    "name": "Wilson",
+    "fileId": "cloud://tennisdaily/brands/wilson.png"
+  }
+]
+```
+
+### 21.2 获取球拍系列
+
+添加球拍页面使用。返回系统维护的球拍系列列表，支持按品牌过滤。
+
+```http
+GET /api/racket-series
+GET /api/racket-series?brandId=1
+Authorization: Bearer <token>
+```
+
+查询参数：
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| brandId | number | 品牌 ID，可选；传入后只返回该品牌下的系列 |
+
+响应 data 示例：
+
+```json
+[
+  {
+    "id": 101,
+    "brandId": 1,
+    "name": "EZONE"
+  },
+  {
+    "id": 102,
+    "brandId": 1,
+    "name": "VCORE"
+  }
+]
+```
+
+### 21.3 获取球拍库，按品牌分类
+
+添加球拍页面使用。返回系统球拍库中的球拍，并按品牌分组。
+
+```http
+GET /api/racket-library
+GET /api/racket-library?brandId=1
+GET /api/racket-library?brandId=1&seriesId=101
+Authorization: Bearer <token>
+```
+
+查询参数：
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| brandId | number | 品牌 ID，可选；传入后只返回该品牌球拍 |
+| seriesId | number | 系列 ID，可选；传入后只返回该系列球拍，可与 `brandId` 组合使用 |
+
+响应 data 示例：
+
+```json
+[
+  {
+    "brandId": 1,
     "brand": "Yonex",
     "items": [
       {
         "id": 1,
+        "brandId": 1,
         "brand": "Yonex",
+        "seriesId": 101,
+        "series": "EZONE",
         "model": "EZONE 100",
         "releaseYear": 2025,
         "weight": 300,
         "headSize": 100,
+        "stringPattern": "16x19",
+        "fileId": "cloud://tennisdaily/rackets/ezone100.png",
         "imageUrl": ""
       }
     ]
   },
   {
+    "brandId": 2,
     "brand": "Wilson",
     "items": [
       {
         "id": 7,
+        "brandId": 2,
         "brand": "Wilson",
+        "seriesId": 201,
+        "series": "Blade",
         "model": "Blade 98 16x19",
         "releaseYear": 2024,
         "weight": 305,
         "headSize": 98,
+        "stringPattern": "16x19",
+        "fileId": "cloud://tennisdaily/rackets/blade98.png",
         "imageUrl": ""
       }
     ]
@@ -1701,7 +1797,7 @@ Authorization: Bearer <token>
 ]
 ```
 
-### 21.2 从球拍库添加到我的球拍
+### 21.4 从球拍库添加到我的球拍
 
 用户选择球拍库中的球拍后，新增我的球拍时传 `libraryId`。
 
@@ -1729,11 +1825,17 @@ Content-Type: application/json
 
 说明：
 
+- `headSize` 表示拍面大小数值，例如 `98`，展示单位可拼接为 `sq.in.`。
+- `stringPattern` 表示穿线模式，例如 `16x19`、`18x20`、`16/19`。
+- `fileId` 表示球拍图片文件 ID，可用于前端按文件 ID 加载图片资源。
+- `brandId`、`seriesId`、`series` 已从 `racket_library` 返回，前端可直接用于品牌/系列展示或筛选。
+- `GET /api/racket-library` 支持通过 query 参数 `brandId`、`seriesId` 过滤球拍库列表。
+- `brandId`、`seriesId` 目前由球拍库自身字段承载，未引入独立品牌/系列表。
 - `libraryId` 有值时，后端会从球拍库补全 `brand`、`model`、`imageUrl`。
 - 如果请求体里也传了 `brand`、`model`、`imageUrl`，以前端传入值为准。
 - `name` 仍可自定义，比如“EZONE 主力拍”。
 
-### 21.3 添加库中没有的球拍
+### 21.5 添加库中没有的球拍
 
 如果球拍库没有对应球拍，用户可以手动输入。
 
@@ -1759,8 +1861,10 @@ Content-Type: application/json
 - 手动输入时不传 `libraryId`，或传 `0`。
 - `name` 必填。
 - `brand`、`model` 可选。
+- 如果球拍库中没有对应系列，`series` 可不传。
+- 当前接口不再接收/处理 `stringName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost`。
 
-### 21.4 获取我的球拍，用于新增打球记录时选择
+### 21.6 获取我的球拍，用于新增打球记录时选择
 
 新增打球记录页面使用。只返回当前用户未退役球拍：
 

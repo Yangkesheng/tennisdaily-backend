@@ -38,6 +38,11 @@ type Racket struct {
 	ImageURL                   string         `json:"imageUrl" gorm:"column:image_url;size:500"`
 	PurchaseDate               *time.Time     `json:"purchaseDate" gorm:"type:date"`
 	PurchasePrice              *float64       `json:"purchasePrice" gorm:"type:decimal(10,2)"`
+	ReleaseYear                int            `json:"releaseYear" gorm:"-"`
+	Weight                     int            `json:"weight" gorm:"-"`
+	HeadSize                   int            `json:"headSize" gorm:"-"`
+	StringPattern              string         `json:"stringPattern" gorm:"-"`
+	FileID                     string         `json:"fileId" gorm:"-"`
 	StringName                 string         `json:"stringName" gorm:"-"`
 	VerticalTension            *float64       `json:"verticalTension" gorm:"-"`
 	HorizontalTension          *float64       `json:"horizontalTension" gorm:"-"`
@@ -94,6 +99,11 @@ type RacketResponse struct {
 	ImageURL                   string       `json:"imageUrl"`
 	PurchaseDate               string       `json:"purchaseDate"`
 	PurchasePrice              *float64     `json:"purchasePrice"`
+	ReleaseYear                int          `json:"releaseYear"`
+	Weight                     int          `json:"weight"`
+	HeadSize                   int          `json:"headSize"`
+	StringPattern              string       `json:"stringPattern"`
+	FileID                     string       `json:"fileId"`
 	StringName                 string       `json:"stringName"`
 	VerticalTension            *float64     `json:"verticalTension"`
 	HorizontalTension          *float64     `json:"horizontalTension"`
@@ -185,6 +195,11 @@ func NewRacketResponse(racket Racket) RacketResponse {
 		ImageURL:                   racket.ImageURL,
 		PurchaseDate:               purchaseDate,
 		PurchasePrice:              racket.PurchasePrice,
+		ReleaseYear:                racket.ReleaseYear,
+		Weight:                     racket.Weight,
+		HeadSize:                   racket.HeadSize,
+		StringPattern:              racket.StringPattern,
+		FileID:                     racket.FileID,
 		StringName:                 racket.StringName,
 		VerticalTension:            racket.VerticalTension,
 		HorizontalTension:          racket.HorizontalTension,

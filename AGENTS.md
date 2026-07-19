@@ -343,6 +343,9 @@ GET /api/home/summary
 ### 7.7 球拍与穿线
 
 ```http
+GET    /api/racket-brands
+GET    /api/racket-series
+GET    /api/racket-series?brandId=1
 GET    /api/racket-library
 GET    /api/my-rackets
 GET    /api/rackets/stats
@@ -596,6 +599,8 @@ tennis_sessions
   sub_category
 racket
 racket_stringing_record
+racket_brands
+racket_series
 racket_library
 ```
 

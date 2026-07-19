@@ -1,5 +1,308 @@
 # Change Log
 
+## 2026-07-19 新增球拍品牌和系列接口
+
+### 需求/变更内容
+
+- 初始化脚本新增 `racket_brands` 和 `racket_series` 表，用于维护球拍品牌和系列基础数据。
+- 新增 `GET /api/racket-brands` 返回球拍品牌列表。
+- 新增 `GET /api/racket-series` 返回球拍系列列表，并支持通过 `brandId` 查询指定品牌下的系列。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/model/racket_library.go`
+- `internal/repository/racket_repository.go`
+- `internal/service/racket_service.go`
+- `internal/handler/racket_handler.go`
+- `migrations/init.sql`
+- `migrations/010_create_racket_brand_series.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+- `AGENTS.md`
+
+### 接口变化
+
+- 新增接口：
+  - `GET /api/racket-brands`
+  - `GET /api/racket-series`
+  - `GET /api/racket-series?brandId=1`
+
+### 数据库变化
+
+- 新增表 `racket_brands`：
+  - `id BIGINT PRIMARY KEY AUTO_INCREMENT`
+  - `name VARCHAR(128) NOT NULL`
+  - `file_id VARCHAR(255) DEFAULT NULL`
+  - `created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- 新增表 `racket_series`：
+  - `id BIGINT PRIMARY KEY AUTO_INCREMENT`
+  - `brand_id BIGINT NOT NULL`
+  - `name VARCHAR(128) NOT NULL`
+  - `created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+### 兼容性说明
+
+- 新增接口和新表，不影响现有球拍库、我的球拍和打球记录接口。
+- `racket_series.brand_id` 仅逻辑关联 `racket_brands.id`，未添加数据库外键。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/model/racket_library.go internal/repository/racket_repository.go internal/service/racket_service.go internal/handler/racket_handler.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-19 球拍库支持品牌和系列过滤
+
+### 需求/变更内容
+
+- `GET /api/racket-library` 新增可选 query 参数 `brandId` 和 `seriesId`。
+- 支持按品牌 ID、系列 ID 或品牌 ID + 系列 ID 组合过滤球拍库。
+- 不传过滤参数时保持原有全量返回和按品牌分组结构不变。
+
+### 修改文件
+
+- `internal/model/racket_library.go`
+- `internal/handler/racket_handler.go`
+- `internal/service/racket_service.go`
+- `internal/repository/racket_repository.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/racket-library` 新增 query 参数：
+  - `brandId`：品牌 ID，可选，必须为正整数。
+  - `seriesId`：系列 ID，可选，必须为正整数。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 不传参数时接口响应与原行为一致。
+- 响应仍按品牌分组，过滤后只返回匹配球拍项所在的品牌分组。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket_library.go internal/handler/racket_handler.go internal/service/racket_service.go internal/repository/racket_repository.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-19 球拍列表返回 fileId
+
+### 需求/变更内容
+
+- `GET /api/rackets` 返回增加球拍 `fileId`，从关联的球拍库 `racket_library.file_id` 填充。
+- `GET /api/rackets/:id` 详情中的 `data.racket` 同步返回 `fileId`，保持 `RacketResponse` 响应结构一致。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/rackets` 每个球拍新增响应字段：`fileId`。
+- `GET /api/rackets/:id` 的 `data.racket` 同步新增响应字段：`fileId`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增 JSON 字段，不删除或改名已有字段。
+- 未关联球拍库或球拍库记录不存在时，`fileId` 返回空字符串。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-19 球拍库新增 fileId 字段
+
+### 需求/变更内容
+
+- `racket_library` 新增 `file_id` 字段，用于保存球拍图片文件 ID。
+- `GET /api/racket-library` 每个球拍项新增 `fileId` 响应字段。
+- 初始化脚本同步补充建表字段和旧表幂等补列逻辑。
+
+### 修改文件
+
+- `internal/model/racket_library.go`
+- `migrations/init.sql`
+- `migrations/009_add_racket_library_file_id.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/racket-library` 的每个球拍项新增 `fileId`。
+
+### 数据库变化
+
+- `racket_library` 新增字段：
+  - `file_id VARCHAR(255) NULL DEFAULT NULL COMMENT '球拍图片文件ID'`
+
+### 兼容性说明
+
+- 仅新增字段，不删除或改名已有字段。
+- 旧数据 `fileId` 默认为空字符串响应。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket_library.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-19 球拍列表返回球拍库参数
+
+### 需求/变更内容
+
+- `GET /api/rackets` 返回增加球拍参数，包含关联球拍库的发布年份、重量、拍面大小和穿线模式。
+- `GET /api/rackets/:id` 详情中的 `racket` 同步返回相同球拍参数，保持 `RacketResponse` 响应结构一致。
+- 批量查询球拍库参数并在 service enrich 阶段补充，避免列表接口 N+1 查询。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/repository/racket_repository.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/rackets` 每个球拍新增响应字段：
+  - `releaseYear`
+  - `weight`
+  - `headSize`
+  - `stringPattern`
+- `GET /api/rackets/:id` 的 `data.racket` 同步新增上述字段。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增 JSON 字段，不删除或改名已有字段。
+- 未关联球拍库或球拍库记录不存在时，数字字段返回 `0`，`stringPattern` 返回空字符串。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/repository/racket_repository.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-18 球拍库新增穿线模式字段
+
+### 需求/变更内容
+
+- `racket_library` 新增 `string_pattern` 字段，用于保存穿线模式，例如 `16x19`、`18x20`、`16/19`。
+- 确认 `head_size` 字段已存在，用于保存拍面大小数值，例如 `98`，展示单位为 `sq.in.`。
+- `GET /api/racket-library` 每个球拍项新增 `stringPattern` 响应字段。
+
+### 修改文件
+
+- `internal/model/racket_library.go`
+- `migrations/init.sql`
+- `migrations/008_add_racket_library_string_pattern.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/racket-library` 的每个球拍项新增 `stringPattern`。
+
+### 数据库变化
+
+- `racket_library` 新增字段：
+  - `string_pattern VARCHAR(64) NULL DEFAULT NULL COMMENT '穿线模式，例如 16x19、18x20、16/19'`
+- `migrations/init.sql` 同步补充建表和幂等补列逻辑。
+
+### 兼容性说明
+
+- 旧数据 `stringPattern` 默认为空字符串响应。
+- `headSize` 保持数值字段，不在后端拼接单位。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket_library.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-18 球拍库新增品牌与系列字段并清空旧数据
+
+### 需求/变更内容
+
+- 为 `racket_library` 新增 `brand_id`、`series_id`、`series` 字段，便于前端按品牌/系列做展示和筛选。
+- 本次迁移同步清空 `racket_library` 旧数据，作为球拍库重建的起点。
+- 球拍库响应同步返回新增字段，品牌分组顶层也补充 `brandId`。
+- 新增初始化脚本补列逻辑和独立迁移，保证新旧库都能平滑升级。
+
+### 修改文件
+
+- `internal/model/racket_library.go`
+- `internal/service/racket_service.go`
+- `migrations/init.sql`
+- `migrations/007_add_racket_library_series_fields.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/racket-library` 的分组项新增 `brandId`。
+- `GET /api/racket-library` 的每个球拍项新增 `brandId`、`seriesId`、`series`。
+- 其他球拍相关接口响应不变。
+
+### 数据库变化
+
+- `racket_library` 新增字段：
+  - `brand_id BIGINT NOT NULL DEFAULT 0`
+  - `series_id BIGINT NOT NULL DEFAULT 0`
+  - `series VARCHAR(100) NOT NULL DEFAULT ''`
+- 迁移执行时先清空 `racket_library` 旧数据，再添加上述字段。
+- 新增迁移：`migrations/007_add_racket_library_series_fields.sql`。
+- `migrations/init.sql` 同步补充建表和幂等补列逻辑。
+
+### 兼容性说明
+
+- `racket_library` 旧数据会被清空，请先确认不再需要历史球拍库数据。
+- 现有品牌分组逻辑仍按 `brand` 分组，不依赖新字段。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket_library.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-15 用户输入文本接入微信内容安全检测
 
 ### 需求/变更内容

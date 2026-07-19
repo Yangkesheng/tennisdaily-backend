@@ -38,6 +38,28 @@ CREATE TABLE IF NOT EXISTS user_wechat_identities (
   INDEX idx_user_wechat_deleted_at (deleted_at)
 ) COMMENT='用户微信身份绑定表';
 
+
+
+CREATE TABLE IF NOT EXISTS racket_brands (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '品牌ID',
+  name VARCHAR(128) NOT NULL COMMENT '品牌名称，例如 Wilson、Babolat、Yonex',
+  file_id VARCHAR(255) DEFAULT NULL COMMENT '品牌图片文件ID',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+  UNIQUE KEY uk_racket_brands_name (name)
+) COMMENT='球拍品牌表';
+
+CREATE TABLE IF NOT EXISTS racket_series (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '系列ID',
+  brand_id BIGINT NOT NULL COMMENT '品牌ID，仅逻辑关联 racket_brands.id，不使用数据库外键',
+  name VARCHAR(128) NOT NULL COMMENT '系列名称，例如 Blade、Pure Drive、EZONE',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+  UNIQUE KEY uk_racket_series_brand_name (brand_id, name),
+  INDEX idx_racket_series_brand_id (brand_id)
+) COMMENT='球拍系列表';
+
+
 CREATE TABLE IF NOT EXISTS tennis_sessions (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '打球记录ID',
   user_id BIGINT NOT NULL COMMENT '用户ID',
@@ -126,11 +148,16 @@ CREATE TABLE IF NOT EXISTS racket_stringing_record (
 
 CREATE TABLE IF NOT EXISTS racket_library (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '球拍库ID',
+  brand_id BIGINT NOT NULL DEFAULT 0 COMMENT '品牌ID',
   brand VARCHAR(50) NOT NULL COMMENT '品牌',
+  series_id BIGINT NOT NULL DEFAULT 0 COMMENT '系列ID',
+  series VARCHAR(100) NOT NULL DEFAULT '' COMMENT '系列',
   model VARCHAR(100) NOT NULL COMMENT '型号',
   release_year SMALLINT NOT NULL COMMENT '版本年份',
   weight SMALLINT DEFAULT NULL COMMENT '裸拍重量(g)',
   head_size SMALLINT DEFAULT NULL COMMENT '拍面大小(sq in)',
+  string_pattern VARCHAR(64) DEFAULT NULL COMMENT '穿线模式，例如 16x19、18x20、16/19',
+  file_id VARCHAR(255) DEFAULT NULL COMMENT '球拍图片文件ID',
   image_url VARCHAR(500) DEFAULT NULL COMMENT '球拍图片',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -264,6 +291,13 @@ ALTER TABLE racket_stringing_record MODIFY COLUMN string_date DATETIME NOT NULL 
 CALL ensure_column('racket_stringing_record', 'vertical_tension', '`vertical_tension` DECIMAL(4,1) DEFAULT NULL COMMENT ''竖线磅数''', 'string_name');
 CALL ensure_column('racket_stringing_record', 'horizontal_tension', '`horizontal_tension` DECIMAL(4,1) DEFAULT NULL COMMENT ''横线磅数''', 'vertical_tension');
 
+-- 兼容已存在的旧 racket_library 表。
+CALL ensure_column('racket_library', 'brand_id', '`brand_id` BIGINT NOT NULL DEFAULT 0 COMMENT ''品牌ID''', 'id');
+CALL ensure_column('racket_library', 'series_id', '`series_id` BIGINT NOT NULL DEFAULT 0 COMMENT ''系列ID''', 'brand');
+CALL ensure_column('racket_library', 'series', '`series` VARCHAR(100) NOT NULL DEFAULT '''' COMMENT ''系列''', 'series_id');
+CALL ensure_column('racket_library', 'string_pattern', '`string_pattern` VARCHAR(64) NULL DEFAULT NULL COMMENT ''穿线模式，例如 16x19、18x20、16/19''', 'head_size');
+CALL ensure_column('racket_library', 'file_id', '`file_id` VARCHAR(255) NULL DEFAULT NULL COMMENT ''球拍图片文件ID''', 'string_pattern');
+
 -- 兼容已存在但索引不完整的表。
 CALL ensure_index('user_wechat_identities', 'idx_user_wechat_appid_openid', 'UNIQUE INDEX `idx_user_wechat_appid_openid` (`appid`, `openid`)');
 CALL ensure_index('user_wechat_identities', 'idx_user_wechat_user_id', 'INDEX `idx_user_wechat_user_id` (`user_id`)');
@@ -272,6 +306,9 @@ CALL ensure_index('racket_stringing_record', 'idx_stringing_user_deleted_racket'
 CALL ensure_index('racket_stringing_record', 'idx_stringing_user_deleted_date', 'INDEX `idx_stringing_user_deleted_date` (`user_id`, `deleted_at`, `string_date`)');
 CALL ensure_index('racket_stringing_record', 'idx_stringing_racket_deleted_date', 'INDEX `idx_stringing_racket_deleted_date` (`racket_id`, `deleted_at`, `string_date`)');
 CALL ensure_index('racket_library', 'uk_brand_model_year', 'UNIQUE INDEX `uk_brand_model_year` (`brand`, `model`, `release_year`)');
+CALL ensure_index('racket_brands', 'uk_racket_brands_name', 'UNIQUE INDEX `uk_racket_brands_name` (`name`)');
+CALL ensure_index('racket_series', 'uk_racket_series_brand_name', 'UNIQUE INDEX `uk_racket_series_brand_name` (`brand_id`, `name`)');
+CALL ensure_index('racket_series', 'idx_racket_series_brand_id', 'INDEX `idx_racket_series_brand_id` (`brand_id`)');
 
 DROP PROCEDURE IF EXISTS ensure_column;
 DROP PROCEDURE IF EXISTS ensure_index;

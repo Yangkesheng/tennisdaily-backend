@@ -26,8 +26,32 @@ func NewRacketService(repo *repository.RacketRepository, userRepo *repository.Us
 	return &RacketService{repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, loc: loc}
 }
 
-func (s *RacketService) Library() ([]model.RacketLibraryBrandGroupResponse, error) {
-	items, err := s.repo.LibraryList()
+func (s *RacketService) Brands() ([]model.RacketBrandResponse, error) {
+	items, err := s.repo.BrandList()
+	if err != nil {
+		return nil, err
+	}
+	responses := make([]model.RacketBrandResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, model.NewRacketBrandResponse(item))
+	}
+	return responses, nil
+}
+
+func (s *RacketService) Series(query model.RacketSeriesQuery) ([]model.RacketSeriesResponse, error) {
+	items, err := s.repo.SeriesList(query)
+	if err != nil {
+		return nil, err
+	}
+	responses := make([]model.RacketSeriesResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, model.NewRacketSeriesResponse(item))
+	}
+	return responses, nil
+}
+
+func (s *RacketService) Library(query model.RacketLibraryQuery) ([]model.RacketLibraryBrandGroupResponse, error) {
+	items, err := s.repo.LibraryList(query)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +63,7 @@ func (s *RacketService) Library() ([]model.RacketLibraryBrandGroupResponse, erro
 		if !ok {
 			idx = len(groups)
 			brandIndex[item.Brand] = idx
-			groups = append(groups, model.RacketLibraryBrandGroupResponse{Brand: item.Brand, Items: []model.RacketLibraryItemResponse{}})
+			groups = append(groups, model.RacketLibraryBrandGroupResponse{BrandID: item.BrandID, Brand: item.Brand, Items: []model.RacketLibraryItemResponse{}})
 		}
 		groups[idx].Items = append(groups[idx].Items, model.NewRacketLibraryItemResponse(item))
 	}
@@ -335,8 +359,20 @@ func (s *RacketService) requireRacket(userID, racketID int64) (*model.Racket, er
 
 func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]model.RacketResponse, error) {
 	ids := make([]int64, 0, len(rackets))
+	libraryIDs := make([]int64, 0, len(rackets))
+	libraryIDSet := make(map[int64]struct{})
 	for _, racket := range rackets {
 		ids = append(ids, racket.ID)
+		if racket.LibraryID > 0 {
+			if _, ok := libraryIDSet[racket.LibraryID]; !ok {
+				libraryIDSet[racket.LibraryID] = struct{}{}
+				libraryIDs = append(libraryIDs, racket.LibraryID)
+			}
+		}
+	}
+	libraries, err := s.repo.LibraryFindByIDs(libraryIDs)
+	if err != nil {
+		return nil, err
 	}
 	latest, err := s.repo.LatestStringingRecords(userID, ids)
 	if err != nil {
@@ -353,6 +389,13 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 
 	responses := make([]model.RacketResponse, 0, len(rackets))
 	for _, racket := range rackets {
+		if library, ok := libraries[racket.LibraryID]; ok {
+			racket.ReleaseYear = library.ReleaseYear
+			racket.Weight = library.Weight
+			racket.HeadSize = library.HeadSize
+			racket.StringPattern = library.StringPattern
+			racket.FileID = library.FileID
+		}
 		if record, ok := latest[racket.ID]; ok {
 			racket.StringName = record.StringName
 			racket.VerticalTension = record.VerticalTension

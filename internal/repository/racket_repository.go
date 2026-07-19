@@ -18,9 +18,32 @@ func NewRacketRepository(db *gorm.DB) *RacketRepository {
 	return &RacketRepository{db: db}
 }
 
-func (r *RacketRepository) LibraryList() ([]model.RacketLibrary, error) {
+func (r *RacketRepository) BrandList() ([]model.RacketBrand, error) {
+	var items []model.RacketBrand
+	err := r.db.Order("name ASC").Find(&items).Error
+	return items, err
+}
+
+func (r *RacketRepository) SeriesList(query model.RacketSeriesQuery) ([]model.RacketSeries, error) {
+	var items []model.RacketSeries
+	db := r.db.Model(&model.RacketSeries{})
+	if query.BrandID > 0 {
+		db = db.Where("brand_id = ?", query.BrandID)
+	}
+	err := db.Order("brand_id ASC, name ASC").Find(&items).Error
+	return items, err
+}
+
+func (r *RacketRepository) LibraryList(query model.RacketLibraryQuery) ([]model.RacketLibrary, error) {
 	var items []model.RacketLibrary
-	err := r.db.Order("brand ASC, model ASC, release_year DESC").Find(&items).Error
+	db := r.db.Model(&model.RacketLibrary{})
+	if query.BrandID > 0 {
+		db = db.Where("brand_id = ?", query.BrandID)
+	}
+	if query.SeriesID > 0 {
+		db = db.Where("series_id = ?", query.SeriesID)
+	}
+	err := db.Order("brand ASC, model ASC, release_year DESC").Find(&items).Error
 	return items, err
 }
 
@@ -34,6 +57,22 @@ func (r *RacketRepository) LibraryFindByID(id int64) (*model.RacketLibrary, erro
 		return nil, err
 	}
 	return &item, nil
+}
+
+func (r *RacketRepository) LibraryFindByIDs(ids []int64) (map[int64]model.RacketLibrary, error) {
+	items := make(map[int64]model.RacketLibrary)
+	if len(ids) == 0 {
+		return items, nil
+	}
+
+	var libraries []model.RacketLibrary
+	if err := r.db.Where("id IN ?", ids).Find(&libraries).Error; err != nil {
+		return nil, err
+	}
+	for _, item := range libraries {
+		items[item.ID] = item
+	}
+	return items, nil
 }
 
 func (r *RacketRepository) List(userID int64, includeRetired bool) ([]model.Racket, error) {

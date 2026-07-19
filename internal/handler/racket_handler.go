@@ -17,14 +17,46 @@ func NewRacketHandler(racketService *service.RacketService) *RacketHandler {
 	return &RacketHandler{racketService: racketService}
 }
 
-func (h *RacketHandler) Library(c *gin.Context) {
-	logger.Debug("GET /api/racket-library start")
-	groups, err := h.racketService.Library()
+func (h *RacketHandler) Brands(c *gin.Context) {
+	logger.Debug("GET /api/racket-brands start")
+	brands, err := h.racketService.Brands()
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
 	}
-	logger.Debug("GET /api/racket-library success brandCount=%d", len(groups))
+	logger.Debug("GET /api/racket-brands success count=%d", len(brands))
+	response.OK(c, brands)
+}
+
+func (h *RacketHandler) Series(c *gin.Context) {
+	var query model.RacketSeriesQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	logger.Debug("GET /api/racket-series start brandID=%d", query.BrandID)
+	series, err := h.racketService.Series(query)
+	if err != nil {
+		response.Error(c, 500, response.CodeInternalError, "internal error")
+		return
+	}
+	logger.Debug("GET /api/racket-series success brandID=%d count=%d", query.BrandID, len(series))
+	response.OK(c, series)
+}
+
+func (h *RacketHandler) Library(c *gin.Context) {
+	var query model.RacketLibraryQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	logger.Debug("GET /api/racket-library start brandID=%d seriesID=%d", query.BrandID, query.SeriesID)
+	groups, err := h.racketService.Library(query)
+	if err != nil {
+		response.Error(c, 500, response.CodeInternalError, "internal error")
+		return
+	}
+	logger.Debug("GET /api/racket-library success brandID=%d seriesID=%d brandCount=%d", query.BrandID, query.SeriesID, len(groups))
 	response.OK(c, groups)
 }
 
