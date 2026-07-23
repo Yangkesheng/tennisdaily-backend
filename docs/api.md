@@ -1317,6 +1317,17 @@ curl http://localhost:8081/api/stats/month \
   "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
   "lastStringCost": 80,
+  "latestStringingRecord": {
+    "id": 1,
+    "racketId": 1,
+    "stringName": "Poly Tour Pro",
+    "verticalTension": 48,
+    "horizontalTension": 46,
+    "cost": 80,
+    "stringDate": "2026-05-10 10:00",
+    "createdAt": "2026-05-10T10:00:00+08:00",
+    "updatedAt": "2026-05-10T10:00:00+08:00"
+  },
   "usageCount": 12,
   "usageMinutes": 1440,
   "usageHours": 24,
@@ -1330,6 +1341,7 @@ curl http://localhost:8081/api/stats/month \
 说明：
 
 - `stringName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
+- `latestStringingRecord` 为最近一次完整穿线记录；没有穿线记录时返回 `null`。
 - `usageCount`、`usageMinutes`、`usageHours` 通过打球记录中的 `racketId` 实时统计。
 - `totalMinutes`、`totalHours` 为兼容旧前端保留，当前与 `usageMinutes`、`usageHours` 一致。
 - 默认列表不返回已退役球拍。
@@ -1368,6 +1380,17 @@ Authorization: Bearer <token>
     "horizontalTension": 46,
     "lastStringDate": "2026-05-10",
     "lastStringCost": 80,
+    "latestStringingRecord": {
+      "id": 1,
+      "racketId": 1,
+      "stringName": "Poly Tour Pro",
+      "verticalTension": 48,
+      "horizontalTension": 46,
+      "cost": 80,
+      "stringDate": "2026-05-10 10:00",
+      "createdAt": "2026-05-10T10:00:00+08:00",
+      "updatedAt": "2026-05-10T10:00:00+08:00"
+    },
     "usageCount": 12,
     "usageMinutes": 1440,
     "usageHours": 24,

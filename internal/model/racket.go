@@ -28,37 +28,38 @@ func (s RacketStatus) Label() string {
 }
 
 type Racket struct {
-	ID                         int64          `json:"id" gorm:"primaryKey"`
-	UserID                     int64          `json:"userId" gorm:"not null;index"`
-	LibraryID                  int64          `json:"libraryId" gorm:"column:library_id;not null;default:0;index"`
-	Name                       string         `json:"name" gorm:"size:100;not null"`
-	Brand                      string         `json:"brand" gorm:"size:50"`
-	Model                      string         `json:"model" gorm:"size:100"`
-	Status                     RacketStatus   `json:"status" gorm:"not null;default:2"`
-	ImageURL                   string         `json:"imageUrl" gorm:"column:image_url;size:500"`
-	PurchaseDate               *time.Time     `json:"purchaseDate" gorm:"type:date"`
-	PurchasePrice              *float64       `json:"purchasePrice" gorm:"type:decimal(10,2)"`
-	ReleaseYear                int            `json:"releaseYear" gorm:"-"`
-	Weight                     int            `json:"weight" gorm:"-"`
-	HeadSize                   int            `json:"headSize" gorm:"-"`
-	StringPattern              string         `json:"stringPattern" gorm:"-"`
-	FileID                     string         `json:"fileId" gorm:"-"`
-	StringName                 string         `json:"stringName" gorm:"-"`
-	VerticalTension            *float64       `json:"verticalTension" gorm:"-"`
-	HorizontalTension          *float64       `json:"horizontalTension" gorm:"-"`
-	LastStringDate             string         `json:"lastStringDate" gorm:"-"`
-	LastStringCost             *float64       `json:"lastStringCost" gorm:"-"`
-	UsageCount                 int            `json:"usageCount" gorm:"-"`
-	UsageMinutes               int            `json:"usageMinutes" gorm:"-"`
-	UsageHours                 int            `json:"usageHours" gorm:"-"`
-	AfterStringingUsageCount   int            `json:"afterStringingUsageCount" gorm:"-"`
-	AfterStringingUsageMinutes int            `json:"afterStringingUsageMinutes" gorm:"-"`
-	AfterStringingUsageHours   int            `json:"afterStringingUsageHours" gorm:"-"`
-	TotalMinutes               int            `json:"totalMinutes" gorm:"-"`
-	TotalHours                 int            `json:"totalHours" gorm:"-"`
-	CreatedAt                  time.Time      `json:"createdAt"`
-	UpdatedAt                  time.Time      `json:"updatedAt"`
-	DeletedAt                  gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                         int64                    `json:"id" gorm:"primaryKey"`
+	UserID                     int64                    `json:"userId" gorm:"not null;index"`
+	LibraryID                  int64                    `json:"libraryId" gorm:"column:library_id;not null;default:0;index"`
+	Name                       string                   `json:"name" gorm:"size:100;not null"`
+	Brand                      string                   `json:"brand" gorm:"size:50"`
+	Model                      string                   `json:"model" gorm:"size:100"`
+	Status                     RacketStatus             `json:"status" gorm:"not null;default:2"`
+	ImageURL                   string                   `json:"imageUrl" gorm:"column:image_url;size:500"`
+	PurchaseDate               *time.Time               `json:"purchaseDate" gorm:"type:date"`
+	PurchasePrice              *float64                 `json:"purchasePrice" gorm:"type:decimal(10,2)"`
+	ReleaseYear                int                      `json:"releaseYear" gorm:"-"`
+	Weight                     int                      `json:"weight" gorm:"-"`
+	HeadSize                   int                      `json:"headSize" gorm:"-"`
+	StringPattern              string                   `json:"stringPattern" gorm:"-"`
+	FileID                     string                   `json:"fileId" gorm:"-"`
+	StringName                 string                   `json:"stringName" gorm:"-"`
+	VerticalTension            *float64                 `json:"verticalTension" gorm:"-"`
+	HorizontalTension          *float64                 `json:"horizontalTension" gorm:"-"`
+	LastStringDate             string                   `json:"lastStringDate" gorm:"-"`
+	LastStringCost             *float64                 `json:"lastStringCost" gorm:"-"`
+	LatestStringingRecord      *StringingRecordResponse `json:"latestStringingRecord" gorm:"-"`
+	UsageCount                 int                      `json:"usageCount" gorm:"-"`
+	UsageMinutes               int                      `json:"usageMinutes" gorm:"-"`
+	UsageHours                 int                      `json:"usageHours" gorm:"-"`
+	AfterStringingUsageCount   int                      `json:"afterStringingUsageCount" gorm:"-"`
+	AfterStringingUsageMinutes int                      `json:"afterStringingUsageMinutes" gorm:"-"`
+	AfterStringingUsageHours   int                      `json:"afterStringingUsageHours" gorm:"-"`
+	TotalMinutes               int                      `json:"totalMinutes" gorm:"-"`
+	TotalHours                 int                      `json:"totalHours" gorm:"-"`
+	CreatedAt                  time.Time                `json:"createdAt"`
+	UpdatedAt                  time.Time                `json:"updatedAt"`
+	DeletedAt                  gorm.DeletedAt           `json:"-" gorm:"index"`
 }
 
 func (Racket) TableName() string {
@@ -90,35 +91,36 @@ type RacketUsageStats struct {
 }
 
 type RacketResponse struct {
-	ID                         int64        `json:"id"`
-	LibraryID                  int64        `json:"libraryId"`
-	Name                       string       `json:"name"`
-	Brand                      string       `json:"brand"`
-	Model                      string       `json:"model"`
-	Status                     RacketStatus `json:"status"`
-	ImageURL                   string       `json:"imageUrl"`
-	PurchaseDate               string       `json:"purchaseDate"`
-	PurchasePrice              *float64     `json:"purchasePrice"`
-	ReleaseYear                int          `json:"releaseYear"`
-	Weight                     int          `json:"weight"`
-	HeadSize                   int          `json:"headSize"`
-	StringPattern              string       `json:"stringPattern"`
-	FileID                     string       `json:"fileId"`
-	StringName                 string       `json:"stringName"`
-	VerticalTension            *float64     `json:"verticalTension"`
-	HorizontalTension          *float64     `json:"horizontalTension"`
-	LastStringDate             string       `json:"lastStringDate"`
-	LastStringCost             *float64     `json:"lastStringCost"`
-	UsageCount                 int          `json:"usageCount"`
-	UsageMinutes               int          `json:"usageMinutes"`
-	UsageHours                 int          `json:"usageHours"`
-	AfterStringingUsageCount   int          `json:"afterStringingUsageCount"`
-	AfterStringingUsageMinutes int          `json:"afterStringingUsageMinutes"`
-	AfterStringingUsageHours   int          `json:"afterStringingUsageHours"`
-	TotalMinutes               int          `json:"totalMinutes"`
-	TotalHours                 int          `json:"totalHours"`
-	CreatedAt                  time.Time    `json:"createdAt"`
-	UpdatedAt                  time.Time    `json:"updatedAt"`
+	ID                         int64                    `json:"id"`
+	LibraryID                  int64                    `json:"libraryId"`
+	Name                       string                   `json:"name"`
+	Brand                      string                   `json:"brand"`
+	Model                      string                   `json:"model"`
+	Status                     RacketStatus             `json:"status"`
+	ImageURL                   string                   `json:"imageUrl"`
+	PurchaseDate               string                   `json:"purchaseDate"`
+	PurchasePrice              *float64                 `json:"purchasePrice"`
+	ReleaseYear                int                      `json:"releaseYear"`
+	Weight                     int                      `json:"weight"`
+	HeadSize                   int                      `json:"headSize"`
+	StringPattern              string                   `json:"stringPattern"`
+	FileID                     string                   `json:"fileId"`
+	StringName                 string                   `json:"stringName"`
+	VerticalTension            *float64                 `json:"verticalTension"`
+	HorizontalTension          *float64                 `json:"horizontalTension"`
+	LastStringDate             string                   `json:"lastStringDate"`
+	LastStringCost             *float64                 `json:"lastStringCost"`
+	LatestStringingRecord      *StringingRecordResponse `json:"latestStringingRecord"`
+	UsageCount                 int                      `json:"usageCount"`
+	UsageMinutes               int                      `json:"usageMinutes"`
+	UsageHours                 int                      `json:"usageHours"`
+	AfterStringingUsageCount   int                      `json:"afterStringingUsageCount"`
+	AfterStringingUsageMinutes int                      `json:"afterStringingUsageMinutes"`
+	AfterStringingUsageHours   int                      `json:"afterStringingUsageHours"`
+	TotalMinutes               int                      `json:"totalMinutes"`
+	TotalHours                 int                      `json:"totalHours"`
+	CreatedAt                  time.Time                `json:"createdAt"`
+	UpdatedAt                  time.Time                `json:"updatedAt"`
 }
 
 type StringingRecordResponse struct {
@@ -205,6 +207,7 @@ func NewRacketResponse(racket Racket) RacketResponse {
 		HorizontalTension:          racket.HorizontalTension,
 		LastStringDate:             racket.LastStringDate,
 		LastStringCost:             racket.LastStringCost,
+		LatestStringingRecord:      racket.LatestStringingRecord,
 		UsageCount:                 racket.UsageCount,
 		UsageMinutes:               racket.UsageMinutes,
 		UsageHours:                 racket.UsageHours,

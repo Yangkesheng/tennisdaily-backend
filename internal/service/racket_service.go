@@ -402,6 +402,8 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 			racket.HorizontalTension = record.HorizontalTension
 			racket.LastStringDate = record.StringDate.Format("2006-01-02")
 			racket.LastStringCost = &record.Cost
+			latestRecord := model.NewStringingRecordResponse(record)
+			racket.LatestStringingRecord = &latestRecord
 		}
 		stats := usage[racket.ID]
 		racket.UsageCount = stats.Count

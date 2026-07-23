@@ -1,5 +1,44 @@
 # Change Log
 
+## 2026-07-23 球拍列表返回最新穿线记录
+
+### 需求/变更内容
+
+- `GET /api/rackets` 每把球拍新增 `latestStringingRecord`，返回该球拍最近一次完整穿线记录。
+- `GET /api/rackets/:id` 的 `data.racket` 同步返回 `latestStringingRecord`，保持 `RacketResponse` 结构一致。
+- 保留原有 `stringName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost` 摊平字段，兼容旧客户端。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/rackets` 每个球拍新增响应字段：`latestStringingRecord`。
+- `GET /api/rackets/:id` 的 `data.racket` 同步新增响应字段：`latestStringingRecord`。
+- 无穿线记录时，`latestStringingRecord` 返回 `null`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增 JSON 字段，不删除或改名已有字段。
+- 最新穿线记录复用现有批量查询逻辑，不新增 N+1 查询。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-19 新增球拍品牌和系列接口
 
 ### 需求/变更内容
