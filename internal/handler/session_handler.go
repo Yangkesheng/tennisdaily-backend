@@ -202,7 +202,7 @@ func parseIDParam(c *gin.Context) (int64, bool) {
 func handleServiceError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrInvalidRequest):
-		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		response.Error(c, 400, response.CodeInvalidRequest, service.InvalidRequestMessage(err))
 	case errors.Is(err, service.ErrSensitiveContent):
 		response.Error(c, 400, response.CodeInvalidRequest, "输入内容包含敏感信息，请修改后重试")
 	case errors.Is(err, service.ErrUnauthorized):

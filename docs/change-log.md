@@ -1182,3 +1182,116 @@
 ### 测试结果
 
 - 通过。
+
+## 2026-07-25 打球记录时长校验前置
+
+### 需求/变更内容
+
+- 针对 `POST /api/sessions` 提交 `durationMinutes=1800` 的异常请求，确保服务层先执行业务参数校验。
+- `Create` / `Update` 在内容安全检测前先构建并校验打球记录，避免无效请求触发外部内容安全检查或进入写入流程。
+- 新增服务层单测覆盖超过 600 分钟的打球时长返回 `invalid request`。
+
+### 修改文件
+
+- `internal/service/session_service.go`
+- `internal/service/session_service_test.go`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无新增接口。
+- `POST /api/sessions` 和 `PUT /api/sessions/:id` 对 `durationMinutes > 600` 继续返回 `invalid request`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 合法请求不受影响。
+- 超过 600 分钟的打球时长请求会在内容安全检查前被拒绝。
+
+### 已执行检查命令
+
+- `gofmt -w internal/service/session_service.go internal/service/session_service_test.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-25 打球记录参数错误提示明确化
+
+### 需求/变更内容
+
+- `durationMinutes` 超出范围时，错误响应从通用 `invalid request` 调整为明确字段原因。
+- 新增可携带具体原因的参数错误封装，保持 `ErrInvalidRequest` 可被 `errors.Is` 识别。
+- Handler 对参数错误继续返回错误码 `40001`，但 `message` 使用 service 返回的具体原因。
+
+### 修改文件
+
+- `internal/service/errors.go`
+- `internal/service/session_service.go`
+- `internal/service/session_service_test.go`
+- `internal/handler/session_handler.go`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/sessions` 和 `PUT /api/sessions/:id` 当 `durationMinutes` 不在 `1-600` 范围时返回：`durationMinutes must be between 1 and 600`。
+- 错误码仍为 `40001`，HTTP 状态码仍为 `400`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 响应结构不变。
+- 仅参数错误 `message` 更明确，便于前端直接提示用户。
+
+### 已执行检查命令
+
+- `gofmt -w internal/service/errors.go internal/service/session_service.go internal/service/session_service_test.go internal/handler/session_handler.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-25 打球记录参数错误改为中文提示
+
+### 需求/变更内容
+
+- 将打球记录参数校验失败提示从英文改为中文，便于前端直接展示给用户。
+- `durationMinutes` 超出范围时提示：`打球时长必须在 1-600 分钟之间`。
+- `rating` 超出范围时提示：`评分必须在 1-5 之间`。
+
+### 修改文件
+
+- `internal/service/session_service.go`
+- `internal/service/session_service_test.go`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/sessions` 和 `PUT /api/sessions/:id` 的参数错误 `message` 改为中文提示。
+- 错误码仍为 `40001`，HTTP 状态码仍为 `400`，响应结构不变。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅错误提示文案变化。
+- 合法请求不受影响。
+
+### 已执行检查命令
+
+- `gofmt -w internal/service/session_service.go internal/service/session_service_test.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。

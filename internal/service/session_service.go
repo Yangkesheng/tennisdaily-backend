@@ -108,14 +108,15 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
-	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
-		return model.SessionResponse{}, err
-	}
-
 	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
+
+	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
+		return model.SessionResponse{}, err
+	}
+
 	if err := s.repo.Create(&session); err != nil {
 		return model.SessionResponse{}, err
 	}
@@ -142,12 +143,12 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 		return model.SessionResponse{}, ErrNotFound
 	}
 
-	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
+	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
+	if err != nil {
 		return model.SessionResponse{}, err
 	}
 
-	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
-	if err != nil {
+	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
 		return model.SessionResponse{}, err
 	}
 
@@ -343,14 +344,14 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		duration = defaultDurationMinutes
 	}
 	if duration <= 0 || duration > maxDurationMinutes {
-		return model.TennisSession{}, ErrInvalidRequest
+		return model.TennisSession{}, NewInvalidRequestError("打球时长必须在 1-600 分钟之间")
 	}
 
 	if rating == 0 {
 		rating = defaultRating
 	}
 	if rating < 1 || rating > 5 {
-		return model.TennisSession{}, ErrInvalidRequest
+		return model.TennisSession{}, NewInvalidRequestError("评分必须在 1-5 之间")
 	}
 
 	if !matchRank.IsValid() {
