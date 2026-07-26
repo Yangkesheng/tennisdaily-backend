@@ -35,7 +35,6 @@ type Racket struct {
 	Brand                      string                   `json:"brand" gorm:"size:50"`
 	Model                      string                   `json:"model" gorm:"size:100"`
 	Status                     RacketStatus             `json:"status" gorm:"not null;default:2"`
-	ImageURL                   string                   `json:"imageUrl" gorm:"column:image_url;size:500"`
 	PurchaseDate               *time.Time               `json:"purchaseDate" gorm:"type:date"`
 	PurchasePrice              *float64                 `json:"purchasePrice" gorm:"type:decimal(10,2)"`
 	ReleaseYear                int                      `json:"releaseYear" gorm:"-"`
@@ -44,6 +43,7 @@ type Racket struct {
 	StringPattern              string                   `json:"stringPattern" gorm:"-"`
 	FileID                     string                   `json:"fileId" gorm:"-"`
 	StringName                 string                   `json:"stringName" gorm:"-"`
+	StoreName                  string                   `json:"storeName" gorm:"-"`
 	VerticalTension            *float64                 `json:"verticalTension" gorm:"-"`
 	HorizontalTension          *float64                 `json:"horizontalTension" gorm:"-"`
 	LastStringDate             string                   `json:"lastStringDate" gorm:"-"`
@@ -71,6 +71,7 @@ type RacketStringingRecord struct {
 	UserID            int64          `json:"userId" gorm:"not null;index"`
 	RacketID          int64          `json:"racketId" gorm:"not null;index"`
 	StringName        string         `json:"stringName" gorm:"size:100;not null"`
+	StoreName         string         `json:"storeName" gorm:"column:store_name;size:100;not null;default:''"`
 	VerticalTension   *float64       `json:"verticalTension" gorm:"column:vertical_tension;type:decimal(4,1)"`
 	HorizontalTension *float64       `json:"horizontalTension" gorm:"column:horizontal_tension;type:decimal(4,1)"`
 	Cost              float64        `json:"cost" gorm:"type:decimal(10,2);not null"`
@@ -97,7 +98,6 @@ type RacketResponse struct {
 	Brand                      string                   `json:"brand"`
 	Model                      string                   `json:"model"`
 	Status                     RacketStatus             `json:"status"`
-	ImageURL                   string                   `json:"imageUrl"`
 	PurchaseDate               string                   `json:"purchaseDate"`
 	PurchasePrice              *float64                 `json:"purchasePrice"`
 	ReleaseYear                int                      `json:"releaseYear"`
@@ -106,6 +106,7 @@ type RacketResponse struct {
 	StringPattern              string                   `json:"stringPattern"`
 	FileID                     string                   `json:"fileId"`
 	StringName                 string                   `json:"stringName"`
+	StoreName                  string                   `json:"storeName"`
 	VerticalTension            *float64                 `json:"verticalTension"`
 	HorizontalTension          *float64                 `json:"horizontalTension"`
 	LastStringDate             string                   `json:"lastStringDate"`
@@ -127,6 +128,7 @@ type StringingRecordResponse struct {
 	ID         int64  `json:"id"`
 	RacketID   int64  `json:"racketId"`
 	StringName string `json:"stringName"`
+	StoreName  string `json:"storeName"`
 
 	VerticalTension   *float64  `json:"verticalTension"`
 	HorizontalTension *float64  `json:"horizontalTension"`
@@ -156,7 +158,6 @@ type CreateRacketRequest struct {
 	Name          string   `json:"name" binding:"required"`
 	Brand         string   `json:"brand"`
 	Model         string   `json:"model"`
-	ImageURL      string   `json:"imageUrl"`
 	PurchaseDate  string   `json:"purchaseDate"`
 	PurchasePrice *float64 `json:"purchasePrice"`
 }
@@ -167,13 +168,23 @@ type UpdateRacketRequest struct {
 	Brand         string       `json:"brand"`
 	Model         string       `json:"model"`
 	Status        RacketStatus `json:"status"`
-	ImageURL      string       `json:"imageUrl"`
 	PurchaseDate  string       `json:"purchaseDate"`
 	PurchasePrice *float64     `json:"purchasePrice"`
 }
 
 type CreateStringingRecordRequest struct {
 	StringName string `json:"stringName" binding:"required"`
+	StoreName  string `json:"storeName"`
+
+	VerticalTension   *float64 `json:"verticalTension"`
+	HorizontalTension *float64 `json:"horizontalTension"`
+	Cost              float64  `json:"cost"`
+	StringDate        string   `json:"stringDate" binding:"required"`
+}
+
+type UpdateStringingRecordRequest struct {
+	StringName string `json:"stringName" binding:"required"`
+	StoreName  string `json:"storeName"`
 
 	VerticalTension   *float64 `json:"verticalTension"`
 	HorizontalTension *float64 `json:"horizontalTension"`
@@ -194,7 +205,6 @@ func NewRacketResponse(racket Racket) RacketResponse {
 		Brand:                      racket.Brand,
 		Model:                      racket.Model,
 		Status:                     racket.Status,
-		ImageURL:                   racket.ImageURL,
 		PurchaseDate:               purchaseDate,
 		PurchasePrice:              racket.PurchasePrice,
 		ReleaseYear:                racket.ReleaseYear,
@@ -203,6 +213,7 @@ func NewRacketResponse(racket Racket) RacketResponse {
 		StringPattern:              racket.StringPattern,
 		FileID:                     racket.FileID,
 		StringName:                 racket.StringName,
+		StoreName:                  racket.StoreName,
 		VerticalTension:            racket.VerticalTension,
 		HorizontalTension:          racket.HorizontalTension,
 		LastStringDate:             racket.LastStringDate,
@@ -226,6 +237,7 @@ func NewStringingRecordResponse(record RacketStringingRecord) StringingRecordRes
 		ID:                record.ID,
 		RacketID:          record.RacketID,
 		StringName:        record.StringName,
+		StoreName:         record.StoreName,
 		VerticalTension:   record.VerticalTension,
 		HorizontalTension: record.HorizontalTension,
 		Cost:              record.Cost,

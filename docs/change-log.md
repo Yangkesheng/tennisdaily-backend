@@ -1295,3 +1295,205 @@
 ### 测试结果
 
 - 通过。
+
+## 2026-07-25 穿线记录新增门店字段
+
+### 需求/变更内容
+
+- 新增穿线记录时支持填写穿线门店 `storeName`。
+- 穿线记录详情、球拍列表和球拍详情中的最近穿线记录同步返回 `storeName`。
+- `storeName` 纳入用户输入内容安全检查，未填写时默认为空字符串。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `migrations/init.sql`
+- `migrations/011_add_stringing_store_name.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/rackets/:id/stringing-records` 新增可选请求字段 `storeName`。
+- `RacketResponse` 和 `StringingRecordResponse` 新增响应字段 `storeName`。
+
+### 数据库变化
+
+- `racket_stringing_record` 新增字段：`store_name VARCHAR(100) NOT NULL DEFAULT '' COMMENT '穿线门店'`。
+
+### 兼容性说明
+
+- `storeName` 为可选字段，旧客户端不传不受影响。
+- 旧数据迁移后 `store_name` 默认为空字符串。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-26 删除球拍实例图片字段
+
+### 需求/变更内容
+
+- 删除 `racket.image_url` 字段，不再在用户球拍实例上保存图片地址。
+- 创建/更新球拍不再接收或保存实例级 `imageUrl`。
+- 球拍列表、详情、可选球拍及状态变更响应不再返回实例级 `imageUrl`。
+- 保留 `racket_library.image_url`，球拍库接口图片字段不受影响。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `migrations/init.sql`
+- `migrations/012_drop_racket_image_url.sql`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/rackets` 请求字段移除 `imageUrl`。
+- `PUT /api/rackets/:id` 请求字段移除 `imageUrl`。
+- `RacketResponse` 响应字段移除 `imageUrl`。
+
+### 数据库变化
+
+- `racket` 表删除字段：`image_url`。
+- 新增迁移：`migrations/012_drop_racket_image_url.sql`。
+
+### 兼容性说明
+
+- 旧客户端继续传 `imageUrl` 时，后端会忽略该字段。
+- 如需球拍库图片，继续使用 `GET /api/racket-library` 返回的 `imageUrl` 或 `fileId`。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-26 支持编辑穿线记录
+
+### 需求/变更内容
+
+- 新增编辑穿线记录接口，支持修改球线名称、穿线门店、竖/横线磅数、费用和穿线时间。
+- 编辑时校验当前用户、球拍归属和穿线记录归属，不能跨用户或跨球拍修改。
+- 编辑后球拍列表和详情中的最近穿线信息会基于更新后的记录重新计算。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/handler/racket_handler.go`
+- `internal/model/racket.go`
+- `internal/repository/racket_repository.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 新增 `PUT /api/rackets/:id/stringing-records/:recordId`。
+- 请求体字段同新增穿线记录：`stringName`、`storeName`、`verticalTension`、`horizontalTension`、`cost`、`stringDate`。
+- 响应返回更新后的 `StringingRecordResponse`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增接口，不影响现有新增穿线记录和球拍详情接口。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/handler/racket_handler.go internal/model/racket.go internal/repository/racket_repository.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-26 支持删除穿线记录
+
+### 需求/变更内容
+
+- 新增删除穿线记录接口，支持逻辑删除指定球拍下的穿线记录。
+- 删除时校验当前用户、球拍归属和穿线记录归属，不能跨用户或跨球拍删除。
+- 删除后球拍列表和详情中的最近穿线信息会自动排除已删除记录。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/handler/racket_handler.go`
+- `internal/repository/racket_repository.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 新增 `DELETE /api/rackets/:id/stringing-records/:recordId`。
+- 响应 `data` 为 `{ "deleted": true }`。
+
+### 数据库变化
+
+- 无新增字段；删除穿线记录通过 `racket_stringing_record.deleted_at` 逻辑删除。
+
+### 兼容性说明
+
+- 仅新增接口，不影响现有新增/编辑穿线记录接口。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/handler/racket_handler.go internal/repository/racket_repository.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-26 新增获取主力球拍接口
+
+### 需求/变更内容
+
+- 新增获取当前用户主力球拍接口，返回主力球拍基础信息。
+- 响应复用球拍聚合信息，包含最近一次穿线记录和累计使用次数/时间。
+- 无主力球拍时返回 `data: null`。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/handler/racket_handler.go`
+- `internal/repository/racket_repository.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 新增 `GET /api/rackets/primary`。
+- 响应为 `RacketResponse` 或 `null`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增接口，不影响现有球拍列表、详情和主力拍设置接口。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/handler/racket_handler.go internal/repository/racket_repository.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。

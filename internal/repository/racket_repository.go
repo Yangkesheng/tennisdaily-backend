@@ -93,6 +93,20 @@ func (r *RacketRepository) Selectable(userID int64) ([]model.Racket, error) {
 	return rackets, err
 }
 
+func (r *RacketRepository) Primary(userID int64) (*model.Racket, error) {
+	var racket model.Racket
+	err := r.db.Where("user_id = ? AND status = ? AND deleted_at IS NULL", userID, model.RacketStatusPrimary).
+		Order("updated_at DESC, id DESC").
+		First(&racket).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &racket, nil
+}
+
 func (r *RacketRepository) Stats(userID int64) (int, float64, float64, error) {
 	type racketRow struct {
 		Count int     `gorm:"column:count"`
@@ -216,6 +230,32 @@ func (r *RacketRepository) Retire(userID, id int64) (bool, error) {
 
 func (r *RacketRepository) CreateStringingRecord(record *model.RacketStringingRecord) error {
 	return r.db.Create(record).Error
+}
+
+func (r *RacketRepository) FindStringingRecordByID(userID, racketID, recordID int64) (*model.RacketStringingRecord, error) {
+	var record model.RacketStringingRecord
+	err := r.db.Where("user_id = ? AND racket_id = ? AND id = ? AND deleted_at IS NULL", userID, racketID, recordID).First(&record).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &record, nil
+}
+
+func (r *RacketRepository) UpdateStringingRecord(record *model.RacketStringingRecord) error {
+	return r.db.Save(record).Error
+}
+
+func (r *RacketRepository) SoftDeleteStringingRecord(userID, racketID, recordID int64) (bool, error) {
+	result := r.db.Model(&model.RacketStringingRecord{}).
+		Where("user_id = ? AND racket_id = ? AND id = ? AND deleted_at IS NULL", userID, racketID, recordID).
+		Updates(map[string]interface{}{"deleted_at": time.Now(), "updated_at": time.Now()})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
 }
 
 func (r *RacketRepository) ListStringingRecords(userID, racketID int64) ([]model.RacketStringingRecord, error) {

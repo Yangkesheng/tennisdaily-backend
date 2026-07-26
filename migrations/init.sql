@@ -110,7 +110,6 @@ CREATE TABLE IF NOT EXISTS racket (
   brand VARCHAR(50) DEFAULT NULL COMMENT '品牌',
   model VARCHAR(100) DEFAULT NULL COMMENT '型号',
   status TINYINT NOT NULL DEFAULT 2 COMMENT '状态:1主力拍 2在用 3已退役',
-  image_url VARCHAR(500) DEFAULT NULL COMMENT '球拍图片地址',
   purchase_date DATE DEFAULT NULL COMMENT '购买日期',
   purchase_price DECIMAL(10,2) DEFAULT NULL COMMENT '购买价格',
 
@@ -132,6 +131,7 @@ CREATE TABLE IF NOT EXISTS racket_stringing_record (
   racket_id BIGINT NOT NULL COMMENT '球拍ID',
 
   string_name VARCHAR(100) NOT NULL COMMENT '球线名称',
+  store_name VARCHAR(100) NOT NULL DEFAULT '' COMMENT '穿线门店',
   vertical_tension DECIMAL(4,1) DEFAULT NULL COMMENT '竖线磅数',
   horizontal_tension DECIMAL(4,1) DEFAULT NULL COMMENT '横线磅数',
   cost DECIMAL(10,2) NOT NULL COMMENT '穿线费用',
@@ -288,7 +288,8 @@ CALL ensure_index('racket', 'idx_racket_user_library', 'INDEX `idx_racket_user_l
 
 -- 兼容旧版本 racket_stringing_record.string_date 只存日期。
 ALTER TABLE racket_stringing_record MODIFY COLUMN string_date DATETIME NOT NULL COMMENT '穿线时间';
-CALL ensure_column('racket_stringing_record', 'vertical_tension', '`vertical_tension` DECIMAL(4,1) DEFAULT NULL COMMENT ''竖线磅数''', 'string_name');
+CALL ensure_column('racket_stringing_record', 'store_name', '`store_name` VARCHAR(100) NOT NULL DEFAULT '''' COMMENT ''穿线门店''', 'string_name');
+CALL ensure_column('racket_stringing_record', 'vertical_tension', '`vertical_tension` DECIMAL(4,1) DEFAULT NULL COMMENT ''竖线磅数''', 'store_name');
 CALL ensure_column('racket_stringing_record', 'horizontal_tension', '`horizontal_tension` DECIMAL(4,1) DEFAULT NULL COMMENT ''横线磅数''', 'vertical_tension');
 
 -- 兼容已存在的旧 racket_library 表。

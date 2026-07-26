@@ -107,8 +107,23 @@ func (s *RacketService) Selectable(userID int64) ([]model.RacketResponse, error)
 	return s.enrichRackets(userID, rackets)
 }
 
+func (s *RacketService) Primary(userID int64) (*model.RacketResponse, error) {
+	racket, err := s.repo.Primary(userID)
+	if err != nil {
+		return nil, err
+	}
+	if racket == nil {
+		return nil, nil
+	}
+	responses, err := s.enrichRackets(userID, []model.Racket{*racket})
+	if err != nil {
+		return nil, err
+	}
+	return &responses[0], nil
+}
+
 func (s *RacketService) Create(userID int64, req model.CreateRacketRequest) (model.RacketResponse, error) {
-	if err := s.applyLibraryDefaults(&req.LibraryID, &req.Name, &req.Brand, &req.Model, &req.ImageURL); err != nil {
+	if err := s.applyLibraryDefaults(&req.LibraryID, &req.Name, &req.Brand, &req.Model); err != nil {
 		return model.RacketResponse{}, err
 	}
 	if req.Name == "" {
@@ -130,7 +145,6 @@ func (s *RacketService) Create(userID int64, req model.CreateRacketRequest) (mod
 		Brand:         req.Brand,
 		Model:         req.Model,
 		Status:        model.RacketStatusActive,
-		ImageURL:      req.ImageURL,
 		PurchaseDate:  purchaseDate,
 		PurchasePrice: req.PurchasePrice,
 	}
@@ -172,7 +186,7 @@ func (s *RacketService) Detail(userID, id int64) (model.RacketDetailResponse, er
 }
 
 func (s *RacketService) Update(userID, id int64, req model.UpdateRacketRequest) (model.RacketResponse, error) {
-	if err := s.applyLibraryDefaults(&req.LibraryID, &req.Name, &req.Brand, &req.Model, &req.ImageURL); err != nil {
+	if err := s.applyLibraryDefaults(&req.LibraryID, &req.Name, &req.Brand, &req.Model); err != nil {
 		return model.RacketResponse{}, err
 	}
 	if req.Name == "" {
@@ -199,7 +213,6 @@ func (s *RacketService) Update(userID, id int64, req model.UpdateRacketRequest) 
 	racket.Name = req.Name
 	racket.Brand = req.Brand
 	racket.Model = req.Model
-	racket.ImageURL = req.ImageURL
 	racket.PurchaseDate = purchaseDate
 	racket.PurchasePrice = req.PurchasePrice
 	if req.Status >= model.RacketStatusPrimary && req.Status <= model.RacketStatusRetired {
@@ -284,7 +297,7 @@ func (s *RacketService) AddStringingRecord(userID, racketID int64, req model.Cre
 	if req.StringName == "" || req.StringDate == "" {
 		return ErrInvalidRequest
 	}
-	if err := s.checkUserInputTexts(userID, req.StringName); err != nil {
+	if err := s.checkUserInputTexts(userID, req.StringName, req.StoreName); err != nil {
 		return err
 	}
 	if _, err := s.requireRacket(userID, racketID); err != nil {
@@ -298,6 +311,7 @@ func (s *RacketService) AddStringingRecord(userID, racketID int64, req model.Cre
 		UserID:            userID,
 		RacketID:          racketID,
 		StringName:        req.StringName,
+		StoreName:         req.StoreName,
 		VerticalTension:   req.VerticalTension,
 		HorizontalTension: req.HorizontalTension,
 		Cost:              req.Cost,
@@ -310,7 +324,7 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 	if req.StringName == "" || req.StringDate == "" {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
-	if err := s.checkUserInputTexts(userID, req.StringName); err != nil {
+	if err := s.checkUserInputTexts(userID, req.StringName, req.StoreName); err != nil {
 		return model.StringingRecordResponse{}, err
 	}
 	if _, err := s.requireRacket(userID, racketID); err != nil {
@@ -324,6 +338,7 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 		UserID:            userID,
 		RacketID:          racketID,
 		StringName:        req.StringName,
+		StoreName:         req.StoreName,
 		VerticalTension:   req.VerticalTension,
 		HorizontalTension: req.HorizontalTension,
 		Cost:              req.Cost,
@@ -333,6 +348,53 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 		return model.StringingRecordResponse{}, err
 	}
 	return model.NewStringingRecordResponse(record), nil
+}
+
+func (s *RacketService) UpdateStringingRecord(userID, racketID, recordID int64, req model.UpdateStringingRecordRequest) (model.StringingRecordResponse, error) {
+	if req.StringName == "" || req.StringDate == "" {
+		return model.StringingRecordResponse{}, ErrInvalidRequest
+	}
+	if err := s.checkUserInputTexts(userID, req.StringName, req.StoreName); err != nil {
+		return model.StringingRecordResponse{}, err
+	}
+	if _, err := s.requireRacket(userID, racketID); err != nil {
+		return model.StringingRecordResponse{}, err
+	}
+	record, err := s.repo.FindStringingRecordByID(userID, racketID, recordID)
+	if err != nil {
+		return model.StringingRecordResponse{}, err
+	}
+	if record == nil {
+		return model.StringingRecordResponse{}, ErrNotFound
+	}
+	stringDate, err := s.parseStringingDate(req.StringDate)
+	if err != nil {
+		return model.StringingRecordResponse{}, ErrInvalidRequest
+	}
+	record.StringName = req.StringName
+	record.StoreName = req.StoreName
+	record.VerticalTension = req.VerticalTension
+	record.HorizontalTension = req.HorizontalTension
+	record.Cost = req.Cost
+	record.StringDate = stringDate
+	if err := s.repo.UpdateStringingRecord(record); err != nil {
+		return model.StringingRecordResponse{}, err
+	}
+	return model.NewStringingRecordResponse(*record), nil
+}
+
+func (s *RacketService) DeleteStringingRecord(userID, racketID, recordID int64) error {
+	if _, err := s.requireRacket(userID, racketID); err != nil {
+		return err
+	}
+	deleted, err := s.repo.SoftDeleteStringingRecord(userID, racketID, recordID)
+	if err != nil {
+		return err
+	}
+	if !deleted {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (s *RacketService) checkUserInputTexts(userID int64, texts ...string) error {
@@ -398,6 +460,7 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 		}
 		if record, ok := latest[racket.ID]; ok {
 			racket.StringName = record.StringName
+			racket.StoreName = record.StoreName
 			racket.VerticalTension = record.VerticalTension
 			racket.HorizontalTension = record.HorizontalTension
 			racket.LastStringDate = record.StringDate.Format("2006-01-02")
@@ -421,7 +484,7 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 	return responses, nil
 }
 
-func (s *RacketService) applyLibraryDefaults(libraryID *int64, name *string, brand *string, racketModel *string, imageURL *string) error {
+func (s *RacketService) applyLibraryDefaults(libraryID *int64, name *string, brand *string, racketModel *string) error {
 	if libraryID == nil || *libraryID == 0 {
 		return nil
 	}
@@ -437,9 +500,6 @@ func (s *RacketService) applyLibraryDefaults(libraryID *int64, name *string, bra
 	}
 	if *racketModel == "" {
 		*racketModel = item.Model
-	}
-	if *imageURL == "" {
-		*imageURL = item.ImageURL
 	}
 	if *name == "" {
 		*name = item.Brand + " " + item.Model

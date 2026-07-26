@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"tennisdaily-backend/internal/logger"
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/response"
@@ -122,6 +124,26 @@ func (h *RacketHandler) Selectable(c *gin.Context) {
 	}
 	logger.Debug("GET /api/rackets/selectable success userID=%d count=%d", userID, len(rackets))
 	response.OK(c, rackets)
+}
+
+func (h *RacketHandler) Primary(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	logger.Debug("GET /api/rackets/primary start userID=%d", userID)
+
+	racket, err := h.racketService.Primary(userID)
+	if err != nil {
+		response.Error(c, 500, response.CodeInternalError, "internal error")
+		return
+	}
+	if racket == nil {
+		logger.Debug("GET /api/rackets/primary success userID=%d racketID=<nil>", userID)
+	} else {
+		logger.Debug("GET /api/rackets/primary success userID=%d racketID=%d", userID, racket.ID)
+	}
+	response.OK(c, racket)
 }
 
 func (h *RacketHandler) Create(c *gin.Context) {
@@ -272,4 +294,65 @@ func (h *RacketHandler) CreateStringingRecord(c *gin.Context) {
 	}
 	logger.Debug("POST /api/rackets/:id/stringing-records success userID=%d racketID=%d recordID=%d", userID, racketID, record.ID)
 	response.OK(c, record)
+}
+
+func (h *RacketHandler) UpdateStringingRecord(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	racketID, ok := parseIDParam(c)
+	if !ok {
+		return
+	}
+	recordID, ok := parseRecordIDParam(c)
+	if !ok {
+		return
+	}
+	logger.Debug("PUT /api/rackets/:id/stringing-records/:recordId start userID=%d racketID=%d recordID=%d", userID, racketID, recordID)
+
+	var req model.UpdateStringingRecordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	record, err := h.racketService.UpdateStringingRecord(userID, racketID, recordID, req)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	logger.Debug("PUT /api/rackets/:id/stringing-records/:recordId success userID=%d racketID=%d recordID=%d", userID, racketID, record.ID)
+	response.OK(c, record)
+}
+
+func (h *RacketHandler) DeleteStringingRecord(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	racketID, ok := parseIDParam(c)
+	if !ok {
+		return
+	}
+	recordID, ok := parseRecordIDParam(c)
+	if !ok {
+		return
+	}
+	logger.Debug("DELETE /api/rackets/:id/stringing-records/:recordId start userID=%d racketID=%d recordID=%d", userID, racketID, recordID)
+
+	if err := h.racketService.DeleteStringingRecord(userID, racketID, recordID); err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	logger.Debug("DELETE /api/rackets/:id/stringing-records/:recordId success userID=%d racketID=%d recordID=%d", userID, racketID, recordID)
+	response.OK(c, gin.H{"deleted": true})
+}
+
+func parseRecordIDParam(c *gin.Context) (int64, bool) {
+	recordID, err := strconv.ParseInt(c.Param("recordId"), 10, 64)
+	if err != nil || recordID <= 0 {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return 0, false
+	}
+	return recordID, true
 }

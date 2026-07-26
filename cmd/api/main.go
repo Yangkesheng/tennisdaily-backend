@@ -84,12 +84,15 @@ func main() {
 		authed.GET("/rackets", racketHandler.List)
 		authed.POST("/rackets", racketHandler.Create)
 		authed.GET("/rackets/selectable", racketHandler.Selectable)
+		authed.GET("/rackets/primary", racketHandler.Primary)
 		authed.GET("/rackets/:id", racketHandler.Detail)
 		authed.PUT("/rackets/:id", racketHandler.Update)
 		authed.DELETE("/rackets/:id", racketHandler.Delete)
 		authed.POST("/rackets/:id/set-primary", racketHandler.SetPrimary)
 		authed.POST("/rackets/:id/retire", racketHandler.Retire)
 		authed.POST("/rackets/:id/stringing-records", racketHandler.CreateStringingRecord)
+		authed.PUT("/rackets/:id/stringing-records/:recordId", racketHandler.UpdateStringingRecord)
+		authed.DELETE("/rackets/:id/stringing-records/:recordId", racketHandler.DeleteStringingRecord)
 	}
 
 	if err := r.Run(":" + cfg.Port); err != nil {

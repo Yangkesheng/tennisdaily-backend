@@ -1309,10 +1309,10 @@ curl http://localhost:8081/api/stats/month \
   "brand": "Yonex",
   "model": "EZONE 100",
   "status": 1,
-  "imageUrl": "",
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
+  "storeName": "冠军穿线工作室",
   "verticalTension": 48,
   "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
@@ -1321,6 +1321,7 @@ curl http://localhost:8081/api/stats/month \
     "id": 1,
     "racketId": 1,
     "stringName": "Poly Tour Pro",
+    "storeName": "冠军穿线工作室",
     "verticalTension": 48,
     "horizontalTension": 46,
     "cost": 80,
@@ -1340,7 +1341,7 @@ curl http://localhost:8081/api/stats/month \
 
 说明：
 
-- `stringName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
+- `stringName`、`storeName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
 - `latestStringingRecord` 为最近一次完整穿线记录；没有穿线记录时返回 `null`。
 - `usageCount`、`usageMinutes`、`usageHours` 通过打球记录中的 `racketId` 实时统计。
 - `totalMinutes`、`totalHours` 为兼容旧前端保留，当前与 `usageMinutes`、`usageHours` 一致。
@@ -1376,6 +1377,7 @@ Authorization: Bearer <token>
     "stringPattern": "16x19",
     "fileId": "cloud://tennisdaily/rackets/ezone100.png",
     "stringName": "Poly Tour Pro",
+    "storeName": "冠军穿线工作室",
     "verticalTension": 48,
     "horizontalTension": 46,
     "lastStringDate": "2026-05-10",
@@ -1384,6 +1386,7 @@ Authorization: Bearer <token>
       "id": 1,
       "racketId": 1,
       "stringName": "Poly Tour Pro",
+      "storeName": "冠军穿线工作室",
       "verticalTension": 48,
       "horizontalTension": 46,
       "cost": 80,
@@ -1504,10 +1507,10 @@ Content-Type: application/json
   "name": "EZONE 主力拍",
   "brand": "Yonex",
   "model": "EZONE 100",
-  "imageUrl": "",
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
+  "storeName": "冠军穿线工作室",
   "verticalTension": 48,
   "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
@@ -1539,7 +1542,6 @@ Authorization: Bearer <token>
     "brand": "Yonex",
     "model": "EZONE 100",
     "status": 1,
-    "imageUrl": "",
     "purchaseDate": "2026-01-01",
     "purchasePrice": 1599,
     "releaseYear": 2025,
@@ -1548,6 +1550,7 @@ Authorization: Bearer <token>
     "stringPattern": "16x19",
     "fileId": "cloud://tennisdaily/rackets/ezone100.png",
     "stringName": "Poly Tour Pro",
+    "storeName": "冠军穿线工作室",
     "verticalTension": 48,
     "horizontalTension": 46,
     "lastStringDate": "2026-05-10",
@@ -1568,8 +1571,9 @@ Authorization: Bearer <token>
       "id": 1,
       "racketId": 1,
       "stringName": "Poly Tour Pro",
-    "verticalTension": 48,
-    "horizontalTension": 46,
+      "storeName": "冠军穿线工作室",
+      "verticalTension": 48,
+      "horizontalTension": 46,
       "cost": 80,
       "stringDate": "2026-05-10 19:30",
       "createdAt": "2026-05-30T12:00:00+08:00",
@@ -1617,10 +1621,10 @@ Content-Type: application/json
   "brand": "Yonex",
   "model": "EZONE 100",
   "status": 1,
-  "imageUrl": "",
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
+  "storeName": "冠军穿线工作室",
   "verticalTension": 48,
   "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
@@ -1672,6 +1676,7 @@ Content-Type: application/json
 ```json
 {
   "stringName": "Poly Tour Pro",
+  "storeName": "冠军穿线工作室",
   "verticalTension": 48,
   "horizontalTension": 46,
   "cost": 80,
@@ -1679,7 +1684,32 @@ Content-Type: application/json
 }
 ```
 
-### 20.12 打球记录关联球拍
+### 20.12 编辑穿线记录
+
+```http
+PUT /api/rackets/:id/stringing-records/:recordId
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体同新增穿线记录，返回更新后的穿线记录。
+
+### 20.13 删除穿线记录
+
+```http
+DELETE /api/rackets/:id/stringing-records/:recordId
+Authorization: Bearer <token>
+```
+
+响应：
+
+```json
+{
+  "deleted": true
+}
+```
+
+### 20.14 打球记录关联球拍
 
 新增/编辑打球记录支持传入：
 
@@ -1839,6 +1869,7 @@ Content-Type: application/json
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
+  "storeName": "冠军穿线工作室",
   "verticalTension": 48,
   "horizontalTension": 46,
   "lastStringDate": "2026-05-10",
@@ -1854,8 +1885,8 @@ Content-Type: application/json
 - `brandId`、`seriesId`、`series` 已从 `racket_library` 返回，前端可直接用于品牌/系列展示或筛选。
 - `GET /api/racket-library` 支持通过 query 参数 `brandId`、`seriesId` 过滤球拍库列表。
 - `brandId`、`seriesId` 目前由球拍库自身字段承载，未引入独立品牌/系列表。
-- `libraryId` 有值时，后端会从球拍库补全 `brand`、`model`、`imageUrl`。
-- 如果请求体里也传了 `brand`、`model`、`imageUrl`，以前端传入值为准。
+- `libraryId` 有值时，后端会从球拍库补全 `brand`、`model`。
+- 如果请求体里也传了 `brand`、`model`，以前端传入值为准。
 - `name` 仍可自定义，比如“EZONE 主力拍”。
 
 ### 21.5 添加库中没有的球拍
@@ -1914,6 +1945,7 @@ Authorization: Bearer <token>
     "model": "EZONE 100",
     "status": 1,
     "stringName": "Poly Tour Pro",
+    "storeName": "冠军穿线工作室",
     "verticalTension": 48,
     "horizontalTension": 46,
     "lastStringDate": "2026-05-10",
@@ -1953,7 +1985,6 @@ Content-Type: application/json
   "name": "EZONE 主力拍",
   "brand": "Yonex",
   "model": "EZONE 100",
-  "imageUrl": "",
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599
 }
@@ -1963,7 +1994,7 @@ Content-Type: application/json
 
 - `name` 必填。
 - `libraryId` 可选。
-- 从球拍库选择时，后端可根据 `libraryId` 补全 `brand`、`model`、`imageUrl`。
+- 从球拍库选择时，后端可根据 `libraryId` 补全 `brand`、`model`。
 - 库中没有的球拍，用户可不传 `libraryId`，直接手动输入 `name`、`brand`、`model`。
 - 当前接口不再接收/处理 `stringName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost`。
 
@@ -1984,7 +2015,6 @@ Content-Type: application/json
   "brand": "Yonex",
   "model": "EZONE 100",
   "status": 1,
-  "imageUrl": "",
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599
 }
@@ -1997,7 +2027,23 @@ Content-Type: application/json
 - `status = 3`：退役。
 - 编辑球拍不再接收/处理穿线信息。
 
-### 22.3 删除球拍
+### 22.3 获取主力球拍
+
+```http
+GET /api/rackets/primary
+Authorization: Bearer <token>
+```
+
+响应 `data` 为主力球拍的 `RacketResponse`，无主力球拍时返回 `null`。
+
+说明：
+
+- 只返回当前用户未删除且 `status = 1` 的主力球拍。
+- 响应包含 `latestStringingRecord` 最近一次穿线记录。
+- 响应包含 `usageCount`、`usageMinutes`、`usageHours`，表示该球拍在打球记录中的累计使用次数和累计时间。
+- 如果历史数据异常存在多把主力拍，返回最近更新的一把。
+
+### 22.4 删除球拍
 
 ```http
 DELETE /api/rackets/:id
@@ -2018,7 +2064,7 @@ Authorization: Bearer <token>
 - 删除后默认列表、我的球拍列表不再返回。
 - 历史打球记录中的 `racketId` 不会被清空。
 
-### 22.4 新增穿线记录
+### 22.5 新增穿线记录
 
 穿线信息通过独立接口维护。
 
@@ -2033,6 +2079,7 @@ Content-Type: application/json
 ```json
 {
   "stringName": "Poly Tour Pro",
+  "storeName": "冠军穿线工作室",
   "verticalTension": 48,
   "horizontalTension": 46,
   "cost": 80,
@@ -2043,11 +2090,63 @@ Content-Type: application/json
 说明：
 
 - `stringName` 必填。
+- `storeName` 为穿线门店，可选，未填写时为空字符串。
 - `verticalTension` 表示竖线磅数，`horizontalTension` 表示横线磅数。
 - `stringDate` 必填，格式 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理。
 - 球拍列表和详情中的当前球线信息来自最近一条穿线记录。
 
-### 22.5 保留我的球拍接口
+### 22.6 编辑穿线记录
+
+```http
+PUT /api/rackets/:id/stringing-records/:recordId
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "stringName": "Poly Tour Pro",
+  "storeName": "冠军穿线工作室",
+  "verticalTension": 48,
+  "horizontalTension": 46,
+  "cost": 80,
+  "stringDate": "2026-05-10 19:30"
+}
+```
+
+说明：
+
+- `recordId` 为穿线记录 ID，必须属于当前用户和路径中的球拍。
+- `stringName` 和 `stringDate` 必填。
+- `storeName` 为穿线门店，可选，未填写时为空字符串。
+- `verticalTension` 表示竖线磅数，`horizontalTension` 表示横线磅数。
+- `stringDate` 格式为 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理。
+- 响应返回更新后的穿线记录。
+
+### 22.7 删除穿线记录
+
+```http
+DELETE /api/rackets/:id/stringing-records/:recordId
+Authorization: Bearer <token>
+```
+
+响应：
+
+```json
+{
+  "deleted": true
+}
+```
+
+说明：
+
+- `recordId` 为穿线记录 ID，必须属于当前用户和路径中的球拍。
+- 当前实现为逻辑删除，更新 `deleted_at`。
+- 删除后球拍列表和详情中的最近穿线信息会自动排除该记录。
+
+### 22.8 保留我的球拍接口
 
 新增打球记录选择球拍时继续使用：
 
