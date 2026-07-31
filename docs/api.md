@@ -1507,6 +1507,7 @@ Content-Type: application/json
   "name": "EZONE 主力拍",
   "brand": "Yonex",
   "model": "EZONE 100",
+  "status": 1,
   "purchaseDate": "2026-01-01",
   "purchasePrice": 1599,
   "stringName": "Poly Tour Pro",
@@ -1521,7 +1522,8 @@ Content-Type: application/json
 规则：
 
 - `name` 必填。
-- 新增球拍默认 `status = 2`，表示在用。
+- `status` 可选，支持 `1` 主力拍、`2` 在用；不传默认 `2`。
+- `status = 1` 时会自动将当前用户其他主力拍改为在用。
 - 如果传入穿线相关字段，会自动创建一条穿线记录。
 
 ### 20.7 获取球拍详情
@@ -2030,11 +2032,11 @@ Content-Type: application/json
 ### 22.3 获取主力球拍
 
 ```http
-GET /api/rackets/primary
+GET /api/my-rackets/primary
 Authorization: Bearer <token>
 ```
 
-响应 `data` 为主力球拍的 `RacketResponse`，无主力球拍时返回 `null`。
+响应 `data` 为主力球拍的 `RacketResponse`，无主力球拍时返回 `null`。返回字段包含球拍信息、`latestStringingRecord` 最新一条穿线信息、`usageCount` 累计使用次数、`usageHours` 累计使用小时数。
 
 说明：
 

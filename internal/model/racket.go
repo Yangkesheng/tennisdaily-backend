@@ -154,12 +154,13 @@ type RacketStatsResponse struct {
 }
 
 type CreateRacketRequest struct {
-	LibraryID     int64    `json:"libraryId"`
-	Name          string   `json:"name" binding:"required"`
-	Brand         string   `json:"brand"`
-	Model         string   `json:"model"`
-	PurchaseDate  string   `json:"purchaseDate"`
-	PurchasePrice *float64 `json:"purchasePrice"`
+	LibraryID     int64        `json:"libraryId"`
+	Name          string       `json:"name" binding:"required"`
+	Brand         string       `json:"brand"`
+	Model         string       `json:"model"`
+	Status        RacketStatus `json:"status"`
+	PurchaseDate  string       `json:"purchaseDate"`
+	PurchasePrice *float64     `json:"purchasePrice"`
 }
 
 type UpdateRacketRequest struct {

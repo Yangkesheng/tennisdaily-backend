@@ -348,6 +348,7 @@ GET    /api/racket-series
 GET    /api/racket-series?brandId=1
 GET    /api/racket-library
 GET    /api/my-rackets
+GET    /api/my-rackets/primary
 GET    /api/rackets/stats
 GET    /api/rackets
 POST   /api/rackets
@@ -752,6 +753,7 @@ go test ./...
 8. 是否更新 `docs/api.md`、`docs/change-log.md` 或相关接口文档
 9. 是否执行 `gofmt`
 10. 是否执行 `go test ./...`
+11. 是否涉及旧接口/旧字段兼容；如需要兼容，必须先询问用户确认后再实现
 
 ---
 
@@ -769,6 +771,7 @@ go test ./...
 - 在 Go 代码中散落枚举魔法数字
 - 统计接口漏掉 `deleted_at` 规则
 - 把中文文案作为数据库枚举主值
+- 未经用户确认擅自新增、保留或扩展兼容接口/兼容字段；是否兼容必须先询问用户
 
 ---
 

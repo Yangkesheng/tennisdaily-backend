@@ -138,18 +138,32 @@ func (s *RacketService) Create(userID int64, req model.CreateRacketRequest) (mod
 		return model.RacketResponse{}, ErrInvalidRequest
 	}
 
+	status := model.RacketStatusActive
+	if req.Status != 0 {
+		if req.Status != model.RacketStatusPrimary && req.Status != model.RacketStatusActive {
+			return model.RacketResponse{}, ErrInvalidRequest
+		}
+		status = req.Status
+	}
+
 	racket := model.Racket{
 		UserID:        userID,
 		LibraryID:     req.LibraryID,
 		Name:          req.Name,
 		Brand:         req.Brand,
 		Model:         req.Model,
-		Status:        model.RacketStatusActive,
+		Status:        status,
 		PurchaseDate:  purchaseDate,
 		PurchasePrice: req.PurchasePrice,
 	}
 	if err := s.repo.Create(&racket); err != nil {
 		return model.RacketResponse{}, err
+	}
+	if status == model.RacketStatusPrimary {
+		if err := s.repo.SetPrimary(userID, racket.ID); err != nil {
+			return model.RacketResponse{}, err
+		}
+		racket.Status = model.RacketStatusPrimary
 	}
 
 	responses, err := s.enrichRackets(userID, []model.Racket{racket})

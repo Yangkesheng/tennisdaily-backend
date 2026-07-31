@@ -126,12 +126,12 @@ func (h *RacketHandler) Selectable(c *gin.Context) {
 	response.OK(c, rackets)
 }
 
-func (h *RacketHandler) Primary(c *gin.Context) {
+func (h *RacketHandler) MyPrimaryRacket(c *gin.Context) {
 	userID, ok := currentUserID(c)
 	if !ok {
 		return
 	}
-	logger.Debug("GET /api/rackets/primary start userID=%d", userID)
+	logger.Debug("GET /api/my-rackets/primary start userID=%d", userID)
 
 	racket, err := h.racketService.Primary(userID)
 	if err != nil {
@@ -139,9 +139,9 @@ func (h *RacketHandler) Primary(c *gin.Context) {
 		return
 	}
 	if racket == nil {
-		logger.Debug("GET /api/rackets/primary success userID=%d racketID=<nil>", userID)
+		logger.Debug("GET /api/my-rackets/primary success userID=%d racketID=<nil>", userID)
 	} else {
-		logger.Debug("GET /api/rackets/primary success userID=%d racketID=%d", userID, racket.ID)
+		logger.Debug("GET /api/my-rackets/primary success userID=%d racketID=%d", userID, racket.ID)
 	}
 	response.OK(c, racket)
 }

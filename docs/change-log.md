@@ -1497,3 +1497,114 @@
 ### 测试结果
 
 - 通过。
+
+## 2026-07-28 新增我的主力球拍接口
+
+### 需求/变更内容
+
+- 新增 `GET /api/my-rackets/primary`，用于获取当前用户主力球拍。
+- 响应复用 `RacketResponse`，包含球拍信息、最新一条穿线信息、球拍累计使用次数和累计使用小时数。
+- 不再保留 `GET /api/rackets/primary` 兼容接口。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/handler/racket_handler.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 新增 `GET /api/my-rackets/primary`。
+- 响应 `data` 为 `RacketResponse` 或 `null`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅保留新增接口 `GET /api/my-rackets/primary`。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/handler/racket_handler.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-28 移除主力球拍兼容接口
+
+### 需求/变更内容
+
+- 移除 `GET /api/rackets/primary` 兼容接口，仅保留 `GET /api/my-rackets/primary`。
+- 将“新增、保留或扩展兼容接口/字段前必须先询问用户确认”写入 `AGENTS.md`。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/handler/racket_handler.go`
+- `docs/api.md`
+- `docs/change-log.md`
+- `AGENTS.md`
+
+### 接口变化
+
+- 移除 `GET /api/rackets/primary`。
+- 保留 `GET /api/my-rackets/primary`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 本次明确不保留兼容接口。
+- 之后是否兼容必须先询问用户确认。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/handler/racket_handler.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-07-28 新增球拍支持直接设为主力
+
+### 需求/变更内容
+
+- `POST /api/rackets` 支持请求字段 `status`。
+- `status = 1` 时，新建球拍直接设为主力拍，并自动将当前用户其他主力拍改为在用。
+- `status` 不传或传 `0` 时仍默认 `2` 在用；创建接口仅允许 `1` 或 `2`。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/rackets` 新增请求字段 `status`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 不传 `status` 的旧请求仍默认创建为在用球拍。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
