@@ -3,8 +3,10 @@ package service
 import (
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
+	"tennisdaily-backend/internal/config"
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/repository"
 
@@ -15,15 +17,16 @@ type RacketService struct {
 	repo            *repository.RacketRepository
 	userRepo        *repository.UserRepository
 	contentSecurity *ContentSecurityService
+	stringHealth    *config.PolyesterStringHealthResolver
 	loc             *time.Location
 }
 
-func NewRacketService(repo *repository.RacketRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService) *RacketService {
+func NewRacketService(repo *repository.RacketRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService, stringHealth *config.PolyesterStringHealthResolver) *RacketService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &RacketService{repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, loc: loc}
+	return &RacketService{repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, stringHealth: stringHealth, loc: loc}
 }
 
 func (s *RacketService) Brands() ([]model.RacketBrandResponse, error) {
@@ -532,9 +535,42 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 			racket.AfterStringingUsageMinutes = stats.Minutes
 			racket.AfterStringingUsageHours = stats.Hours
 		}
+		if record, ok := latest[racket.ID]; ok {
+			health := s.calculateStringHealth(record.StringDate, racket.AfterStringingUsageMinutes)
+			racket.StringHealth = &health
+		}
 		responses = append(responses, model.NewRacketResponse(racket))
 	}
 	return responses, nil
+}
+
+func (s *RacketService) calculateStringHealth(stringDate time.Time, afterStringingUsageMinutes int) model.StringHealthResponse {
+	return calculateStringHealthAt(time.Now().In(s.loc), stringDate, afterStringingUsageMinutes, s.loc, s.stringHealth)
+}
+
+func calculateStringHealthAt(now, stringDate time.Time, afterStringingUsageMinutes int, loc *time.Location, health *config.PolyesterStringHealthResolver) model.StringHealthResponse {
+	now = now.In(loc)
+	stringedAt := stringDate.In(loc)
+	daysSinceStringing := 0
+	if now.After(stringedAt) {
+		startDay := time.Date(stringedAt.Year(), stringedAt.Month(), stringedAt.Day(), 0, 0, 0, 0, loc)
+		nowDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+		daysSinceStringing = int(nowDay.Sub(startDay).Hours() / 24)
+	}
+
+	hoursPlayed := float64(afterStringingUsageMinutes) / 60
+	effectiveWear := hoursPlayed + float64(daysSinceStringing)*health.RestWearPerDay()
+	standardLifeHours := health.StandardLifeHours()
+	score := math.Max(0, 100*(1-effectiveWear/standardLifeHours))
+	remainingHours := int(math.Round(math.Max(0, standardLifeHours-effectiveWear)))
+
+	state := health.State(score)
+	return model.StringHealthResponse{
+		State:          state.Key,
+		Display:        health.RenderDisplay(state.Display, remainingHours),
+		Score:          score,
+		RemainingHours: remainingHours,
+	}
 }
 
 func (s *RacketService) applyLibraryDefaults(libraryID *int64, name *string, brand *string, racketModel *string) error {

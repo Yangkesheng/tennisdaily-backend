@@ -1,5 +1,91 @@
 # Change Log
 
+## 2026-08-04 聚酯线健康度配置化
+
+### 需求/变更内容
+
+- 将 `stringHealthState` 中的状态分档（key、minScore、label、display、color）从代码硬编码迁移到 `config.yaml`。
+- 同步将公式常量 `standardLifeHours`（16）和 `restWearPerDay`（0.18）迁移到配置，业务层通过 resolver 读取。
+- display 模板支持 `{remainingHours}` 占位符，由 resolver 渲染为实际剩余小时数。
+- 配置段缺失时使用代码内置默认值，配置存在时严格校验（key 唯一、minScore 在 `[0, 100]` 且唯一、必须存在 `minScore: 0` 的兜底状态、display 必填）。
+
+### 修改文件
+
+- `internal/config/string_health.go`（新增）
+- `internal/config/string_health_test.go`（新增）
+- `internal/config/config.go`
+- `config.yaml`
+- `internal/service/racket_service.go`
+- `internal/service/racket_service_test.go`
+- `cmd/api/main.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。`stringHealth` 响应结构不变（`state` / `display` / `score` / `remainingHours`），仅阈值和文案来源改为配置。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 默认配置与原有硬编码行为完全一致，现有客户端无需改动。
+- 修改 `config.yaml` 的 `polyesterStringHealth` 段即可调整分档阈值和展示文案，无需重新编译。
+- 配置段缺失时回退到内置默认值，不影响服务启动。
+
+### 已执行检查命令
+
+- `gofmt -w internal/config/config.go internal/config/string_health.go internal/config/string_health_test.go internal/service/racket_service.go internal/service/racket_service_test.go cmd/api/main.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-04 球拍新增聚酯线健康度
+
+### 需求/变更内容
+
+- 依据 `polyester-string-health.md` 实现聚酯线衰减健康度计算。
+- `RacketResponse` 新增 `stringHealth` 字段，包含 `state`、`display`、`score`、`remainingHours`。
+- 健康度基于最近一次穿线日期和穿线后累计打球分钟数计算，公式与产品文档一致：
+  `effective_wear = hours_played + days_since_stringing * 0.18`，标准寿命 `16` 小时。
+
+### 修改文件
+
+- `internal/model/racket.go`
+- `internal/service/racket_service.go`
+- `internal/service/racket_service_test.go`（新增）
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `RacketResponse` 新增响应字段：`stringHealth`。
+- 生效接口：`GET /api/rackets`、`GET /api/rackets/selectable`、`GET /api/my-rackets`、`GET /api/my-rackets/primary`、`GET /api/rackets/:id`、创建/编辑/设为主力/退役接口的返回。
+- 存在最近穿线记录时返回健康度对象；无穿线记录时返回 `null`。
+- 随健康度一并明确 `afterStringingUsageCount` / `afterStringingUsageMinutes` / `afterStringingUsageHours` 的口径：最近一次穿线之后的累计使用统计。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增 JSON 字段，不删除或改名已有字段。
+- 当前版本未区分线型，统一按聚酯线公式计算，不区分线径、打法、气温、湿度、击球强度和穿线师差异。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/racket.go internal/service/racket_service.go internal/service/racket_service_test.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-03 新增球拍库品牌系列数量统计接口
 
 ### 需求/变更内容

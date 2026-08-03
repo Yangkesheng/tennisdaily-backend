@@ -23,14 +23,16 @@ type Config struct {
 	WechatAppID             string
 	WechatSecret            string
 	SessionCategoryResolver *SessionCategoryResolver
+	PolyesterStringHealth   *PolyesterStringHealthResolver
 }
 
 type fileConfig struct {
-	Server       serverConfig       `yaml:"server"`
-	Database     databaseConfig     `yaml:"database"`
-	JWT          jwtConfig          `yaml:"jwt"`
-	Wechat       wechatConfig       `yaml:"wechat"`
-	SessionEnums SessionEnumsConfig `yaml:"sessionEnums"`
+	Server                serverConfig                `yaml:"server"`
+	Database              databaseConfig              `yaml:"database"`
+	JWT                   jwtConfig                   `yaml:"jwt"`
+	Wechat                wechatConfig                `yaml:"wechat"`
+	SessionEnums          SessionEnumsConfig          `yaml:"sessionEnums"`
+	PolyesterStringHealth PolyesterStringHealthConfig `yaml:"polyesterStringHealth"`
 }
 
 type serverConfig struct {
@@ -83,6 +85,11 @@ func Load() Config {
 		panic(fmt.Errorf("invalid sessionEnums config: %w", err))
 	}
 
+	polyesterStringHealth, err := NewPolyesterStringHealthResolver(fc.PolyesterStringHealth)
+	if err != nil {
+		panic(fmt.Errorf("invalid polyesterStringHealth config: %w", err))
+	}
+
 	logger.Debug("config loaded server.port source=%s value=%s", portSource, port)
 	logger.Debug("config loaded database.dsn source=%s value=%s", databaseDSNSource, maskDSN(databaseDSN))
 	logger.Debug("config loaded jwt.secret source=%s value=%s", jwtSecretSource, maskSecret(jwtSecret))
@@ -98,6 +105,7 @@ func Load() Config {
 		WechatAppID:             wechatAppID,
 		WechatSecret:            wechatSecret,
 		SessionCategoryResolver: sessionCategoryResolver,
+		PolyesterStringHealth:   polyesterStringHealth,
 	}
 }
 

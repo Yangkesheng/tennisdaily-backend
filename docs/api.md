@@ -1329,6 +1329,15 @@ curl http://localhost:8081/api/stats/month \
     "createdAt": "2026-05-10T10:00:00+08:00",
     "updatedAt": "2026-05-10T10:00:00+08:00"
   },
+  "afterStringingUsageCount": 5,
+  "afterStringingUsageMinutes": 480,
+  "afterStringingUsageHours": 8,
+  "stringHealth": {
+    "state": "good",
+    "display": "状态良好 · 预计还可打 7h",
+    "score": 46.625,
+    "remainingHours": 7
+  },
   "usageCount": 12,
   "usageMinutes": 1440,
   "usageHours": 24,
@@ -1343,9 +1352,41 @@ curl http://localhost:8081/api/stats/month \
 
 - `stringName`、`storeName`、`verticalTension`、`horizontalTension`、`lastStringDate`、`lastStringCost` 来自最近一条穿线记录。
 - `latestStringingRecord` 为最近一次完整穿线记录；没有穿线记录时返回 `null`。
+- `afterStringingUsageCount`、`afterStringingUsageMinutes`、`afterStringingUsageHours` 为最近一次穿线之后（打球记录 `date >= string_date`）的累计使用统计；没有穿线记录时为 `0`。
+- `stringHealth` 为聚酯线衰减健康度，仅在存在穿线记录时返回对象，没有穿线记录时返回 `null`。
 - `usageCount`、`usageMinutes`、`usageHours` 通过打球记录中的 `racketId` 实时统计。
 - `totalMinutes`、`totalHours` 为兼容旧前端保留，当前与 `usageMinutes`、`usageHours` 一致。
 - 默认列表不返回已退役球拍。
+
+`stringHealth` 对象字段：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| state | string | 状态标识，取值为 `fresh` / `peak` / `good` / `decline` / `dead` / `expired` |
+| display | string | 前端直接展示的状态文案 |
+| score | number | 健康分，范围 `0-100`，可作为进度条百分比 |
+| remainingHours | number | 预计剩余可打小时数，四舍五入为整数 |
+
+健康度计算公式（当前版本统一按聚酯线，不区分线径、打法、气温、湿度等修正系数）：
+
+```text
+effective_wear = afterStringingUsageMinutes / 60 + daysSinceStringing * 0.18
+score = max(0, 100 * (1 - effective_wear / 16))
+remainingHours = max(0, 16 - effective_wear)
+```
+
+其中 `daysSinceStringing` 为最近一次穿线日期到当前日期的自然天数差。`0.18`（每日静置衰减系数）、`16`（标准可用寿命）以及下面状态分档的阈值和展示文案均可在 `config.yaml` 的 `polyesterStringHealth` 段配置调整，上式为默认值。
+
+状态分档（对应 `config.yaml` 默认配置）：
+
+| state | score 区间 | display |
+|---|---|---|
+| fresh | `>= 85` | `新上线 · 手感正脆` |
+| peak | `70 - 84` | `巅峰期 · 预计还可打 {remainingHours}h` |
+| good | `45 - 69` | `状态良好 · 预计还可打 {remainingHours}h` |
+| decline | `25 - 44` | `开始衰减 · 建议近期重穿` |
+| dead | `10 - 24` | `手感变死 · 建议重穿` |
+| expired | `< 10` | `已超期 · 不建议比赛使用` |
 
 ### 20.3 获取球拍列表
 
@@ -1424,6 +1465,10 @@ Authorization: Bearer <token>
 | usageCount | number | 该球拍关联打球记录次数 |
 | usageMinutes | number | 该球拍累计使用分钟数 |
 | usageHours | number | 该球拍累计使用小时数，当前向下取整 |
+| afterStringingUsageCount | number | 最近一次穿线之后的使用次数，无穿线记录时为 `0` |
+| afterStringingUsageMinutes | number | 最近一次穿线之后的累计使用分钟数，无穿线记录时为 `0` |
+| afterStringingUsageHours | number | 最近一次穿线之后的累计使用小时数，向下取整，无穿线记录时为 `0` |
+| stringHealth | object/null | 聚酯线健康度，字段与计算公式见 20.2；无穿线记录时为 `null` |
 | totalMinutes | number | 兼容旧字段，等于 `usageMinutes` |
 | totalHours | number | 兼容旧字段，等于 `usageHours` |
 
@@ -2088,13 +2133,15 @@ GET /api/my-rackets/primary
 Authorization: Bearer <token>
 ```
 
-响应 `data` 为主力球拍的 `RacketResponse`，无主力球拍时返回 `null`。返回字段包含球拍信息、`latestStringingRecord` 最新一条穿线信息、`usageCount` 累计使用次数、`usageHours` 累计使用小时数。
+响应 `data` 为主力球拍的 `RacketResponse`，无主力球拍时返回 `null`。返回字段包含球拍信息、`latestStringingRecord` 最新一条穿线信息、`usageCount` 累计使用次数、`usageHours` 累计使用小时数，以及 `afterStringingUsageCount` / `afterStringingUsageMinutes` / `afterStringingUsageHours` 穿线后使用统计和 `stringHealth` 聚酯线健康度。
 
 说明：
 
 - 只返回当前用户未删除且 `status = 1` 的主力球拍。
 - 响应包含 `latestStringingRecord` 最近一次穿线记录。
 - 响应包含 `usageCount`、`usageMinutes`、`usageHours`，表示该球拍在打球记录中的累计使用次数和累计时间。
+- 响应包含 `afterStringingUsageCount`、`afterStringingUsageMinutes`、`afterStringingUsageHours`，表示最近一次穿线之后的累计使用统计。
+- 响应包含 `stringHealth` 聚酯线健康度，字段结构和计算公式见 20.2；没有穿线记录时为 `null`。
 - 如果历史数据异常存在多把主力拍，返回最近更新的一把。
 
 ### 22.4 删除球拍

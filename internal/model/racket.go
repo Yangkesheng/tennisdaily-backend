@@ -55,6 +55,7 @@ type Racket struct {
 	AfterStringingUsageCount   int                      `json:"afterStringingUsageCount" gorm:"-"`
 	AfterStringingUsageMinutes int                      `json:"afterStringingUsageMinutes" gorm:"-"`
 	AfterStringingUsageHours   int                      `json:"afterStringingUsageHours" gorm:"-"`
+	StringHealth               *StringHealthResponse    `json:"stringHealth" gorm:"-"`
 	TotalMinutes               int                      `json:"totalMinutes" gorm:"-"`
 	TotalHours                 int                      `json:"totalHours" gorm:"-"`
 	CreatedAt                  time.Time                `json:"createdAt"`
@@ -118,6 +119,7 @@ type RacketResponse struct {
 	AfterStringingUsageCount   int                      `json:"afterStringingUsageCount"`
 	AfterStringingUsageMinutes int                      `json:"afterStringingUsageMinutes"`
 	AfterStringingUsageHours   int                      `json:"afterStringingUsageHours"`
+	StringHealth               *StringHealthResponse    `json:"stringHealth"`
 	TotalMinutes               int                      `json:"totalMinutes"`
 	TotalHours                 int                      `json:"totalHours"`
 	CreatedAt                  time.Time                `json:"createdAt"`
@@ -136,6 +138,13 @@ type StringingRecordResponse struct {
 	StringDate        string    `json:"stringDate"`
 	CreatedAt         time.Time `json:"createdAt"`
 	UpdatedAt         time.Time `json:"updatedAt"`
+}
+
+type StringHealthResponse struct {
+	State          string  `json:"state"`
+	Display        string  `json:"display"`
+	Score          float64 `json:"score"`
+	RemainingHours int     `json:"remainingHours"`
 }
 
 type RacketDetailResponse struct {
@@ -226,6 +235,7 @@ func NewRacketResponse(racket Racket) RacketResponse {
 		AfterStringingUsageCount:   racket.AfterStringingUsageCount,
 		AfterStringingUsageMinutes: racket.AfterStringingUsageMinutes,
 		AfterStringingUsageHours:   racket.AfterStringingUsageHours,
+		StringHealth:               racket.StringHealth,
 		TotalMinutes:               racket.TotalMinutes,
 		TotalHours:                 racket.TotalHours,
 		CreatedAt:                  racket.CreatedAt,

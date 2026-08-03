@@ -34,7 +34,7 @@ func main() {
 	authService := service.NewAuthService(cfg, userRepo, contentSecurityService)
 	sessionService := service.NewSessionService(sessionRepo, userRepo, racketRepo, cfg.SessionCategoryResolver, contentSecurityService)
 	statsService := service.NewStatsService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
-	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService)
+	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth)
 	homeService := service.NewHomeService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 

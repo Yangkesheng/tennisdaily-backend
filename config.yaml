@@ -73,3 +73,39 @@ sessionEnums:
           label: 单打
         - value: 2
           label: 双打
+
+
+polyesterStringHealth:
+  standardLifeHours: 16
+  restWearPerDay: 0.18
+  states:
+    - key: fresh
+      minScore: 85
+      label: "新上线"
+      display: "新上线 · 手感正脆"
+      color: "green"
+    - key: peak
+      minScore: 70
+      label: "巅峰期"
+      display: "巅峰期 · 预计还可打 {remainingHours}h"
+      color: "green"
+    - key: good
+      minScore: 45
+      label: "状态良好"
+      display: "状态良好 · 预计还可打 {remainingHours}h"
+      color: "teal"
+    - key: decline
+      minScore: 25
+      label: "开始衰减"
+      display: "开始衰减 · 建议近期重穿"
+      color: "orange"
+    - key: dead
+      minScore: 10
+      label: "手感变死"
+      display: "手感变死 · 建议重穿"
+      color: "deep_orange"
+    - key: expired
+      minScore: 0
+      label: "已超期"
+      display: "已超期 · 不建议比赛使用"
+      color: "red"
