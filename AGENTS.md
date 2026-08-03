@@ -347,6 +347,7 @@ GET    /api/racket-brands
 GET    /api/racket-series
 GET    /api/racket-series?brandId=1
 GET    /api/racket-library
+GET    /api/racket-library/stats
 GET    /api/my-rackets
 GET    /api/my-rackets/primary
 GET    /api/rackets/stats

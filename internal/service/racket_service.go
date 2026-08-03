@@ -70,6 +70,45 @@ func (s *RacketService) Library(query model.RacketLibraryQuery) ([]model.RacketL
 	return groups, nil
 }
 
+func (s *RacketService) LibraryStats() ([]model.RacketLibraryBrandStatsResponse, error) {
+	brands, err := s.repo.LibraryBrandStats()
+	if err != nil {
+		return nil, err
+	}
+	series, err := s.repo.LibrarySeriesStats()
+	if err != nil {
+		return nil, err
+	}
+
+	responses := make([]model.RacketLibraryBrandStatsResponse, 0, len(brands))
+	type brandStatsKey struct {
+		BrandID int64
+		Brand   string
+	}
+	brandIndex := make(map[brandStatsKey]int, len(brands))
+	for _, brand := range brands {
+		brandIndex[brandStatsKey{BrandID: brand.BrandID, Brand: brand.Brand}] = len(responses)
+		responses = append(responses, model.RacketLibraryBrandStatsResponse{
+			BrandID: brand.BrandID,
+			Brand:   brand.Brand,
+			Count:   brand.Count,
+			Series:  []model.RacketLibrarySeriesStatsResponse{},
+		})
+	}
+	for _, item := range series {
+		idx, ok := brandIndex[brandStatsKey{BrandID: item.BrandID, Brand: item.Brand}]
+		if !ok {
+			continue
+		}
+		responses[idx].Series = append(responses[idx].Series, model.RacketLibrarySeriesStatsResponse{
+			SeriesID: item.SeriesID,
+			Series:   item.Series,
+			Count:    item.Count,
+		})
+	}
+	return responses, nil
+}
+
 func (s *RacketService) MyRacketsForSession(userID int64) ([]model.RacketResponse, error) {
 	return s.Selectable(userID)
 }

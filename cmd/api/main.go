@@ -79,6 +79,7 @@ func main() {
 		authed.GET("/racket-brands", racketHandler.Brands)
 		authed.GET("/racket-series", racketHandler.Series)
 		authed.GET("/racket-library", racketHandler.Library)
+		authed.GET("/racket-library/stats", racketHandler.LibraryStats)
 		authed.GET("/my-rackets", racketHandler.MyRackets)
 		authed.GET("/my-rackets/primary", racketHandler.MyPrimaryRacket)
 		authed.GET("/rackets/stats", racketHandler.Stats)

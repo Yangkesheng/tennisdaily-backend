@@ -103,6 +103,33 @@ type RacketLibraryBrandGroupResponse struct {
 	Items   []RacketLibraryItemResponse `json:"items"`
 }
 
+type RacketLibraryBrandStats struct {
+	BrandID int64  `gorm:"column:brand_id"`
+	Brand   string `gorm:"column:brand"`
+	Count   int    `gorm:"column:count"`
+}
+
+type RacketLibrarySeriesStats struct {
+	BrandID  int64  `gorm:"column:brand_id"`
+	Brand    string `gorm:"column:brand"`
+	SeriesID int64  `gorm:"column:series_id"`
+	Series   string `gorm:"column:series"`
+	Count    int    `gorm:"column:count"`
+}
+
+type RacketLibraryBrandStatsResponse struct {
+	BrandID int64                              `json:"brandId"`
+	Brand   string                             `json:"brand"`
+	Count   int                                `json:"count"`
+	Series  []RacketLibrarySeriesStatsResponse `json:"series"`
+}
+
+type RacketLibrarySeriesStatsResponse struct {
+	SeriesID int64  `json:"seriesId"`
+	Series   string `json:"series"`
+	Count    int    `json:"count"`
+}
+
 func NewRacketLibraryItemResponse(item RacketLibrary) RacketLibraryItemResponse {
 	return RacketLibraryItemResponse{
 		ID:            item.ID,

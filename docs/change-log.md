@@ -1,5 +1,47 @@
 # Change Log
 
+## 2026-08-03 新增球拍库品牌系列数量统计接口
+
+### 需求/变更内容
+
+- 新增 `GET /api/racket-library/stats`，返回球拍库中每个品牌的球拍数量。
+- 同一响应中返回每个品牌下每个系列的球拍数量。
+- 统计口径来自 `racket_library`，按数量降序返回。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/model/racket_library.go`
+- `internal/repository/racket_repository.go`
+- `internal/service/racket_service.go`
+- `internal/handler/racket_handler.go`
+- `docs/api.md`
+- `docs/change-log.md`
+- `AGENTS.md`
+
+### 接口变化
+
+- 新增接口：
+  - `GET /api/racket-library/stats`
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 仅新增接口，不修改现有接口字段和行为。
+- 接口需要 JWT 鉴权，和现有球拍库接口保持一致。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/model/racket_library.go internal/repository/racket_repository.go internal/service/racket_service.go internal/handler/racket_handler.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-07-23 球拍列表返回最新穿线记录
 
 ### 需求/变更内容

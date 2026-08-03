@@ -47,6 +47,26 @@ func (r *RacketRepository) LibraryList(query model.RacketLibraryQuery) ([]model.
 	return items, err
 }
 
+func (r *RacketRepository) LibraryBrandStats() ([]model.RacketLibraryBrandStats, error) {
+	var rows []model.RacketLibraryBrandStats
+	err := r.db.Model(&model.RacketLibrary{}).
+		Select("brand_id, brand, COUNT(*) AS count").
+		Group("brand, brand_id").
+		Order("count DESC").
+		Scan(&rows).Error
+	return rows, err
+}
+
+func (r *RacketRepository) LibrarySeriesStats() ([]model.RacketLibrarySeriesStats, error) {
+	var rows []model.RacketLibrarySeriesStats
+	err := r.db.Model(&model.RacketLibrary{}).
+		Select("brand_id, brand, series_id, series, COUNT(*) AS count").
+		Group("brand, brand_id, series, series_id").
+		Order("count DESC").
+		Scan(&rows).Error
+	return rows, err
+}
+
 func (r *RacketRepository) LibraryFindByID(id int64) (*model.RacketLibrary, error) {
 	var item model.RacketLibrary
 	err := r.db.Where("id = ?", id).First(&item).Error

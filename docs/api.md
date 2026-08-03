@@ -1852,7 +1852,58 @@ Authorization: Bearer <token>
 ]
 ```
 
-### 21.4 从球拍库添加到我的球拍
+### 21.4 获取球拍库品牌和系列数量统计
+
+返回球拍库中每个品牌的球拍数量，以及每个品牌下每个系列的球拍数量。
+
+```http
+GET /api/racket-library/stats
+Authorization: Bearer <token>
+```
+
+响应 data 示例：
+
+```json
+[
+  {
+    "brandId": 1,
+    "brand": "Yonex",
+    "count": 12,
+    "series": [
+      {
+        "seriesId": 101,
+        "series": "EZONE",
+        "count": 5
+      },
+      {
+        "seriesId": 102,
+        "series": "VCORE",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "brandId": 2,
+    "brand": "Wilson",
+    "count": 9,
+    "series": [
+      {
+        "seriesId": 201,
+        "series": "Blade",
+        "count": 6
+      }
+    ]
+  }
+]
+```
+
+说明：
+
+- 品牌按品牌球拍数量 `count` 降序返回。
+- 每个品牌下的系列按系列球拍数量 `count` 降序返回。
+- 统计来源为 `racket_library`。
+
+### 21.5 从球拍库添加到我的球拍
 
 用户选择球拍库中的球拍后，新增我的球拍时传 `libraryId`。
 
@@ -1886,12 +1937,13 @@ Content-Type: application/json
 - `fileId` 表示球拍图片文件 ID，可用于前端按文件 ID 加载图片资源。
 - `brandId`、`seriesId`、`series` 已从 `racket_library` 返回，前端可直接用于品牌/系列展示或筛选。
 - `GET /api/racket-library` 支持通过 query 参数 `brandId`、`seriesId` 过滤球拍库列表。
+- `GET /api/racket-library/stats` 返回球拍库品牌和系列数量统计。
 - `brandId`、`seriesId` 目前由球拍库自身字段承载，未引入独立品牌/系列表。
 - `libraryId` 有值时，后端会从球拍库补全 `brand`、`model`。
 - 如果请求体里也传了 `brand`、`model`，以前端传入值为准。
 - `name` 仍可自定义，比如“EZONE 主力拍”。
 
-### 21.5 添加库中没有的球拍
+### 21.6 添加库中没有的球拍
 
 如果球拍库没有对应球拍，用户可以手动输入。
 

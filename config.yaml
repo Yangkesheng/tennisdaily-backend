@@ -1,29 +1,29 @@
 server:
   port: "8081"
 
-# database:
-#   host: "localhost"
-#   port: 3306
-#   user: "root"
-#   password: "root"
-
-#   name: "tennis_diary"
-#   charset: "utf8mb4"
-#   parseTime: true
-#   loc: "Asia/Shanghai"
-#   timeZone: "Asia/Shanghai"
-
-
 database:
-  host: "10.26.103.99"
+  host: "localhost"
   port: 3306
   user: "root"
-  password: "MFAcn5Fy"
+  password: "root"
+
   name: "tennis_diary"
   charset: "utf8mb4"
   parseTime: true
   loc: "Asia/Shanghai"
   timeZone: "Asia/Shanghai"
+
+
+# database:
+#   host: "10.26.103.99"
+#   port: 3306
+#   user: "root"
+#   password: "MFAcn5Fy"
+#   name: "tennis_diary"
+#   charset: "utf8mb4"
+#   parseTime: true
+#   loc: "Asia/Shanghai"
+#   timeZone: "Asia/Shanghai"
 
   
 jwt:

@@ -62,6 +62,17 @@ func (h *RacketHandler) Library(c *gin.Context) {
 	response.OK(c, groups)
 }
 
+func (h *RacketHandler) LibraryStats(c *gin.Context) {
+	logger.Debug("GET /api/racket-library/stats start")
+	stats, err := h.racketService.LibraryStats()
+	if err != nil {
+		response.Error(c, 500, response.CodeInternalError, "internal error")
+		return
+	}
+	logger.Debug("GET /api/racket-library/stats success brandCount=%d", len(stats))
+	response.OK(c, stats)
+}
+
 func (h *RacketHandler) MyRackets(c *gin.Context) {
 	userID, ok := currentUserID(c)
 	if !ok {
