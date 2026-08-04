@@ -1,5 +1,48 @@
 # Change Log
 
+## 2026-08-05 打球记录取消球拍名称快照字段，展示改为关联我的球拍
+
+### 需求/变更内容
+
+- 取消打球记录自带的球拍名称快照字段 `racket_name`，新增/编辑打球记录不再接收 `racketName`。
+- 展示名称改为按 `racketId` 关联我的球拍（`racket.name`）实时返回：读取记录时通过 `racket` 表按 ID 关联当前球拍名称，不再依赖历史快照。
+- 球拍已被删除的记录，响应 `racketName` 返回空字符串。
+
+### 修改文件
+
+- `internal/model/session.go`（删除 `TennisSession.RacketName`、请求 DTO 的 `RacketName`；`SessionResponse` 保留 `racketName`，由构造函数入参填充）
+- `internal/repository/racket_repository.go`（新增 `NamesByIDs`，批量查询当前用户未删除球拍的名称）
+- `internal/service/session_service.go`（列表/详情/新增/更新/最近一次读取时关联球拍名称；请求处理移除 `racketName`）
+- `internal/service/home_service.go`（首页最近一次打球同样关联球拍名称）
+- `internal/service/session_service_test.go`（请求体移除 `racketName`）
+- `migrations/014_drop_session_racket_name.sql`（新增，删除 `tennis_sessions.racket_name` 列）
+- `migrations/init.sql`（建表语句移除 `racket_name` 列）
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/sessions`、`PUT /api/sessions/:id` 请求体不再接受 `racketName`。
+- `SessionResponse` 仍返回 `racketName`，语义变为按 `racketId` 关联我的球拍当前名称。
+
+### 数据库变化
+
+- `tennis_sessions` 删除 `racket_name` 列（需要执行 `migrations/014_drop_session_racket_name.sql`）。
+
+### 兼容性说明
+
+- 前端仍可继续使用响应中的 `racketName` 做展示，展示内容变为球拍当前名称而非创建时的名称快照。
+- 旧客户端/旧请求若继续传 `racketName`，后端忽略该字段，不报错。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/session.go internal/repository/racket_repository.go internal/service/session_service.go internal/service/home_service.go internal/service/session_service_test.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-05 项目 logger 支持可配置日志级别
 
 ### 需求/变更内容

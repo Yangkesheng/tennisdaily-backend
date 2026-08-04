@@ -161,6 +161,26 @@ func (r *RacketRepository) Primary(userID int64) (*model.Racket, error) {
 	return &racket, nil
 }
 
+// NamesByIDs 返回当前用户未删除球拍的 id -> name 映射，用于打球记录展示时关联我的球拍名称。
+func (r *RacketRepository) NamesByIDs(userID int64, ids []int64) (map[int64]string, error) {
+	names := make(map[int64]string)
+	if len(ids) == 0 {
+		return names, nil
+	}
+
+	var rackets []model.Racket
+	err := r.db.Select("id", "name").
+		Where("user_id = ? AND id IN ?", userID, ids).
+		Find(&rackets).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, racket := range rackets {
+		names[racket.ID] = racket.Name
+	}
+	return names, nil
+}
+
 func (r *RacketRepository) Stats(userID int64) (int, float64, float64, error) {
 	type racketRow struct {
 		Count int     `gorm:"column:count"`

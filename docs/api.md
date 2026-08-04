@@ -236,7 +236,7 @@ Authorization: Bearer <token>
 | courtName | string | 场地名称 |
 | partner | string | 搭档 |
 | cost | number | 花费 |
-| racketName | string | 球拍 |
+| racketName | string | 球拍名称，按 racketId 关联我的球拍实时返回 |
 | shoeName | string | 球鞋 |
 | note | string | 备注 |
 | createdAt | string | 创建时间，RFC3339 |
@@ -257,7 +257,6 @@ Authorization: Bearer <token>
   "courtName": "奥森网球场",
   "partner": "张三",
   "cost": 80,
-  "racketName": "Wilson Blade",
   "shoeName": "Asics Gel Resolution",
   "note": "今天状态不错"
 }
@@ -277,7 +276,6 @@ Authorization: Bearer <token>
 | courtName | 否 | 字符串 |
 | partner | 否 | 字符串，搭档名称 |
 | cost | 否 | 数字 |
-| racketName | 否 | 字符串 |
 | shoeName | 否 | 字符串 |
 | note | 否 | 字符串 |
 
@@ -285,6 +283,7 @@ Authorization: Bearer <token>
 
 - 新客户端应提交 `category` 和 `subCategory`，后端会同步生成兼容旧字段 `type`
 - 旧客户端仍可只提交 `type`，后端会自动映射出 `category` 和 `subCategory`
+- 新增/编辑不再接收 `racketName`，响应中的 `racketName` 由后端按 `racketId` 关联我的球拍实时返回
 - `date` 必须是 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理，不要传完整 ISO 时间
 - `durationMinutes` 传 `0` 时后端会使用默认值 `120`
 - `rating` 传 `0` 时后端会使用默认值 `3`
@@ -602,7 +601,6 @@ Content-Type: application/json
   "courtName": "奥森网球场",
   "partner": "张三",
   "cost": 80,
-  "racketName": "Wilson Blade",
   "shoeName": "Asics Gel Resolution",
   "note": "今天状态不错"
 }
@@ -621,7 +619,6 @@ Content-Type: application/json
   "courtName": "奥森网球场",
   "partner": "张三",
   "cost": 120,
-  "racketName": "Wilson Blade",
   "shoeName": "Asics Gel Resolution",
   "note": "双打比赛冠军"
 }
@@ -668,7 +665,7 @@ Content-Type: application/json
 curl -X POST http://localhost:8081/api/sessions \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ---
@@ -760,7 +757,6 @@ Content-Type: application/json
   "courtName": "国家网球中心",
   "partner": "李四",
   "cost": 100,
-  "racketName": "Babolat Pure Drive",
   "shoeName": "Nike Vapor",
   "note": "更新后的记录"
 }
@@ -802,7 +798,7 @@ Content-Type: application/json
 curl -X PUT http://localhost:8081/api/sessions/1 \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"category":3,"subCategory":1,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"racketName":"Babolat Pure Drive","shoeName":"Nike Vapor","note":"更新后的记录"}'
+  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"category":3,"subCategory":1,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"shoeName":"Nike Vapor","note":"更新后的记录"}'
 ```
 
 ---
@@ -1260,7 +1256,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
 curl -X POST http://localhost:8081/api/sessions \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"date": "2026-01-15 19:30","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"racketName":"Wilson Blade","shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date": "2026-01-15 19:30","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ### 18.3 查看列表
@@ -1762,12 +1758,11 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "racketId": 1,
-  "racketName": "EZONE 主力拍"
+  "racketId": 1
 }
 ```
 
-`racketId` 用于球拍累计使用时长统计，`racketName` 用于前端展示兼容。
+`racketId` 用于球拍累计使用时长统计；球拍名称不再作为打球记录的存储字段，接口返回的 `racketName` 按 `racketId` 关联我的球拍当前名称。
 
 ---
 
@@ -2057,8 +2052,7 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "racketId": 1,
-  "racketName": "EZONE 主力拍"
+  "racketId": 1
 }
 ```
 

@@ -77,7 +77,15 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 
 	var latestSessionResponse *model.SessionResponse
 	if latestSession != nil {
-		resp := model.NewSessionResponse(*latestSession, s.sessionCategoryResolver)
+		var racketName string
+		if latestSession.RacketID > 0 {
+			names, err := s.racketRepo.NamesByIDs(userID, []int64{latestSession.RacketID})
+			if err != nil {
+				return model.HomeSummaryResponse{}, err
+			}
+			racketName = names[latestSession.RacketID]
+		}
+		resp := model.NewSessionResponse(*latestSession, s.sessionCategoryResolver, racketName)
 		latestSessionResponse = &resp
 	}
 

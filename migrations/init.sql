@@ -77,7 +77,6 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
   partner VARCHAR(128) NOT NULL DEFAULT '' COMMENT '搭档',
   cost DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT '本次打球费用',
   racket_id BIGINT NOT NULL DEFAULT 0 COMMENT '使用球拍ID',
-  racket_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '使用球拍名称快照',
   shoe_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '球鞋名称',
   note TEXT NOT NULL COMMENT '备注',
 

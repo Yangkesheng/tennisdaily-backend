@@ -40,7 +40,11 @@ func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return toSessionResponses(sessions, s.sessionCategoryResolver), nil
+	racketNames, err := s.racketRepo.NamesByIDs(userID, sessionRacketIDs(sessions))
+	if err != nil {
+		return nil, err
+	}
+	return toSessionResponses(sessions, s.sessionCategoryResolver, racketNames), nil
 }
 
 func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (model.SessionListPageResponse, error) {
@@ -77,13 +81,18 @@ func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (m
 		return model.SessionListPageResponse{}, err
 	}
 
+	racketNames, err := s.racketRepo.NamesByIDs(userID, sessionRacketIDs(sessions))
+	if err != nil {
+		return model.SessionListPageResponse{}, err
+	}
+
 	totalPages := 0
 	if total > 0 {
 		totalPages = int((total + int64(pageSize) - 1) / int64(pageSize))
 	}
 
 	return model.SessionListPageResponse{
-		List:       toSessionResponses(sessions, s.sessionCategoryResolver),
+		List:       toSessionResponses(sessions, s.sessionCategoryResolver, racketNames),
 		Total:      total,
 		Page:       page,
 		PageSize:   pageSize,
@@ -104,23 +113,31 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 	if err != nil {
 		return nil, err
 	}
-	return toSessionResponses(sessions, s.sessionCategoryResolver), nil
+	racketNames, err := s.racketRepo.NamesByIDs(userID, sessionRacketIDs(sessions))
+	if err != nil {
+		return nil, err
+	}
+	return toSessionResponses(sessions, s.sessionCategoryResolver, racketNames), nil
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
-	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
+	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
 
-	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
+	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.ShoeName, req.Note); err != nil {
 		return model.SessionResponse{}, err
 	}
 
 	if err := s.repo.Create(&session); err != nil {
 		return model.SessionResponse{}, err
 	}
-	return model.NewSessionResponse(session, s.sessionCategoryResolver), nil
+	racketName, err := s.racketName(userID, session.RacketID)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	return model.NewSessionResponse(session, s.sessionCategoryResolver, racketName), nil
 }
 
 func (s *SessionService) FindByID(userID, id int64) (model.SessionResponse, error) {
@@ -131,7 +148,11 @@ func (s *SessionService) FindByID(userID, id int64) (model.SessionResponse, erro
 	if session == nil {
 		return model.SessionResponse{}, ErrNotFound
 	}
-	return model.NewSessionResponse(*session, s.sessionCategoryResolver), nil
+	racketName, err := s.racketName(userID, session.RacketID)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	return model.NewSessionResponse(*session, s.sessionCategoryResolver, racketName), nil
 }
 
 func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest) (model.SessionResponse, error) {
@@ -143,12 +164,12 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 		return model.SessionResponse{}, ErrNotFound
 	}
 
-	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.RacketName, req.ShoeName, req.Note)
+	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
 
-	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.RacketName, req.ShoeName, req.Note); err != nil {
+	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.ShoeName, req.Note); err != nil {
 		return model.SessionResponse{}, err
 	}
 
@@ -163,14 +184,17 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	existing.Partner = updated.Partner
 	existing.Cost = updated.Cost
 	existing.RacketID = updated.RacketID
-	existing.RacketName = updated.RacketName
 	existing.ShoeName = updated.ShoeName
 	existing.Note = updated.Note
 
 	if err := s.repo.Update(existing); err != nil {
 		return model.SessionResponse{}, err
 	}
-	return model.NewSessionResponse(*existing, s.sessionCategoryResolver), nil
+	racketName, err := s.racketName(userID, existing.RacketID)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	return model.NewSessionResponse(*existing, s.sessionCategoryResolver, racketName), nil
 }
 
 func (s *SessionService) Delete(userID, id int64) error {
@@ -192,7 +216,11 @@ func (s *SessionService) Latest(userID int64) (*model.SessionResponse, error) {
 	if session == nil {
 		return nil, nil
 	}
-	resp := model.NewSessionResponse(*session, s.sessionCategoryResolver)
+	racketName, err := s.racketName(userID, session.RacketID)
+	if err != nil {
+		return nil, err
+	}
+	resp := model.NewSessionResponse(*session, s.sessionCategoryResolver, racketName)
 	return &resp, nil
 }
 
@@ -334,7 +362,7 @@ func calendarSessionTypeBreakdown(summary model.SessionCalendarSummaryResponse) 
 	}
 }
 
-func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, category model.SessionCategory, subCategory model.SessionSubCategory, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, racketName string, shoeName string, note string) (model.TennisSession, error) {
+func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, category model.SessionCategory, subCategory model.SessionSubCategory, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, shoeName string, note string) (model.TennisSession, error) {
 	sessionDate, err := s.parseSessionDateTime(date)
 	if err != nil {
 		return model.TennisSession{}, ErrInvalidRequest
@@ -379,10 +407,20 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		Partner:         partner,
 		Cost:            cost,
 		RacketID:        racketID,
-		RacketName:      racketName,
 		ShoeName:        shoeName,
 		Note:            note,
 	}, nil
+}
+
+func (s *SessionService) racketName(userID, racketID int64) (string, error) {
+	if racketID <= 0 {
+		return "", nil
+	}
+	names, err := s.racketRepo.NamesByIDs(userID, []int64{racketID})
+	if err != nil {
+		return "", err
+	}
+	return names[racketID], nil
 }
 
 func (s *SessionService) parseSessionDateTime(value string) (time.Time, error) {
@@ -426,10 +464,26 @@ func (s *SessionService) checkUserInputTexts(userID int64, texts ...string) erro
 	return s.contentSecurity.CheckTexts(user.OpenID, texts...)
 }
 
-func toSessionResponses(sessions []model.TennisSession, sessionCategoryResolver *config.SessionCategoryResolver) []model.SessionResponse {
+func sessionRacketIDs(sessions []model.TennisSession) []int64 {
+	seen := make(map[int64]struct{}, len(sessions))
+	ids := make([]int64, 0, len(sessions))
+	for _, session := range sessions {
+		if session.RacketID <= 0 {
+			continue
+		}
+		if _, ok := seen[session.RacketID]; ok {
+			continue
+		}
+		seen[session.RacketID] = struct{}{}
+		ids = append(ids, session.RacketID)
+	}
+	return ids
+}
+
+func toSessionResponses(sessions []model.TennisSession, sessionCategoryResolver *config.SessionCategoryResolver, racketNames map[int64]string) []model.SessionResponse {
 	responses := make([]model.SessionResponse, 0, len(sessions))
 	for _, session := range sessions {
-		responses = append(responses, model.NewSessionResponse(session, sessionCategoryResolver))
+		responses = append(responses, model.NewSessionResponse(session, sessionCategoryResolver, racketNames[session.RacketID]))
 	}
 	return responses
 }

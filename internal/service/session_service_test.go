@@ -20,7 +20,6 @@ func TestSessionServiceCreateRejectsDurationOverMax(t *testing.T) {
 		SubCategory:     model.SessionSubCategoryDoubles,
 		MatchRank:       model.MatchRankNone,
 		RacketID:        15,
-		RacketName:      "Pure Aero 98 Tour racket unstrung",
 	})
 	if !errors.Is(err, ErrInvalidRequest) {
 		t.Fatalf("expected ErrInvalidRequest, got %v", err)

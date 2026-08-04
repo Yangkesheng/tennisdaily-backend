@@ -20,7 +20,6 @@ type TennisSession struct {
 	Partner         string             `json:"partner" gorm:"size:128;not null;default:''"`
 	Cost            float64            `json:"cost" gorm:"type:decimal(10,2);not null;default:0"`
 	RacketID        int64              `json:"racketId" gorm:"not null;default:0;index"`
-	RacketName      string             `json:"racketName" gorm:"size:128;not null;default:''"`
 	ShoeName        string             `json:"shoeName" gorm:"size:128;not null;default:''"`
 	Note            string             `json:"note" gorm:"not null;default:''"`
 	CreatedAt       time.Time          `json:"createdAt"`
@@ -115,7 +114,7 @@ type SessionCategoryTextResolver interface {
 	TypeText(category SessionCategory, subCategory SessionSubCategory) (string, bool)
 }
 
-func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResolver) SessionResponse {
+func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResolver, racketName string) SessionResponse {
 	category, subCategory := session.Category, session.SubCategory
 	categoryText, subCategoryText, typeText, ok := sessionCategoryTexts(category, subCategory, resolver)
 	if !ok {
@@ -141,7 +140,7 @@ func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResol
 		Partner:         session.Partner,
 		Cost:            session.Cost,
 		RacketID:        session.RacketID,
-		RacketName:      session.RacketName,
+		RacketName:      racketName,
 		ShoeName:        session.ShoeName,
 		Note:            session.Note,
 		CreatedAt:       session.CreatedAt,
@@ -192,7 +191,6 @@ type CreateSessionRequest struct {
 	Partner         string             `json:"partner"`
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`
-	RacketName      string             `json:"racketName"`
 	ShoeName        string             `json:"shoeName"`
 	Note            string             `json:"note"`
 }
@@ -209,7 +207,6 @@ type UpdateSessionRequest struct {
 	Partner         string             `json:"partner"`
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`
-	RacketName      string             `json:"racketName"`
 	ShoeName        string             `json:"shoeName"`
 	Note            string             `json:"note"`
 }
