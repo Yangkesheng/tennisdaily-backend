@@ -38,6 +38,7 @@ type fileConfig struct {
 	Database              databaseConfig              `yaml:"database"`
 	JWT                   jwtConfig                   `yaml:"jwt"`
 	Wechat                wechatConfig                `yaml:"wechat"`
+	Logger                loggerConfig                `yaml:"logger"`
 	Storage               storageConfig               `yaml:"storage"`
 	SessionEnums          SessionEnumsConfig          `yaml:"sessionEnums"`
 	PolyesterStringHealth PolyesterStringHealthConfig `yaml:"polyesterStringHealth"`
@@ -79,8 +80,26 @@ type storageConfig struct {
 	RunOnStart bool   `yaml:"runOnStart"`
 }
 
+type loggerConfig struct {
+	Level string `yaml:"level"`
+}
+
 func Load() Config {
 	fc := loadConfigFile()
+
+	logLevel := fc.Logger.Level
+	logLevelSource := "config"
+	if logLevel == "" {
+		logLevel = "debug"
+		logLevelSource = "default"
+	}
+	if value := os.Getenv("LOG_LEVEL"); value != "" {
+		logLevel = value
+		logLevelSource = "env"
+	}
+	if err := logger.SetLevel(logLevel); err != nil {
+		panic(fmt.Errorf("invalid LOG_LEVEL: %s", logLevel))
+	}
 
 	port, portSource := envOrDefaultWithSource("SERVER_PORT", fc.Server.Port)
 	databaseDSN, databaseDSNSource := envOrDefaultWithSource("DATABASE_DSN", fc.Database.DSN())
@@ -134,6 +153,7 @@ func Load() Config {
 		panic(fmt.Errorf("invalid polyesterStringHealth config: %w", err))
 	}
 
+	logger.Debug("config loaded logger.level source=%s value=%s", logLevelSource, logLevel)
 	logger.Debug("config loaded server.port source=%s value=%s", portSource, port)
 	logger.Debug("config loaded database.dsn source=%s value=%s", databaseDSNSource, maskDSN(databaseDSN))
 	logger.Debug("config loaded jwt.secret source=%s value=%s", jwtSecretSource, maskSecret(jwtSecret))

@@ -1,5 +1,49 @@
 # Change Log
 
+## 2026-08-05 项目 logger 支持可配置日志级别
+
+### 需求/变更内容
+
+- 项目自带 logger（`internal/logger`）新增级别过滤，支持 `debug / info / warn / error` 四档；低于当前级别的日志不输出。
+- 日志级别可通过 `config.yaml` 的 `logger.level` 配置，也支持环境变量 `LOG_LEVEL` 覆盖（优先级高于配置文件）。
+- 未配置时默认 `debug`，保持原有行为不变。
+- 将错误路径日志从 `logger.Debug` 提升为 `logger.Warn` / `logger.Error`，避免生产环境关闭 debug 后丢失关键错误信息（球拍图片迁移失败、service 内部错误、认证内部错误）。
+
+### 修改文件
+
+- `internal/logger/logger.go`（新增 `Level` / `SetLevel` / `Enabled` / `Info` / `Warn` / `Error`，按级别过滤输出）
+- `internal/logger/logger_test.go`（新增，级别解析与过滤单元测试）
+- `internal/config/config.go`（加载 `logger.level`，支持 `LOG_LEVEL` 环境变量覆盖）
+- `config.yaml`（新增 `logger` 段，默认 `debug`）
+- `cmd/api/main.go`（图片迁移运行错误改为 `Error` 级别）
+- `internal/service/racket_image_migration.go`（单条迁移失败改为 `Warn` 级别）
+- `internal/handler/session_handler.go`（service 内部错误改为 `Error` 级别）
+- `internal/handler/auth_handler.go`（认证内部错误补充 `Error` 级别日志）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无 HTTP 接口变化。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 默认级别仍为 `debug`，不配置时日志行为与之前一致。
+- 生产环境建议设置 `LOG_LEVEL=info`（或 `warn`），可配合 `GIN_MODE=release` 减少线上日志量。
+- `LOG_LEVEL` 非法值会导致服务启动失败（panic），与现有配置校验行为一致。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/config/config.go internal/handler/auth_handler.go internal/handler/session_handler.go internal/logger/logger.go internal/logger/logger_test.go internal/service/racket_image_migration.go`
+- `go test ./...`
+
+### 测试结果
+
+- `go test ./...` 全部通过。
+
 ## 2026-08-04 球拍库图片迁移到微信云托管对象存储
 
 ### 需求/变更内容

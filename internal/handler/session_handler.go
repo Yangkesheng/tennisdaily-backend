@@ -212,7 +212,7 @@ func handleServiceError(c *gin.Context, err error) {
 	case errors.Is(err, service.ErrNotFound):
 		response.Error(c, 404, response.CodeNotFound, "not found")
 	default:
-		logger.Debug("service internal error path=%s error=%v", c.FullPath(), err)
+		logger.Error("service internal error path=%s error=%v", c.FullPath(), err)
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 	}
 }

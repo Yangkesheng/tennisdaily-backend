@@ -128,7 +128,7 @@ func startRacketImageMigration(cfg config.Config, racketRepo *repository.RacketR
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
 		defer cancel()
 		if _, err := migrationService.Run(ctx); err != nil {
-			logger.Debug("racket image migration error: %v", err)
+			logger.Error("racket image migration error: %v", err)
 		}
 	}
 

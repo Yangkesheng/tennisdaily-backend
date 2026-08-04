@@ -82,7 +82,7 @@ func (m *RacketImageMigration) Run(ctx context.Context) (*ImageMigrationResult, 
 				URL:   item.ImageURL,
 				Error: err.Error(),
 			})
-			logger.Debug("racket image migration failed id=%d url=%s err=%v", item.ID, item.ImageURL, err)
+			logger.Warn("racket image migration failed id=%d url=%s err=%v", item.ID, item.ImageURL, err)
 			continue
 		}
 

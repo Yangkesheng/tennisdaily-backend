@@ -34,6 +34,7 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 			response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
 			return
 		}
+		logger.Error("POST /api/auth/wechat-login internal error: %v", err)
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
 	}
@@ -125,5 +126,6 @@ func handleAuthError(c *gin.Context, err error) {
 		response.Error(c, 404, response.CodeNotFound, "not found")
 		return
 	}
+	logger.Error("auth internal error path=%s error=%v", c.FullPath(), err)
 	response.Error(c, 500, response.CodeInternalError, "internal error")
 }
