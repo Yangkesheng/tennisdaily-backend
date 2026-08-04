@@ -1,5 +1,53 @@
 # Change Log
 
+## 2026-08-04 球拍库图片迁移到微信云托管对象存储
+
+### 需求/变更内容
+
+- 新增定时任务：将 `racket_library.image_url` 的旧外链图片下载并上传到微信云托管对象存储。
+- 上传成功后仅更新 `racket_library.file_id`（不动 `image_url`，保留旧链接兜底/回退），并写入上传记录表 `racket_library_image_upload`，保证幂等与审计。
+- 上传使用微信云托管官方服务端路径：开放接口服务 `/_/cos/getauth` 获取临时密钥 + `/_/cos/metaid/encode` 生成文件元数据（管理端 openid 为空），写入 `x-cos-meta-fileid` 头后经 COS SDK `putObject` 上传。
+- 存储路径：`{folder}/{brand}/{series}/{id}{ext}`，默认 `racket_library/{brand}/{series}/{id}.jpg`；brand/series 会清洗为 cloudPath 允许的字符（中文保留，空格等特殊字符转 `-`）。
+- 下载采用内存方式，不落临时文件，因此无残留文件需要删除。
+- 同一时间只允许一轮迁移运行（防重入）；单条失败保留原样，下个周期自动重试。
+- 前端展示改为优先读 `fileId`、`imageUrl` 兜底（由前端仓库另行修改）。
+
+### 修改文件
+
+- `config.yaml`（新增 `storage` 段：`enabled`/`envId`/`bucket`/`region`/`folder`/`schedule`/`runOnStart`）
+- `internal/config/config.go`（加载 storage 配置，支持环境变量覆盖）
+- `internal/model/racket_library.go`（新增 `RacketLibraryImageUpload` 模型）
+- `migrations/013_create_racket_library_image_upload.sql`（新增上传记录表）
+- `internal/storage/cloud_storage.go`（新增，云存储客户端）
+- `internal/storage/cloud_storage_test.go`（新增，单元测试）
+- `internal/repository/racket_repository.go`（待迁移查询 + 事务更新 file_id 与记录表）
+- `internal/service/racket_image_migration.go`（新增，迁移服务）
+- `cmd/api/main.go`（gocron 定时任务装配 + runOnStart）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无 HTTP 接口变化。
+
+### 数据库变化
+
+- 新增表 `racket_library_image_upload`（`racket_library_id` 唯一、`file_id`、`object_key`、`source_url`、`created_at`）。
+
+### 兼容性说明
+
+- `storage.enabled` 默认 `false`，不开启不影响现有服务。
+- `image_url` 不被修改，前端在 `fileId` 为空时才回退 `imageUrl`，兼容迁移前/迁移中状态。
+- 迁移依赖云托管「开放接口服务」已开启且服务版本已重建；对象存储读权限需允许所有用户读取。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/config/config.go internal/model/racket_library.go internal/repository/racket_repository.go internal/service/racket_image_migration.go internal/storage/cloud_storage.go internal/storage/cloud_storage_test.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过（`go test ./...` 全部包通过，含新增 storage 单元测试）。
+
 ## 2026-08-04 聚酯线健康度配置化
 
 ### 需求/变更内容

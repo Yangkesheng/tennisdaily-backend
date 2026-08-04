@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"log"
+	"time"
 
 	"tennisdaily-backend/internal/config"
 	"tennisdaily-backend/internal/handler"
@@ -10,8 +12,10 @@ import (
 	"tennisdaily-backend/internal/repository"
 	"tennisdaily-backend/internal/response"
 	"tennisdaily-backend/internal/service"
+	"tennisdaily-backend/internal/storage"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-co-op/gocron/v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -51,6 +55,8 @@ func main() {
 		logger.Debug("GET /health success status=ok")
 		response.OK(c, gin.H{"status": "ok"})
 	})
+
+	startRacketImageMigration(cfg, racketRepo)
 
 	api := r.Group("/api")
 	api.POST("/auth/wechat-login", authHandler.WechatLogin)
@@ -99,4 +105,52 @@ func main() {
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("run server: %v", err)
 	}
+}
+
+// startRacketImageMigration 配置开启时，注册球拍库图片每日迁移定时任务。
+func startRacketImageMigration(cfg config.Config, racketRepo *repository.RacketRepository) {
+	if !cfg.StorageEnabled {
+		return
+	}
+	if cfg.StorageEnvID == "" || cfg.StorageBucket == "" || cfg.StorageRegion == "" || cfg.StorageFolder == "" || cfg.StorageSchedule == "" {
+		log.Fatalf("storage enabled but envId/bucket/region/folder/schedule missing")
+	}
+
+	cloudStore := storage.New(storage.Config{
+		EnvID:  cfg.StorageEnvID,
+		Bucket: cfg.StorageBucket,
+		Region: cfg.StorageRegion,
+		Folder: cfg.StorageFolder,
+	})
+	migrationService := service.NewRacketImageMigration(racketRepo, cloudStore)
+
+	runOnce := func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
+		defer cancel()
+		if _, err := migrationService.Run(ctx); err != nil {
+			logger.Debug("racket image migration error: %v", err)
+		}
+	}
+
+	if cfg.StorageRunOnStart {
+		logger.Debug("racket image migration runOnStart triggered")
+		go runOnce()
+	}
+
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		loc = time.Local
+	}
+	scheduler, err := gocron.NewScheduler(gocron.WithLocation(loc))
+	if err != nil {
+		log.Fatalf("create gocron scheduler: %v", err)
+	}
+	if _, err := scheduler.NewJob(
+		gocron.CronJob(cfg.StorageSchedule, false),
+		gocron.NewTask(runOnce),
+	); err != nil {
+		log.Fatalf("register racket image migration job: %v", err)
+	}
+	scheduler.Start()
+	logger.Debug("racket image migration scheduler started schedule=%s", cfg.StorageSchedule)
 }

@@ -34,6 +34,41 @@ wechat:
   appId: ""
   appSecret: ""
 
+# ------------------------------------------------------------------
+# 微信云托管对象存储（球拍库图片迁移）
+#
+# 用途：定时把 racket_library.image_url 的旧外链图片下载并上传到对象存储，
+# 上传成功后只更新 racket_library.file_id（不动 image_url），并写入
+# racket_library_image_upload 记录表（幂等依据）。
+#
+# 使用前提（不满足则迁移失败，服务其余功能不受影响）：
+#   1. 微信云托管控制台已开启「开放接口服务」，且开启后重新构建了服务版本；
+#   2. 对象存储读权限允许所有用户读取（球拍库为共享图片）；
+#   3. 已执行 migrations/013_create_racket_library_image_upload.sql 建表。
+# ------------------------------------------------------------------
+storage:
+  # 是否开启图片迁移定时任务；false 时不注册任务，不影响现有服务。
+  # 也支持环境变量 STORAGE_ENABLED 覆盖。
+  enabled: false
+  # 微信云托管环境 ID，用于拼接 cloudID：cloud://{envId}.{bucket}/{path}
+  # 从云托管控制台「环境管理」获取；也支持环境变量 STORAGE_ENV_ID 覆盖。
+  envId: "prod-d6gkg1meqce4aaa7e"
+  # 对象存储桶名，从云托管控制台「对象存储-存储配置」获取；
+  # 也支持环境变量 STORAGE_BUCKET 覆盖。
+  bucket: "7072-prod-d6gkg1meqce4aaa7e-1440725645"
+  # 对象存储地域，与控制台「存储配置」保持一致；也支持环境变量 STORAGE_REGION 覆盖。
+  region: "ap-shanghai"
+  # 图片存储根目录，最终路径为 {folder}/{品牌}/{系列}/{id}.{ext}；
+  # 也支持环境变量 STORAGE_FOLDER 覆盖。
+  folder: "racket_library"
+  # 每日执行时间，标准 5 段 cron 表达式（分 时 日 月 周），
+  # 默认 "0 3 * * *" 表示每天 03:00（Asia/Shanghai）；
+  # 也支持环境变量 STORAGE_SCHEDULE 覆盖。
+  schedule: "0 3 * * *"
+  # 服务启动时是否立即执行一轮迁移，用于首次部署验证；
+  # 首次跑通后建议改回 false；也支持环境变量 STORAGE_RUN_ON_START 覆盖。
+  runOnStart: true
+
 
 
 sessionEnums:

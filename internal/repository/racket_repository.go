@@ -95,6 +95,40 @@ func (r *RacketRepository) LibraryFindByIDs(ids []int64) (map[int64]model.Racket
 	return items, nil
 }
 
+// LibraryImagesPending 返回待上传对象存储的球拍库图片：
+// image_url 非空，且尚未写入上传记录表（记录表是幂等依据，不依赖 file_id）。
+func (r *RacketRepository) LibraryImagesPending() ([]model.RacketLibrary, error) {
+	var items []model.RacketLibrary
+	err := r.db.Model(&model.RacketLibrary{}).
+		Where("image_url IS NOT NULL AND image_url <> ''").
+		Where("NOT EXISTS (SELECT 1 FROM racket_library_image_upload u WHERE u.racket_library_id = racket_library.id)").
+		Order("id ASC").
+		Find(&items).Error
+	return items, err
+}
+
+// ApplyLibraryImageUpload 在事务中更新 file_id（不动 image_url）并写入上传记录。
+func (r *RacketRepository) ApplyLibraryImageUpload(libraryID int64, fileID, objectKey, sourceURL string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.RacketLibrary{}).
+			Where("id = ?", libraryID).
+			Update("file_id", fileID).Error; err != nil {
+			return err
+		}
+
+		record := model.RacketLibraryImageUpload{
+			RacketLibraryID: libraryID,
+			FileID:          fileID,
+			ObjectKey:       objectKey,
+			SourceURL:       sourceURL,
+		}
+		if err := tx.Create(&record).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (r *RacketRepository) List(userID int64, includeRetired bool) ([]model.Racket, error) {
 	var rackets []model.Racket
 	query := r.db.Where("user_id = ? AND deleted_at IS NULL", userID)

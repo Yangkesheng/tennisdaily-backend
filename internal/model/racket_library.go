@@ -45,6 +45,20 @@ func (RacketLibrary) TableName() string {
 	return "racket_library"
 }
 
+// RacketLibraryImageUpload 记录球拍库图片已上传对象存储的日志，用于迁移幂等与审计回滚。
+type RacketLibraryImageUpload struct {
+	ID              int64     `json:"id" gorm:"primaryKey"`
+	RacketLibraryID int64     `json:"racketLibraryId" gorm:"column:racket_library_id;not null;uniqueIndex"`
+	FileID          string    `json:"fileId" gorm:"column:file_id;size:255;not null"`
+	ObjectKey       string    `json:"objectKey" gorm:"column:object_key;size:255;not null"`
+	SourceURL       string    `json:"sourceUrl" gorm:"column:source_url;size:500;not null;default:''"`
+	CreatedAt       time.Time `json:"createdAt"`
+}
+
+func (RacketLibraryImageUpload) TableName() string {
+	return "racket_library_image_upload"
+}
+
 type RacketLibraryQuery struct {
 	BrandID  int64 `form:"brandId" binding:"omitempty,min=1"`
 	SeriesID int64 `form:"seriesId" binding:"omitempty,min=1"`
