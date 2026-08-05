@@ -12,16 +12,17 @@ const homeRatingTrendLimit = 5
 type HomeService struct {
 	sessionRepo             *repository.SessionRepository
 	racketRepo              *repository.RacketRepository
+	shoeRepo                *repository.ShoeRepository
 	sessionCategoryResolver model.SessionCategoryTextResolver
 	loc                     *time.Location
 }
 
-func NewHomeService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver model.SessionCategoryTextResolver) *HomeService {
+func NewHomeService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository, shoeRepo *repository.ShoeRepository, sessionCategoryResolver model.SessionCategoryTextResolver) *HomeService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &HomeService{sessionRepo: sessionRepo, racketRepo: racketRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
+	return &HomeService{sessionRepo: sessionRepo, racketRepo: racketRepo, shoeRepo: shoeRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
 }
 
 func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model.HomeSummaryResponse, error) {
@@ -60,6 +61,11 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 		return model.HomeSummaryResponse{}, err
 	}
 
+	shoeCost, err := s.shoeRepo.SumPurchaseCostByMonth(userID, start, end)
+	if err != nil {
+		return model.HomeSummaryResponse{}, err
+	}
+
 	yearCount, err := s.sessionRepo.CountByDateRange(userID, yearStart, yearEnd)
 	if err != nil {
 		return model.HomeSummaryResponse{}, err
@@ -85,7 +91,17 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 			}
 			racketName = names[latestSession.RacketID]
 		}
-		resp := model.NewSessionResponse(*latestSession, s.sessionCategoryResolver, racketName)
+		var shoeName string
+		if latestSession.ShoeID > 0 {
+			names, err := s.shoeRepo.NamesByIDs(userID, []int64{latestSession.ShoeID})
+			if err != nil {
+				return model.HomeSummaryResponse{}, err
+			}
+			shoeName = names[latestSession.ShoeID]
+		} else {
+			shoeName = latestSession.ShoeName
+		}
+		resp := model.NewSessionResponse(*latestSession, s.sessionCategoryResolver, racketName, shoeName)
 		latestSessionResponse = &resp
 	}
 
@@ -114,7 +130,8 @@ func (s *HomeService) Summary(userID int64, query model.HomeSummaryQuery) (model
 			SessionCost:   sessionCost,
 			RacketCost:    racketCost,
 			StringingCost: stringingCost,
-			TotalCost:     sessionCost + racketCost + stringingCost,
+			ShoeCost:      shoeCost,
+			TotalCost:     sessionCost + racketCost + stringingCost + shoeCost,
 		},
 		LatestSession: latestSessionResponse,
 		RatingTrend:   ratingTrend,

@@ -17,6 +17,7 @@ type HomeExpenseSummaryResponse struct {
 	SessionCost   float64 `json:"sessionCost"`
 	RacketCost    float64 `json:"racketCost"`
 	StringingCost float64 `json:"stringingCost"`
+	ShoeCost      float64 `json:"shoeCost"`
 	TotalCost     float64 `json:"totalCost"`
 }
 

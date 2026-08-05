@@ -22,17 +22,18 @@ type SessionService struct {
 	repo                    *repository.SessionRepository
 	userRepo                *repository.UserRepository
 	racketRepo              *repository.RacketRepository
+	shoeRepo                *repository.ShoeRepository
 	contentSecurity         *ContentSecurityService
 	sessionCategoryResolver *config.SessionCategoryResolver
 	loc                     *time.Location
 }
 
-func NewSessionService(repo *repository.SessionRepository, userRepo *repository.UserRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver *config.SessionCategoryResolver, contentSecurity *ContentSecurityService) *SessionService {
+func NewSessionService(repo *repository.SessionRepository, userRepo *repository.UserRepository, racketRepo *repository.RacketRepository, shoeRepo *repository.ShoeRepository, sessionCategoryResolver *config.SessionCategoryResolver, contentSecurity *ContentSecurityService) *SessionService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &SessionService{repo: repo, userRepo: userRepo, racketRepo: racketRepo, contentSecurity: contentSecurity, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
+	return &SessionService{repo: repo, userRepo: userRepo, racketRepo: racketRepo, shoeRepo: shoeRepo, contentSecurity: contentSecurity, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
 }
 
 func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
@@ -44,7 +45,11 @@ func (s *SessionService) List(userID int64) ([]model.SessionResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return toSessionResponses(sessions, s.sessionCategoryResolver, racketNames), nil
+	shoeNames, err := s.shoeRepo.NamesByIDs(userID, sessionShoeIDs(sessions))
+	if err != nil {
+		return nil, err
+	}
+	return toSessionResponses(sessions, s.sessionCategoryResolver, racketNames, shoeNames), nil
 }
 
 func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (model.SessionListPageResponse, error) {
@@ -85,6 +90,10 @@ func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (m
 	if err != nil {
 		return model.SessionListPageResponse{}, err
 	}
+	shoeNames, err := s.shoeRepo.NamesByIDs(userID, sessionShoeIDs(sessions))
+	if err != nil {
+		return model.SessionListPageResponse{}, err
+	}
 
 	totalPages := 0
 	if total > 0 {
@@ -92,7 +101,7 @@ func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (m
 	}
 
 	return model.SessionListPageResponse{
-		List:       toSessionResponses(sessions, s.sessionCategoryResolver, racketNames),
+		List:       toSessionResponses(sessions, s.sessionCategoryResolver, racketNames, shoeNames),
 		Total:      total,
 		Page:       page,
 		PageSize:   pageSize,
@@ -117,11 +126,15 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 	if err != nil {
 		return nil, err
 	}
-	return toSessionResponses(sessions, s.sessionCategoryResolver, racketNames), nil
+	shoeNames, err := s.shoeRepo.NamesByIDs(userID, sessionShoeIDs(sessions))
+	if err != nil {
+		return nil, err
+	}
+	return toSessionResponses(sessions, s.sessionCategoryResolver, racketNames, shoeNames), nil
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
-	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeName, req.Note)
+	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeID, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
@@ -137,7 +150,11 @@ func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (m
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
-	return model.NewSessionResponse(session, s.sessionCategoryResolver, racketName), nil
+	shoeName, err := s.sessionShoeName(userID, session)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	return model.NewSessionResponse(session, s.sessionCategoryResolver, racketName, shoeName), nil
 }
 
 func (s *SessionService) FindByID(userID, id int64) (model.SessionResponse, error) {
@@ -152,7 +169,11 @@ func (s *SessionService) FindByID(userID, id int64) (model.SessionResponse, erro
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
-	return model.NewSessionResponse(*session, s.sessionCategoryResolver, racketName), nil
+	shoeName, err := s.sessionShoeName(userID, *session)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	return model.NewSessionResponse(*session, s.sessionCategoryResolver, racketName, shoeName), nil
 }
 
 func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest) (model.SessionResponse, error) {
@@ -164,7 +185,7 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 		return model.SessionResponse{}, ErrNotFound
 	}
 
-	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeName, req.Note)
+	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeID, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
@@ -184,6 +205,7 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	existing.Partner = updated.Partner
 	existing.Cost = updated.Cost
 	existing.RacketID = updated.RacketID
+	existing.ShoeID = updated.ShoeID
 	existing.ShoeName = updated.ShoeName
 	existing.Note = updated.Note
 
@@ -194,7 +216,11 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
-	return model.NewSessionResponse(*existing, s.sessionCategoryResolver, racketName), nil
+	shoeName, err := s.sessionShoeName(userID, *existing)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	return model.NewSessionResponse(*existing, s.sessionCategoryResolver, racketName, shoeName), nil
 }
 
 func (s *SessionService) Delete(userID, id int64) error {
@@ -220,7 +246,11 @@ func (s *SessionService) Latest(userID int64) (*model.SessionResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp := model.NewSessionResponse(*session, s.sessionCategoryResolver, racketName)
+	shoeName, err := s.sessionShoeName(userID, *session)
+	if err != nil {
+		return nil, err
+	}
+	resp := model.NewSessionResponse(*session, s.sessionCategoryResolver, racketName, shoeName)
 	return &resp, nil
 }
 
@@ -259,7 +289,7 @@ func (s *SessionService) Calendar(userID int64, year, month int) (model.SessionC
 		Charts: model.SessionCalendarChartsResponse{
 			WeeklySessions:       s.calendarWeeklySessions(start, end, days),
 			RatingTrend:          ratingTrend,
-			ExpenseBreakdown:     calendarExpenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+			ExpenseBreakdown:     calendarExpenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost, summary.ShoeCost),
 			SessionTypeBreakdown: calendarSessionTypeBreakdown(summary),
 		},
 	}, nil
@@ -281,6 +311,11 @@ func (s *SessionService) calendarSummary(userID int64, start, end time.Time) (mo
 		return model.SessionCalendarSummaryResponse{}, err
 	}
 
+	shoeCost, err := s.shoeRepo.SumPurchaseCostByRange(userID, start, end)
+	if err != nil {
+		return model.SessionCalendarSummaryResponse{}, err
+	}
+
 	return model.SessionCalendarSummaryResponse{
 		SessionCount:   sessionStats.SessionCount,
 		ActiveDayCount: sessionStats.ActiveDayCount,
@@ -290,7 +325,8 @@ func (s *SessionService) calendarSummary(userID int64, start, end time.Time) (mo
 		SessionCost:    sessionStats.SessionCost,
 		RacketCost:     racketCost,
 		StringingCost:  stringingCost,
-		TotalCost:      sessionStats.SessionCost + racketCost + stringingCost,
+		ShoeCost:       shoeCost,
+		TotalCost:      sessionStats.SessionCost + racketCost + stringingCost + shoeCost,
 		TrainingCount:  sessionStats.TrainingCount,
 		SinglesCount:   sessionStats.SinglesCount,
 		DoublesCount:   sessionStats.DoublesCount,
@@ -344,11 +380,12 @@ func (s *SessionService) calendarRatingTrend(userID int64, start, end time.Time)
 	return trend, nil
 }
 
-func calendarExpenseBreakdown(sessionCost, racketCost, stringingCost float64) []model.CalendarExpenseChartItemResponse {
+func calendarExpenseBreakdown(sessionCost, racketCost, stringingCost, shoeCost float64) []model.CalendarExpenseChartItemResponse {
 	return []model.CalendarExpenseChartItemResponse{
 		{Label: "打球", Value: sessionCost},
 		{Label: "球拍", Value: racketCost},
 		{Label: "穿线", Value: stringingCost},
+		{Label: "球鞋", Value: shoeCost},
 	}
 }
 
@@ -362,7 +399,7 @@ func calendarSessionTypeBreakdown(summary model.SessionCalendarSummaryResponse) 
 	}
 }
 
-func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, category model.SessionCategory, subCategory model.SessionSubCategory, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, shoeName string, note string) (model.TennisSession, error) {
+func (s *SessionService) buildSession(userID int64, date string, duration int, rating int16, sessionType model.SessionType, category model.SessionCategory, subCategory model.SessionSubCategory, matchRank model.MatchRank, courtName string, partner string, cost float64, racketID int64, shoeID int64, shoeName string, note string) (model.TennisSession, error) {
 	sessionDate, err := s.parseSessionDateTime(date)
 	if err != nil {
 		return model.TennisSession{}, ErrInvalidRequest
@@ -407,6 +444,7 @@ func (s *SessionService) buildSession(userID int64, date string, duration int, r
 		Partner:         partner,
 		Cost:            cost,
 		RacketID:        racketID,
+		ShoeID:          shoeID,
 		ShoeName:        shoeName,
 		Note:            note,
 	}, nil
@@ -421,6 +459,17 @@ func (s *SessionService) racketName(userID, racketID int64) (string, error) {
 		return "", err
 	}
 	return names[racketID], nil
+}
+
+func (s *SessionService) sessionShoeName(userID int64, session model.TennisSession) (string, error) {
+	if session.ShoeID <= 0 {
+		return session.ShoeName, nil
+	}
+	names, err := s.shoeRepo.NamesByIDs(userID, []int64{session.ShoeID})
+	if err != nil {
+		return "", err
+	}
+	return names[session.ShoeID], nil
 }
 
 func (s *SessionService) parseSessionDateTime(value string) (time.Time, error) {
@@ -480,10 +529,33 @@ func sessionRacketIDs(sessions []model.TennisSession) []int64 {
 	return ids
 }
 
-func toSessionResponses(sessions []model.TennisSession, sessionCategoryResolver *config.SessionCategoryResolver, racketNames map[int64]string) []model.SessionResponse {
+func sessionShoeIDs(sessions []model.TennisSession) []int64 {
+	seen := make(map[int64]struct{}, len(sessions))
+	ids := make([]int64, 0, len(sessions))
+	for _, session := range sessions {
+		if session.ShoeID <= 0 {
+			continue
+		}
+		if _, ok := seen[session.ShoeID]; ok {
+			continue
+		}
+		seen[session.ShoeID] = struct{}{}
+		ids = append(ids, session.ShoeID)
+	}
+	return ids
+}
+
+func toSessionResponses(sessions []model.TennisSession, sessionCategoryResolver *config.SessionCategoryResolver, racketNames map[int64]string, shoeNames map[int64]string) []model.SessionResponse {
 	responses := make([]model.SessionResponse, 0, len(sessions))
 	for _, session := range sessions {
-		responses = append(responses, model.NewSessionResponse(session, sessionCategoryResolver, racketNames[session.RacketID]))
+		responses = append(responses, model.NewSessionResponse(session, sessionCategoryResolver, racketNames[session.RacketID], sessionShoeName(session, shoeNames)))
 	}
 	return responses
+}
+
+func sessionShoeName(session model.TennisSession, shoeNames map[int64]string) string {
+	if session.ShoeID <= 0 {
+		return session.ShoeName
+	}
+	return shoeNames[session.ShoeID]
 }

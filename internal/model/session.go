@@ -20,6 +20,7 @@ type TennisSession struct {
 	Partner         string             `json:"partner" gorm:"size:128;not null;default:''"`
 	Cost            float64            `json:"cost" gorm:"type:decimal(10,2);not null;default:0"`
 	RacketID        int64              `json:"racketId" gorm:"not null;default:0;index"`
+	ShoeID          int64              `json:"shoeId" gorm:"not null;default:0;index"`
 	ShoeName        string             `json:"shoeName" gorm:"size:128;not null;default:''"`
 	Note            string             `json:"note" gorm:"not null;default:''"`
 	CreatedAt       time.Time          `json:"createdAt"`
@@ -50,6 +51,7 @@ type SessionResponse struct {
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`
 	RacketName      string             `json:"racketName"`
+	ShoeID          int64              `json:"shoeId"`
 	ShoeName        string             `json:"shoeName"`
 	Note            string             `json:"note"`
 	CreatedAt       time.Time          `json:"createdAt"`
@@ -70,6 +72,7 @@ type SessionCalendarSummaryResponse struct {
 	SessionCost    float64 `json:"sessionCost"`
 	RacketCost     float64 `json:"racketCost"`
 	StringingCost  float64 `json:"stringingCost"`
+	ShoeCost       float64 `json:"shoeCost"`
 	TotalCost      float64 `json:"totalCost"`
 	TrainingCount  int64   `json:"trainingCount"`
 	SinglesCount   int64   `json:"singlesCount"`
@@ -114,7 +117,7 @@ type SessionCategoryTextResolver interface {
 	TypeText(category SessionCategory, subCategory SessionSubCategory) (string, bool)
 }
 
-func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResolver, racketName string) SessionResponse {
+func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResolver, racketName string, shoeName string) SessionResponse {
 	category, subCategory := session.Category, session.SubCategory
 	categoryText, subCategoryText, typeText, ok := sessionCategoryTexts(category, subCategory, resolver)
 	if !ok {
@@ -141,7 +144,8 @@ func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResol
 		Cost:            session.Cost,
 		RacketID:        session.RacketID,
 		RacketName:      racketName,
-		ShoeName:        session.ShoeName,
+		ShoeID:          session.ShoeID,
+		ShoeName:        shoeName,
 		Note:            session.Note,
 		CreatedAt:       session.CreatedAt,
 		UpdatedAt:       session.UpdatedAt,
@@ -191,6 +195,7 @@ type CreateSessionRequest struct {
 	Partner         string             `json:"partner"`
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`
+	ShoeID          int64              `json:"shoeId"`
 	ShoeName        string             `json:"shoeName"`
 	Note            string             `json:"note"`
 }
@@ -207,6 +212,7 @@ type UpdateSessionRequest struct {
 	Partner         string             `json:"partner"`
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`
+	ShoeID          int64              `json:"shoeId"`
 	ShoeName        string             `json:"shoeName"`
 	Note            string             `json:"note"`
 }

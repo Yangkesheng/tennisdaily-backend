@@ -33,19 +33,22 @@ func main() {
 	sessionRepo := repository.NewSessionRepository(db)
 
 	racketRepo := repository.NewRacketRepository(db)
+	shoeRepo := repository.NewShoeRepository(db)
 
 	contentSecurityService := service.NewContentSecurityService(cfg)
 	authService := service.NewAuthService(cfg, userRepo, contentSecurityService)
-	sessionService := service.NewSessionService(sessionRepo, userRepo, racketRepo, cfg.SessionCategoryResolver, contentSecurityService)
-	statsService := service.NewStatsService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
+	sessionService := service.NewSessionService(sessionRepo, userRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver, contentSecurityService)
+	statsService := service.NewStatsService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth)
-	homeService := service.NewHomeService(sessionRepo, racketRepo, cfg.SessionCategoryResolver)
+	shoeService := service.NewShoeService(shoeRepo, userRepo, contentSecurityService)
+	homeService := service.NewHomeService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 
 	authHandler := handler.NewAuthHandler(authService)
 	sessionHandler := handler.NewSessionHandler(sessionService)
 	statsHandler := handler.NewStatsHandler(statsService)
 	racketHandler := handler.NewRacketHandler(racketService)
+	shoeHandler := handler.NewShoeHandler(shoeService)
 	homeHandler := handler.NewHomeHandler(homeService)
 	enumHandler := handler.NewEnumHandler(enumService)
 
@@ -100,6 +103,22 @@ func main() {
 		authed.POST("/rackets/:id/stringing-records", racketHandler.CreateStringingRecord)
 		authed.PUT("/rackets/:id/stringing-records/:recordId", racketHandler.UpdateStringingRecord)
 		authed.DELETE("/rackets/:id/stringing-records/:recordId", racketHandler.DeleteStringingRecord)
+
+		authed.GET("/shoe-brands", shoeHandler.Brands)
+		authed.GET("/shoe-series", shoeHandler.Series)
+		authed.GET("/shoe-library", shoeHandler.Library)
+		authed.GET("/shoe-library/stats", shoeHandler.LibraryStats)
+		authed.GET("/my-shoes", shoeHandler.MyShoes)
+		authed.GET("/my-shoes/primary", shoeHandler.MyPrimaryShoe)
+		authed.GET("/shoes/stats", shoeHandler.Stats)
+		authed.GET("/shoes", shoeHandler.List)
+		authed.POST("/shoes", shoeHandler.Create)
+		authed.GET("/shoes/selectable", shoeHandler.Selectable)
+		authed.GET("/shoes/:id", shoeHandler.Detail)
+		authed.PUT("/shoes/:id", shoeHandler.Update)
+		authed.DELETE("/shoes/:id", shoeHandler.Delete)
+		authed.POST("/shoes/:id/set-primary", shoeHandler.SetPrimary)
+		authed.POST("/shoes/:id/retire", shoeHandler.Retire)
 	}
 
 	if err := r.Run(":" + cfg.Port); err != nil {

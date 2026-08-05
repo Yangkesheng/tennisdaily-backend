@@ -1,5 +1,108 @@
 # Change Log
 
+## 2026-08-05 打球记录支持 shoeId 关联；球鞋购买费用计入首页/统计 expense
+
+### 需求/变更内容
+
+- 打球记录新增/编辑支持传 `shoeId` 关联我的球鞋；响应 `shoeName` 按 `shoeId` 实时返回，`shoeId = 0` 时回退快照 `shoe_name`（保留快照列，兼容旧客户端）。
+- 首页 `expense`、日历汇总、统计图表 `summary` 新增 `shoeCost`（按月份/范围内 `shoe.purchase_price` 合计），`totalCost` 口径变为 `sessionCost + racketCost + stringingCost + shoeCost`。
+- 统计图表与日历 `expenseBreakdown` 新增"球鞋"分项。
+
+### 修改文件
+
+- `migrations/016_add_session_shoe_id.sql`（新增，`tennis_sessions` 增加 `shoe_id` 列）
+- `migrations/init.sql`（建表语句同步增加 `shoe_id` 列）
+- `internal/model/session.go`（`TennisSession` / `SessionResponse` / 请求 DTO 增加 `shoeId`；`NewSessionResponse` 增加 `shoeName` 参数）
+- `internal/model/home.go`（`HomeExpenseSummaryResponse` 增加 `shoeCost`）
+- `internal/model/stats.go`（`StatsChartsSummaryResponse` 增加 `shoeCost`）
+- `internal/repository/shoe_repository.go`（新增 `NamesByIDs`、`SumPurchaseCostByMonth` / `SumPurchaseCostByRange`）
+- `internal/service/session_service.go`（注入 `shoeRepo`；写入/解析 `shoeId`；日历汇总与 expenseBreakdown 增加球鞋费用）
+- `internal/service/home_service.go`（首页 expense 增加 `shoeCost`；最近一次打球关联球鞋名称）
+- `internal/service/stats_service.go`（注入 `shoeRepo`；summary 与 expenseBreakdown 增加球鞋费用）
+- `internal/service/session_service_test.go`（构造参数同步）
+- `cmd/api/main.go`（依赖装配同步）
+- `AGENTS.md`、`docs/api.md`、`docs/shoe-add-api-design.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/sessions`、`PUT /api/sessions/:id` 请求体新增可选字段 `shoeId`（我的球鞋 ID，`0` 表示不关联）。
+- `SessionResponse` 新增 `shoeId`；`shoeName` 语义变为优先按 `shoeId` 实时关联，无关联时回退快照。
+- 首页 `expense` 新增 `shoeCost`，`totalCost` 口径更新。
+- 日历 `summary`、`/api/stats/charts` 的 `summary` 新增 `shoeCost`，`totalCost` 口径更新；`expenseBreakdown` 新增"球鞋"分项。
+
+### 数据库变化
+
+- `tennis_sessions` 新增 `shoe_id BIGINT NOT NULL DEFAULT 0`（执行 `migrations/016_add_session_shoe_id.sql`）。
+
+### 兼容性说明
+
+- `shoeName` 请求字段与快照列保留：旧客户端继续传 `shoeName` 可正常保存与展示；新客户端传 `shoeId` 时展示以实时关联为准。
+- `totalCost` 口径变化会使历史统计数据变大（新增球鞋购买费用），属预期行为。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/session.go internal/model/home.go internal/model/stats.go internal/repository/shoe_repository.go internal/service/session_service.go internal/service/home_service.go internal/service/stats_service.go internal/service/session_service_test.go cmd/api/main.go`
+- `go build ./...`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-05 新增球鞋管理功能（球鞋库 + 我的球鞋）
+
+### 需求/变更内容
+
+- 新增球鞋功能，整体流程与球拍一致：球鞋库（品牌/系列/性别）选择 + 手动输入，我的球鞋列表/详情/编辑/设置主力/退役/删除。
+- 球鞋库只返回 `published` 数据；同一型号不同配色各占一行，`product_code` 仅内部回源用。
+- 打球记录仍使用 `shoeName` 自由文本，本次不接入 `shoeId` 关联；球鞋费用暂不计入首页/统计 `expense`（见设计文档开放问题）。
+
+### 修改文件
+
+- `migrations/015_create_shoe_tables.sql`（新增，`shoe_brands` / `shoe_series` / `shoe_library` / `shoe` 四张表）
+- `internal/model/shoe.go`（新增，模型与请求/响应 DTO）
+- `internal/repository/shoe_repository.go`（新增）
+- `internal/service/shoe_service.go`（新增）
+- `internal/handler/shoe_handler.go`（新增）
+- `cmd/api/main.go`（装配 `ShoeService` / `ShoeHandler`，注册路由）
+- `docs/shoe-add-api-design.md`
+- `docs/api.md`（新增 23. 球鞋管理接口）
+- `docs/change-log.md`
+
+### 接口变化
+
+新增接口（均需鉴权）：
+
+- `GET /api/shoe-brands`
+- `GET /api/shoe-series`（支持 `brandId`、`gender`）
+- `GET /api/shoe-library`（支持 `brandId`、`seriesId`、`gender`）
+- `GET /api/shoe-library/stats`
+- `GET /api/shoes`、`POST /api/shoes`
+- `GET /api/shoes/:id`、`PUT /api/shoes/:id`、`DELETE /api/shoes/:id`
+- `GET /api/shoes/selectable`、`GET /api/shoes/stats`
+- `GET /api/my-shoes`、`GET /api/my-shoes/primary`
+- `POST /api/shoes/:id/set-primary`、`POST /api/shoes/:id/retire`
+
+### 数据库变化
+
+- 新增 `shoe_brands`、`shoe_series`、`shoe_library`、`shoe` 四张表（执行 `migrations/015_create_shoe_tables.sql`）。
+
+### 兼容性说明
+
+- 全部为新增接口，不影响现有接口与字段。
+- `tennis_sessions.shoe_name` 保持不变，打球记录相关接口无变化。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/shoe.go internal/repository/shoe_repository.go internal/service/shoe_service.go internal/handler/shoe_handler.go cmd/api/main.go`
+- `go build ./...`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-05 打球记录取消球拍名称快照字段，展示改为关联我的球拍
 
 ### 需求/变更内容

@@ -15,16 +15,17 @@ const statsRatingTrendLimit = 8
 type StatsService struct {
 	sessionRepo             *repository.SessionRepository
 	racketRepo              *repository.RacketRepository
+	shoeRepo                *repository.ShoeRepository
 	sessionCategoryResolver *config.SessionCategoryResolver
 	loc                     *time.Location
 }
 
-func NewStatsService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository, sessionCategoryResolver *config.SessionCategoryResolver) *StatsService {
+func NewStatsService(sessionRepo *repository.SessionRepository, racketRepo *repository.RacketRepository, shoeRepo *repository.ShoeRepository, sessionCategoryResolver *config.SessionCategoryResolver) *StatsService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &StatsService{sessionRepo: sessionRepo, racketRepo: racketRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
+	return &StatsService{sessionRepo: sessionRepo, racketRepo: racketRepo, shoeRepo: shoeRepo, sessionCategoryResolver: sessionCategoryResolver, loc: loc}
 }
 
 func (s *StatsService) Month(userID int64) (model.SessionStats, error) {
@@ -136,6 +137,11 @@ func (s *StatsService) buildSummary(userID int64, start, end time.Time) (model.S
 		return model.StatsChartsSummaryResponse{}, err
 	}
 
+	shoeCost, err := s.shoeRepo.SumPurchaseCostByRange(userID, start, end)
+	if err != nil {
+		return model.StatsChartsSummaryResponse{}, err
+	}
+
 	return model.StatsChartsSummaryResponse{
 		SessionCount:   sessionStats.SessionCount,
 		ActiveDayCount: sessionStats.ActiveDayCount,
@@ -145,7 +151,8 @@ func (s *StatsService) buildSummary(userID int64, start, end time.Time) (model.S
 		SessionCost:    sessionStats.SessionCost,
 		RacketCost:     racketCost,
 		StringingCost:  stringingCost,
-		TotalCost:      sessionStats.SessionCost + racketCost + stringingCost,
+		ShoeCost:       shoeCost,
+		TotalCost:      sessionStats.SessionCost + racketCost + stringingCost + shoeCost,
 		TrainingCount:  sessionStats.TrainingCount,
 		SinglesCount:   sessionStats.SinglesCount,
 		DoublesCount:   sessionStats.DoublesCount,
@@ -238,12 +245,13 @@ func (s *StatsService) yearRatingTrend(userID int64, start, end time.Time) ([]mo
 	return trend, nil
 }
 
-func expenseBreakdown(sessionCost, racketCost, stringingCost float64) []model.StatsBreakdownItemResponse {
-	totalCost := sessionCost + racketCost + stringingCost
+func expenseBreakdown(sessionCost, racketCost, stringingCost, shoeCost float64) []model.StatsBreakdownItemResponse {
+	totalCost := sessionCost + racketCost + stringingCost + shoeCost
 	return []model.StatsBreakdownItemResponse{
 		{Key: "session", Label: "打球", Value: sessionCost, Percent: percent(sessionCost, totalCost)},
 		{Key: "racket", Label: "球拍", Value: racketCost, Percent: percent(racketCost, totalCost)},
 		{Key: "stringing", Label: "穿线", Value: stringingCost, Percent: percent(stringingCost, totalCost)},
+		{Key: "shoe", Label: "球鞋", Value: shoeCost, Percent: percent(shoeCost, totalCost)},
 	}
 }
 
@@ -255,7 +263,7 @@ func (s *StatsService) buildChartsForFrequency(frequency []model.StatsFrequencyC
 	return model.StatsChartsResponse{
 		Frequency:                           frequency,
 		RatingTrend:                         ratingTrend,
-		ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost),
+		ExpenseBreakdown:                    expenseBreakdown(summary.SessionCost, summary.RacketCost, summary.StringingCost, summary.ShoeCost),
 		SessionCategoryCountBreakdown:       s.sessionCategoryBreakdown(rows, float64(summary.SessionCount), sessionBreakdownMetricCount),
 		SessionSubCategoryCountBreakdown:    s.sessionSubCategoryBreakdown(rows, float64(summary.SessionCount), sessionBreakdownMetricCount),
 		SessionCategoryDurationBreakdown:    s.sessionCategoryBreakdown(rows, float64(summary.TotalMinutes), sessionBreakdownMetricMinutes),

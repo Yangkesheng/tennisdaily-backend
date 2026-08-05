@@ -413,7 +413,8 @@ GET /api/home/summary
     "sessionCost": 320,
     "racketCost": 1280,
     "stringingCost": 260,
-    "totalCost": 1860
+    "shoeCost": 899,
+    "totalCost": 2759
   },
   "latestSession": null,
   "ratingTrend": []
@@ -433,7 +434,8 @@ GET /api/home/summary
 | `sessionCost` | 同 `monthCost` |
 | `racketCost` | 查询月份球拍购买费用 |
 | `stringingCost` | 查询月份穿线费用 |
-| `totalCost` | `sessionCost + racketCost + stringingCost` |
+| `shoeCost` | 查询月份球鞋购买费用 |
+| `totalCost` | `sessionCost + racketCost + stringingCost + shoeCost` |
 
 ---
 
@@ -835,7 +837,7 @@ GET /api/sessions/calendar?year=YYYY&month=M
 首页 `expense.totalCost` 口径：
 
 ```text
-打球消费 + 球拍购买费用 + 穿线费用
+打球消费 + 球拍购买费用 + 穿线费用 + 球鞋购买费用
 ```
 
 其中：
@@ -843,6 +845,7 @@ GET /api/sessions/calendar?year=YYYY&month=M
 - 打球消费：`tennis_sessions.cost`
 - 球拍购买费用：`racket.purchase_price`
 - 穿线费用：`racket_stringing_record.cost`
+- 球鞋购买费用：`shoe.purchase_price`
 
 ---
 

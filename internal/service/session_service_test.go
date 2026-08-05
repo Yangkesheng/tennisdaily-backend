@@ -10,7 +10,7 @@ import (
 
 func TestSessionServiceCreateRejectsDurationOverMax(t *testing.T) {
 	resolver := newTestSessionCategoryResolver(t)
-	service := NewSessionService(nil, nil, nil, resolver, nil)
+	service := NewSessionService(nil, nil, nil, nil, resolver, nil)
 
 	_, err := service.Create(29, model.CreateSessionRequest{
 		Date:            "2026-07-25 03:00",

@@ -209,6 +209,7 @@ Authorization: Bearer <token>
   "partner": "张三",
   "cost": 80,
   "racketName": "Wilson Blade",
+  "shoeId": 1,
   "shoeName": "Asics Gel Resolution",
   "note": "今天状态不错",
   "createdAt": "2026-01-15T12:00:00+08:00",
@@ -237,7 +238,8 @@ Authorization: Bearer <token>
 | partner | string | 搭档 |
 | cost | number | 花费 |
 | racketName | string | 球拍名称，按 racketId 关联我的球拍实时返回 |
-| shoeName | string | 球鞋 |
+| shoeId | number | 使用球鞋 ID，未选择时为 `0` |
+| shoeName | string | 球鞋名称：`shoeId > 0` 时按鞋 ID 关联我的球鞋实时返回；无 `shoeId` 时返回创建时快照；球鞋已删除时为空字符串 |
 | note | string | 备注 |
 | createdAt | string | 创建时间，RFC3339 |
 | updatedAt | string | 更新时间，RFC3339 |
@@ -257,6 +259,7 @@ Authorization: Bearer <token>
   "courtName": "奥森网球场",
   "partner": "张三",
   "cost": 80,
+  "shoeId": 1,
   "shoeName": "Asics Gel Resolution",
   "note": "今天状态不错"
 }
@@ -276,7 +279,8 @@ Authorization: Bearer <token>
 | courtName | 否 | 字符串 |
 | partner | 否 | 字符串，搭档名称 |
 | cost | 否 | 数字 |
-| shoeName | 否 | 字符串 |
+| shoeId | 否 | 数字，我的球鞋 ID；不传或传 `0` 表示不关联球鞋 |
+| shoeName | 否 | 字符串，兼容旧客户端保留；新客户端传 `shoeId` 即可 |
 | note | 否 | 字符串 |
 
 注意：
@@ -284,6 +288,7 @@ Authorization: Bearer <token>
 - 新客户端应提交 `category` 和 `subCategory`，后端会同步生成兼容旧字段 `type`
 - 旧客户端仍可只提交 `type`，后端会自动映射出 `category` 和 `subCategory`
 - 新增/编辑不再接收 `racketName`，响应中的 `racketName` 由后端按 `racketId` 关联我的球拍实时返回
+- 响应中的 `shoeName` 优先按 `shoeId` 关联我的球鞋实时返回；`shoeId` 为 `0` 时回退到请求里的 `shoeName` 快照；关联球鞋已删除时返回空字符串
 - `date` 必须是 `YYYY-MM-DD HH:mm`，旧格式 `YYYY-MM-DD` 仍兼容并按当天 `00:00` 处理，不要传完整 ISO 时间
 - `durationMinutes` 传 `0` 时后端会使用默认值 `120`
 - `rating` 传 `0` 时后端会使用默认值 `3`
@@ -307,6 +312,17 @@ Authorization: Bearer <token>
 | DELETE | `/api/sessions/:id` | 是 | 删除打球记录，软删除 |
 | GET | `/api/stats/month` | 是 | 获取本月统计 |
 | GET | `/api/rackets/stats` | 是 | 获取球拍统计 |
+| GET | `/api/shoe-brands` | 是 | 获取球鞋品牌 |
+| GET | `/api/shoe-series` | 是 | 获取球鞋系列，支持按品牌、性别过滤 |
+| GET | `/api/shoe-library` | 是 | 获取球鞋库，按品牌分类 |
+| GET | `/api/shoe-library/stats` | 是 | 获取球鞋库品牌/系列数量统计 |
+| GET | `/api/shoes` | 是 | 获取我的球鞋列表 |
+| POST | `/api/shoes` | 是 | 新增我的球鞋 |
+| GET | `/api/shoes/:id` | 是 | 获取球鞋详情 |
+| PUT | `/api/shoes/:id` | 是 | 更新球鞋 |
+| DELETE | `/api/shoes/:id` | 是 | 删除球鞋，软删除 |
+| GET | `/api/shoes/stats` | 是 | 获取球鞋统计 |
+| GET | `/api/my-shoes` | 是 | 获取可选球鞋，新增打球记录选择用 |
 
 ---
 
@@ -665,7 +681,7 @@ Content-Type: application/json
 curl -X POST http://localhost:8081/api/sessions \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeId":1,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ---
@@ -798,7 +814,7 @@ Content-Type: application/json
 curl -X PUT http://localhost:8081/api/sessions/1 \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"category":3,"subCategory":1,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"shoeName":"Nike Vapor","note":"更新后的记录"}'
+  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"category":3,"subCategory":1,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"shoeId":2,"shoeName":"Nike Vapor","note":"更新后的记录"}'
 ```
 
 ---
@@ -968,7 +984,8 @@ Authorization: Bearer <token>
       "sessionCost": 240,
       "racketCost": 1599,
       "stringingCost": 80,
-      "totalCost": 1919,
+      "shoeCost": 890,
+      "totalCost": 2809,
       "trainingCount": 1,
       "singlesCount": 0,
       "doublesCount": 1,
@@ -1023,7 +1040,8 @@ Authorization: Bearer <token>
 | sessionCost | number | 查询范围内打球消费合计 |
 | racketCost | number | 查询范围内球拍购买费用合计 |
 | stringingCost | number | 查询范围内穿线费用合计 |
-| totalCost | number | `sessionCost + racketCost + stringingCost` |
+| shoeCost | number | 查询范围内球鞋购买费用合计 |
+| totalCost | number | `sessionCost + racketCost + stringingCost + shoeCost` |
 | trainingCount | number | 查询范围内训练记录数 |
 | singlesCount | number | 查询范围内单打记录数 |
 | doublesCount | number | 查询范围内双打记录数 |
@@ -1133,9 +1151,13 @@ Authorization: Bearer <token>
 | month | number | 查询月份；按年查询时为 `0` |
 | rangeText | string | 查询范围展示文案 |
 | summary.sessionCost | number | 查询范围内打球费用合计 |
+| summary.racketCost | number | 查询范围内球拍购买费用合计 |
+| summary.stringingCost | number | 查询范围内穿线费用合计 |
+| summary.shoeCost | number | 查询范围内球鞋购买费用合计 |
+| summary.totalCost | number | 打球 + 球拍 + 穿线 + 球鞋费用合计 |
 | summary.totalMinutes | number | 查询范围内打球总分钟数 |
 | summary.sessionCount | number | 查询范围内打球记录数 |
-| charts.expenseBreakdown | array | 打球、球拍、穿线总消费占比 |
+| charts.expenseBreakdown | array | 打球、球拍、穿线、球鞋总消费占比 |
 | charts.sessionCategoryCountBreakdown | array | 按配置中的一级类型统计打球次数占比 |
 | charts.sessionSubCategoryCountBreakdown | array | 按配置中的二级类型统计打球次数占比 |
 | charts.sessionCategoryDurationBreakdown | array | 按配置中的一级类型统计打球时长占比 |
@@ -1256,7 +1278,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
 curl -X POST http://localhost:8081/api/sessions \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"date": "2026-01-15 19:30","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date": "2026-01-15 19:30","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeId":1,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ### 18.3 查看列表
@@ -2255,3 +2277,341 @@ Authorization: Bearer <token>
 ```text
 status IN (1, 2)
 ```
+
+---
+
+## 23. 球鞋管理接口
+
+球鞋功能整体流程与球拍一致：球鞋库（品牌/系列/性别）→ 添加我的球鞋（库选择补全 + 手动输入）→ 我的球鞋管理（列表/详情/编辑/主力/退役/删除）。
+
+打球记录已支持 `shoeId` 关联我的球鞋，响应 `shoeName` 按 `shoeId` 实时返回；未关联（`shoeId = 0`）的记录回退到快照 `shoeName`。
+
+### 23.1 球鞋状态
+
+| 值 | 含义 |
+|---:|---|
+| `1` | 主力鞋 |
+| `2` | 在用 |
+| `3` | 已退役 |
+
+### 23.2 获取球鞋品牌
+
+```http
+GET /api/shoe-brands
+Authorization: Bearer <token>
+```
+
+响应 data：
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Asics",
+    "fileId": "cloud://tennisdaily/shoe-brands/asics.png"
+  }
+]
+```
+
+说明：`shoe_brands.slug` 为内部品牌标识，不返回给前端。
+
+### 23.3 获取球鞋系列
+
+```http
+GET /api/shoe-series
+GET /api/shoe-series?brandId=1
+GET /api/shoe-series?brandId=1&gender=1
+Authorization: Bearer <token>
+```
+
+查询参数：
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| brandId | number | 品牌 ID，可选 |
+| gender | number | 性别，可选；`0` 未知 / `1` 男 / `2` 女 / `3` 童，不传返回全部 |
+
+响应 data：
+
+```json
+[
+  {
+    "id": 101,
+    "brandId": 1,
+    "gender": 1,
+    "name": "Gel Resolution"
+  }
+]
+```
+
+### 23.4 获取球鞋库，按品牌分类
+
+```http
+GET /api/shoe-library
+GET /api/shoe-library?brandId=1&seriesId=101&gender=1
+Authorization: Bearer <token>
+```
+
+查询参数：
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| brandId | number | 品牌 ID，可选 |
+| seriesId | number | 系列 ID，可选 |
+| gender | number | 性别，可选；`0` 未知 / `1` 男 / `2` 女 / `3` 童 |
+
+规则：
+
+- 只返回 `shoe_library.status = 'published'` 的数据。
+- 同一型号不同配色各占一行，每条记录有独立 `id`。
+- 每个品牌分组下按 `release_year DESC, id ASC` 排序。
+
+响应 data：
+
+```json
+[
+  {
+    "brandId": 1,
+    "brand": "Asics",
+    "items": [
+      {
+        "id": 1,
+        "brandId": 1,
+        "brand": "Asics",
+        "seriesId": 101,
+        "series": "Gel Resolution",
+        "model": "Gel Resolution 9",
+        "gender": 1,
+        "releaseYear": 2025,
+        "colorway": "White/Orewood Brown",
+        "weight": "14.6 ounces (size 10.5)",
+        "width": "Snug Medium",
+        "surface": "Hard (all court)",
+        "price": 1090,
+        "colorwayCount": 5,
+        "fileId": "cloud://tennisdaily/shoes/gel9.png",
+        "imageUrl": ""
+      }
+    ]
+  }
+]
+```
+
+说明：`product_code`、`status` 为内部字段，不返回给前端。
+
+### 23.5 获取球鞋库品牌和系列数量统计
+
+```http
+GET /api/shoe-library/stats
+Authorization: Bearer <token>
+```
+
+只统计 `status = 'published'` 的数据；按品牌分组统计行数（含不同配色行），品牌下按系列分组统计行数。
+
+### 23.6 获取我的球鞋列表
+
+```http
+GET /api/shoes
+GET /api/shoes?includeRetired=true
+Authorization: Bearer <token>
+```
+
+查询参数：
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| includeRetired | boolean | 是否包含已退役球鞋，默认 `false` |
+
+排序：`status ASC, created_at DESC`（主力鞋在前）。
+
+响应 data：`ShoeResponse` 数组，字段见 23.7。
+
+### 23.7 添加球鞋
+
+```http
+POST /api/shoes
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+从球鞋库选择：
+
+```json
+{
+  "libraryId": 1,
+  "name": "Gel Resolution 主力鞋",
+  "size": "42",
+  "colorway": "White/Orewood Brown",
+  "status": 1,
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1090
+}
+```
+
+手动输入库中没有的球鞋：
+
+```json
+{
+  "name": "我的旧款备用鞋",
+  "brand": "Babolat",
+  "model": "Jet Mach III",
+  "size": "42.5",
+  "purchasePrice": 899
+}
+```
+
+请求体字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|:---:|---|
+| libraryId | number | 否 | 球鞋库 ID（`published` 的配色行 ID，不同配色各占一行）；传 `0` 或不传表示手动输入 |
+| name | string | 是 | 球鞋名称 |
+| brand | string | 否 | 品牌；从库选择时后端按 `libraryId` 补全 |
+| model | string | 否 | 型号；从库选择时后端按 `libraryId` 补全 |
+| status | number | 否 | `1` 主力鞋 / `2` 在用，默认 `2`；创建时不接受 `3` |
+| size | string | 否 | 尺码，如 `42`、`42.5` |
+| colorway | string | 否 | 配色；从库选择时可由库补全 |
+| purchaseDate | string | 否 | 购买日期，格式 `YYYY-MM-DD` |
+| purchasePrice | number | 否 | 购买价格 |
+
+规则：
+
+- `libraryId` 对应记录必须是 `published`，否则返回 `40001 invalid request`。
+- 显式传入的 `brand`、`model` 优先于库补全；`name` 为空时用 `brand + " " + model` 补全。
+- `gender`、`releaseYear`、`fileId` 通过 `libraryId` 关联球鞋库实时补全，不冗余到 `shoe` 表。
+- `status = 1` 时，自动将当前用户其他主力鞋改为在用。
+
+响应 data（`ShoeResponse`）：
+
+```json
+{
+  "id": 1,
+  "libraryId": 1,
+  "name": "Gel Resolution 主力鞋",
+  "brand": "Asics",
+  "model": "Gel Resolution 9",
+  "status": 1,
+  "gender": 1,
+  "size": "42",
+  "colorway": "White/Orewood Brown",
+  "purchaseDate": "2026-01-01",
+  "purchasePrice": 1090,
+  "releaseYear": 2025,
+  "fileId": "cloud://tennisdaily/shoes/gel9.png",
+  "createdAt": "2026-08-05T10:00:00+08:00",
+  "updatedAt": "2026-08-05T10:00:00+08:00"
+}
+```
+
+字段说明：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | number | 我的球鞋 ID |
+| libraryId | number | 球鞋库配色行 ID，手动输入时为 `0` |
+| name | string | 球鞋名称 |
+| brand | string | 品牌 |
+| model | string | 型号 |
+| status | number | `1` 主力鞋 / `2` 在用 / `3` 已退役 |
+| gender | number | 性别，关联球鞋库补全，手动输入时为 `0` |
+| size | string | 尺码 |
+| colorway | string | 配色 |
+| purchaseDate | string | 购买日期，`YYYY-MM-DD`，可为空字符串 |
+| purchasePrice | number | 购买价格，可为 `null` |
+| releaseYear | number | 关联球鞋库的上市年份，无 `libraryId` 时为 `0` |
+| fileId | string | 关联球鞋库的图片文件 ID，无 `libraryId` 时为空字符串 |
+| createdAt / updatedAt | string | 创建/更新时间，RFC3339 格式 |
+
+### 23.8 获取球鞋详情
+
+```http
+GET /api/shoes/:id
+Authorization: Bearer <token>
+```
+
+响应 data 为单个 `ShoeResponse`；不存在或不属于当前用户时返回 `40401 not found`。
+
+### 23.9 编辑球鞋
+
+```http
+PUT /api/shoes/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体同 23.7，`status` 支持 `1`/`2`/`3`。`status = 1` 时自动将其他主力鞋改为在用。返回更新后的 `ShoeResponse`。
+
+### 23.10 设置主力鞋
+
+```http
+POST /api/shoes/:id/set-primary
+Authorization: Bearer <token>
+```
+
+规则：
+
+- 同一用户同一时间只允许一支主力鞋。
+- 设置成功后，原主力鞋自动变为在用。
+
+### 23.11 退役球鞋
+
+```http
+POST /api/shoes/:id/retire
+Authorization: Bearer <token>
+```
+
+规则：
+
+- 退役后 `status = 3`。
+- 默认列表不展示，`/api/shoes/selectable`、`/api/my-shoes` 不返回退役球鞋。
+
+### 23.12 删除球鞋
+
+```http
+DELETE /api/shoes/:id
+Authorization: Bearer <token>
+```
+
+规则：
+
+- 逻辑删除（更新 `deleted_at`），不做物理删除。
+- 删除后从列表、详情、主力鞋查询中消失。
+
+### 23.13 获取球鞋统计
+
+```http
+GET /api/shoes/stats
+Authorization: Bearer <token>
+```
+
+统计口径：
+
+- `shoeCount`：当前用户未删除球鞋总数（含已退役，不含逻辑删除）。
+- `shoeCost`：当前用户未删除球鞋的 `purchase_price` 合计，空值按 `0` 处理。
+- `totalCost`：当前等于 `shoeCost`。
+
+响应 data：
+
+```json
+{
+  "shoeCount": 3,
+  "shoeCost": 2879,
+  "totalCost": 2879,
+  "shoeCostText": "2879.00",
+  "totalCostText": "2879.00"
+}
+```
+
+### 23.14 可选球鞋 / 我的球鞋
+
+```http
+GET /api/shoes/selectable
+GET /api/my-shoes
+GET /api/my-shoes/primary
+Authorization: Bearer <token>
+```
+
+说明：
+
+- `/api/shoes/selectable`、`/api/my-shoes` 只返回状态 `1`、`2` 的未删除球鞋，供打球记录页选择；打球记录新增/编辑传 `shoeId` 即可关联。
+- `/api/my-shoes/primary` 返回当前主力鞋，没有时返回 `null`。
