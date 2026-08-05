@@ -48,7 +48,7 @@ type Shoe struct {
 }
 
 func (Shoe) TableName() string {
-	return "shoe"
+	return "my_shoes"
 }
 
 type ShoeBrand struct {
@@ -95,7 +95,6 @@ type ShoeLibrary struct {
 	ColorwayCount int       `json:"colorwayCount" gorm:"column:colorway_count;not null;default:0"`
 	FileID        string    `json:"fileId" gorm:"column:file_id;size:255"`
 	ImageURL      string    `json:"imageUrl" gorm:"column:image_url;size:500"`
-	Status        string    `json:"-" gorm:"size:20;not null;default:'draft'"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
@@ -164,14 +163,15 @@ type ShoeLibrarySeriesStats struct {
 	Brand    string `gorm:"column:brand"`
 	SeriesID int64  `gorm:"column:series_id"`
 	Series   string `gorm:"column:series"`
+	Gender   int    `gorm:"column:gender"`
 	Count    int    `gorm:"column:count"`
 }
 
 type ShoeLibraryBrandStatsResponse struct {
-	BrandID int64                            `json:"brandId"`
-	Brand   string                           `json:"brand"`
-	Count   int                              `json:"count"`
-	Series  []ShoeLibrarySeriesStatsResponse `json:"series"`
+	BrandID int64                                       `json:"brandId"`
+	Brand   string                                      `json:"brand"`
+	Count   int                                         `json:"count"`
+	Series  map[string][]ShoeLibrarySeriesStatsResponse `json:"series"`
 }
 
 type ShoeLibrarySeriesStatsResponse struct {

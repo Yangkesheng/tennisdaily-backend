@@ -1,5 +1,126 @@
 # Change Log
 
+## 2026-08-06 球鞋库 stats 系列统计改为按性别分组的哈希返回
+
+### 需求/变更内容
+
+- `GET /api/shoe-library/stats` 品牌总数保持不区分性别（先选品牌、再选性别的交互）。
+- 品牌下的 `series` 改为按性别分组的哈希：key 为性别字符串（`"1"` 男 / `"2"` 女 / `"0"` 未知 / `"3"` 童），值为该性别下的系列统计数组。
+
+### 修改文件
+
+- `internal/model/shoe.go`（`ShoeLibrarySeriesStats` 增加 `Gender`；`ShoeLibraryBrandStatsResponse.Series` 改为 `map[string][]ShoeLibrarySeriesStatsResponse`）
+- `internal/repository/shoe_repository.go`（`LibrarySeriesStats` 的 `SELECT` / `GROUP BY` 增加 `gender`）
+- `internal/service/shoe_service.go`（合并响应时按 `gender` 分组到哈希）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/shoe-library/stats` 响应中 `series` 由数组改为按性别分组的哈希（key 为 `"1"` / `"2"` 等性别字符串）。
+- 品牌统计 `count` 口径不变（仍为品牌全部行数，不区分性别）。
+
+### 数据库变化
+
+- 无（查询变更，无表结构变化）。
+
+### 兼容性说明
+
+- `series` 结构由数组变为哈希，属于响应结构调整，需前后端同步升级；旧客户端按数组解析会取不到数据。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-05 移除球鞋库发布状态（shoe_library.status）
+
+### 需求/变更内容
+
+- 取消 `shoe_library` 的发布状态概念（`draft / published / archived`）：库内数据入库后默认全部可被 C 端读取，不再需要发布流程。
+- 删除数据库 `shoe_library.status` 字段。
+
+### 修改文件
+
+- `internal/model/shoe.go`（`ShoeLibrary` 移除 `Status` 字段）
+- `internal/repository/shoe_repository.go`（`LibraryList` / `LibraryBrandStats` / `LibrarySeriesStats` / `LibraryFindByID` / `LibraryFindByIDs` 移除 `status = 'published'` 过滤）
+- `internal/service/shoe_service.go`（`applyLibraryDefaults` 注释更新）
+- `migrations/017_drop_shoe_library_status.sql`（新增，`ALTER TABLE shoe_library DROP COLUMN status`）
+- `migrations/init.sql`（全新环境建表语句同步移除 `shoe_library.status` 列）
+- `docs/api.md`、`docs/shoe-add-api-design.md`、`docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/shoe-library`：不再只返回 `published`，返回球鞋库全部数据。
+- `GET /api/shoe-library/stats`：不再只统计 `published`，统计全部库数据。
+- `POST /api/shoes`：`libraryId` 只需对应库表存在的记录，不再要求 `published`。
+- API JSON 响应不变（`status` 本就是内部字段，未返回给前端）。
+
+### 数据库变化
+
+- `shoe_library` 删除 `status` 列（执行 `migrations/017_drop_shoe_library_status.sql`）。
+- 已存在的 78 条数据不受影响，删除列后默认全部可读。
+
+### 兼容性说明
+
+- 前端无感知：库列表/统计/创建接口的请求与响应结构不变，只是过滤条件放宽。
+- `my_shoes.status`（主力鞋/在用/退役）与本次改动无关，保持不变。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-05 我的球鞋表定名 my_shoes；修复 015 迁移并同步建表
+
+### 需求/变更内容
+
+- "我的球鞋"表名由草案的 `shoe` 定名为 `my_shoes`（用户确认），与前端 `/my-shoes`、`/shoes` 接口对齐。
+- 修复 `migrations/015_create_shoe_tables.sql` 中 `my_shoes`（原 `shoe`）表缺少 `PRIMARY KEY (id)`，导致 MySQL ERROR 1075 无法建表的问题。
+- `migrations/init.sql` 同步补齐 `my_shoes` / `shoe_brands` / `shoe_series` / `shoe_library` 四张表，避免全新环境缺表。
+- 本地 `tennis_diary` 数据库已执行修复后的迁移，创建 `my_shoes` 表。
+
+### 修改文件
+
+- `migrations/015_create_shoe_tables.sql`
+- `migrations/init.sql`
+- `internal/model/shoe.go`
+- `AGENTS.md`
+- `docs/api.md`
+- `docs/shoe-add-api-design.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。API 路径（`/api/my-shoes`、`/api/shoes` 等）与 JSON 字段（`shoeId`、`shoeName`、`shoeCost`）不变。
+
+### 数据库变化
+
+- 新增 `my_shoes` 表（原草案表名 `shoe` 未在任何库中实际创建，无需数据迁移）。
+- 约束/索引命名随表名调整：`my_shoes_status_check`、`idx_my_shoes_user_deleted_status`、`idx_my_shoes_user_deleted_created`、`idx_my_shoes_user_library`。
+- 执行方式：`mysql tennis_diary < migrations/015_create_shoe_tables.sql`（幂等，`CREATE TABLE IF NOT EXISTS`）。
+
+### 兼容性说明
+
+- 表名仅影响后端 GORM 映射与 DDL；前端不直接接触数据库表名，无需改动。
+
+### 已执行检查命令
+
+- `go build ./...`
+- `go test ./...`
+- 建表后执行原报错 SQL（`SELECT COALESCE(SUM(purchase_price), 0) FROM my_shoes ...`）验证通过。
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-05 打球记录支持 shoeId 关联；球鞋购买费用计入首页/统计 expense
 
 ### 需求/变更内容

@@ -38,7 +38,7 @@ func (r *ShoeRepository) SeriesList(query model.ShoeSeriesQuery) ([]model.ShoeSe
 
 func (r *ShoeRepository) LibraryList(query model.ShoeLibraryQuery) ([]model.ShoeLibrary, error) {
 	var items []model.ShoeLibrary
-	db := r.db.Model(&model.ShoeLibrary{}).Where("status = ?", "published")
+	db := r.db.Model(&model.ShoeLibrary{})
 	if query.BrandID > 0 {
 		db = db.Where("brand_id = ?", query.BrandID)
 	}
@@ -56,7 +56,6 @@ func (r *ShoeRepository) LibraryBrandStats() ([]model.ShoeLibraryBrandStats, err
 	var rows []model.ShoeLibraryBrandStats
 	err := r.db.Model(&model.ShoeLibrary{}).
 		Select("brand_id, brand, COUNT(*) AS count").
-		Where("status = ?", "published").
 		Group("brand, brand_id").
 		Order("count DESC").
 		Scan(&rows).Error
@@ -66,9 +65,8 @@ func (r *ShoeRepository) LibraryBrandStats() ([]model.ShoeLibraryBrandStats, err
 func (r *ShoeRepository) LibrarySeriesStats() ([]model.ShoeLibrarySeriesStats, error) {
 	var rows []model.ShoeLibrarySeriesStats
 	err := r.db.Model(&model.ShoeLibrary{}).
-		Select("brand_id, brand, series_id, series, COUNT(*) AS count").
-		Where("status = ?", "published").
-		Group("brand, brand_id, series, series_id").
+		Select("brand_id, brand, series_id, series, gender, COUNT(*) AS count").
+		Group("brand, brand_id, series, series_id, gender").
 		Order("count DESC").
 		Scan(&rows).Error
 	return rows, err
@@ -76,7 +74,7 @@ func (r *ShoeRepository) LibrarySeriesStats() ([]model.ShoeLibrarySeriesStats, e
 
 func (r *ShoeRepository) LibraryFindByID(id int64) (*model.ShoeLibrary, error) {
 	var item model.ShoeLibrary
-	err := r.db.Where("id = ? AND status = ?", id, "published").First(&item).Error
+	err := r.db.Where("id = ?", id).First(&item).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -93,7 +91,7 @@ func (r *ShoeRepository) LibraryFindByIDs(ids []int64) (map[int64]model.ShoeLibr
 	}
 
 	var libraries []model.ShoeLibrary
-	if err := r.db.Where("id IN ? AND status = ?", ids, "published").Find(&libraries).Error; err != nil {
+	if err := r.db.Where("id IN ?", ids).Find(&libraries).Error; err != nil {
 		return nil, err
 	}
 	for _, item := range libraries {

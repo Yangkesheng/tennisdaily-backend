@@ -2362,7 +2362,6 @@ Authorization: Bearer <token>
 
 规则：
 
-- 只返回 `shoe_library.status = 'published'` 的数据。
 - 同一型号不同配色各占一行，每条记录有独立 `id`。
 - 每个品牌分组下按 `release_year DESC, id ASC` 排序。
 
@@ -2397,7 +2396,7 @@ Authorization: Bearer <token>
 ]
 ```
 
-说明：`product_code`、`status` 为内部字段，不返回给前端。
+说明：`product_code` 为内部字段，不返回给前端。
 
 ### 23.5 获取球鞋库品牌和系列数量统计
 
@@ -2406,7 +2405,23 @@ GET /api/shoe-library/stats
 Authorization: Bearer <token>
 ```
 
-只统计 `status = 'published'` 的数据；按品牌分组统计行数（含不同配色行），品牌下按系列分组统计行数。
+按品牌分组统计行数（含不同配色行，品牌总数不区分性别）；品牌下 `series` 为按性别分组的哈希，key 为性别字符串（`"1"` 男 / `"2"` 女 / `"0"` 未知 / `"3"` 童），值为该性别下的系列统计数组。
+
+响应 data 示例：
+
+```json
+[
+  {
+    "brandId": 1,
+    "brand": "Asics",
+    "count": 13,
+    "series": {
+      "1": [ { "seriesId": 101, "series": "Gel Resolution", "count": 8 } ],
+      "2": [ { "seriesId": 101, "series": "Gel Resolution", "count": 5 } ]
+    }
+  }
+]
+```
 
 ### 23.6 获取我的球鞋列表
 
@@ -2464,7 +2479,7 @@ Content-Type: application/json
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|:---:|---|
-| libraryId | number | 否 | 球鞋库 ID（`published` 的配色行 ID，不同配色各占一行）；传 `0` 或不传表示手动输入 |
+| libraryId | number | 否 | 球鞋库配色行 ID，不同配色各占一行；传 `0` 或不传表示手动输入 |
 | name | string | 是 | 球鞋名称 |
 | brand | string | 否 | 品牌；从库选择时后端按 `libraryId` 补全 |
 | model | string | 否 | 型号；从库选择时后端按 `libraryId` 补全 |
@@ -2476,9 +2491,9 @@ Content-Type: application/json
 
 规则：
 
-- `libraryId` 对应记录必须是 `published`，否则返回 `40001 invalid request`。
+- `libraryId` 对应记录必须存在，否则返回 `40001 invalid request`。
 - 显式传入的 `brand`、`model` 优先于库补全；`name` 为空时用 `brand + " " + model` 补全。
-- `gender`、`releaseYear`、`fileId` 通过 `libraryId` 关联球鞋库实时补全，不冗余到 `shoe` 表。
+- `gender`、`releaseYear`、`fileId` 通过 `libraryId` 关联球鞋库实时补全，不冗余到 `my_shoes` 表。
 - `status = 1` 时，自动将当前用户其他主力鞋改为在用。
 
 响应 data（`ShoeResponse`）：

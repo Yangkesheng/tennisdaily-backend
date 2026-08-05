@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"tennisdaily-backend/internal/model"
@@ -92,7 +93,7 @@ func (s *ShoeService) LibraryStats() ([]model.ShoeLibraryBrandStatsResponse, err
 			BrandID: brand.BrandID,
 			Brand:   brand.Brand,
 			Count:   brand.Count,
-			Series:  []model.ShoeLibrarySeriesStatsResponse{},
+			Series:  map[string][]model.ShoeLibrarySeriesStatsResponse{},
 		})
 	}
 	for _, item := range series {
@@ -100,7 +101,8 @@ func (s *ShoeService) LibraryStats() ([]model.ShoeLibraryBrandStatsResponse, err
 		if !ok {
 			continue
 		}
-		responses[idx].Series = append(responses[idx].Series, model.ShoeLibrarySeriesStatsResponse{
+		genderKey := strconv.Itoa(item.Gender)
+		responses[idx].Series[genderKey] = append(responses[idx].Series[genderKey], model.ShoeLibrarySeriesStatsResponse{
 			SeriesID: item.SeriesID,
 			Series:   item.Series,
 			Count:    item.Count,
@@ -383,7 +385,7 @@ func (s *ShoeService) enrichShoes(userID int64, shoes []model.Shoe) ([]model.Sho
 }
 
 // applyLibraryDefaults 从球鞋库补全品牌、型号、名称与配色；
-// libraryID 无效或非 published 时返回 ErrInvalidRequest。
+// libraryID 无效时返回 ErrInvalidRequest。
 func (s *ShoeService) applyLibraryDefaults(libraryID *int64, name *string, brand *string, shoeModel *string, colorway *string) (*model.ShoeLibrary, error) {
 	if libraryID == nil || *libraryID == 0 {
 		return nil, nil

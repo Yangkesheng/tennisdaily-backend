@@ -606,6 +606,10 @@ racket_stringing_record
 racket_brands
 racket_series
 racket_library
+my_shoes
+shoe_brands
+shoe_series
+shoe_library
 ```
 
 注意：球拍表名是单数：
@@ -620,7 +624,13 @@ racket
 racket_stringing_record
 ```
 
-不要误写为 `rackets` 或 `stringing_records`。
+我的球鞋表名是：
+
+```text
+my_shoes
+```
+
+不要误写为 `rackets`、`stringing_records`、`shoe` 或 `shoes`。
 
 ---
 
@@ -845,7 +855,7 @@ GET /api/sessions/calendar?year=YYYY&month=M
 - 打球消费：`tennis_sessions.cost`
 - 球拍购买费用：`racket.purchase_price`
 - 穿线费用：`racket_stringing_record.cost`
-- 球鞋购买费用：`shoe.purchase_price`
+- 球鞋购买费用：`my_shoes.purchase_price`
 
 ---
 

@@ -64,11 +64,12 @@ CREATE TABLE IF NOT EXISTS `shoe_library` (
   COMMENT='球鞋库表（业务主表）';
 
 -- 我的球鞋表（用户维度：尺码、配色、状态、购买信息；软删除）
-CREATE TABLE IF NOT EXISTS `shoe` (
+CREATE TABLE IF NOT EXISTS `my_shoes` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '球鞋ID，主键',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
   `library_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '球鞋库配色行ID，仅逻辑关联 shoe_library.id',
 
+  PRIMARY KEY (`id`),
   `name` VARCHAR(100) NOT NULL COMMENT '球鞋名称',
   `brand` VARCHAR(50) DEFAULT NULL COMMENT '品牌',
   `model` VARCHAR(100) DEFAULT NULL COMMENT '型号',
@@ -82,10 +83,10 @@ CREATE TABLE IF NOT EXISTS `shoe` (
   `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   `deleted_at` DATETIME(3) DEFAULT NULL COMMENT '删除时间',
 
-  CONSTRAINT `shoe_status_check` CHECK (`status` IN (1, 2, 3)),
-  KEY `idx_shoe_user_deleted_status` (`user_id`, `deleted_at`, `status`),
-  KEY `idx_shoe_user_deleted_created` (`user_id`, `deleted_at`, `created_at`),
-  KEY `idx_shoe_user_library` (`user_id`, `library_id`)
+  CONSTRAINT `my_shoes_status_check` CHECK (`status` IN (1, 2, 3)),
+  KEY `idx_my_shoes_user_deleted_status` (`user_id`, `deleted_at`, `status`),
+  KEY `idx_my_shoes_user_deleted_created` (`user_id`, `deleted_at`, `created_at`),
+  KEY `idx_my_shoes_user_library` (`user_id`, `library_id`)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COMMENT='我的球鞋表';

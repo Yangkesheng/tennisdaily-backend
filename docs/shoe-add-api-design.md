@@ -4,6 +4,9 @@
 > 日期：2026-08-05
 > 关联需求：增加添加网球鞋/球鞋功能，整体流程与添加球拍保持一致
 
+> 2026-08-05 变更：`shoe_library` 取消发布状态（`draft / published / archived`），
+> 库表删除 `status` 字段，C 端默认读取全部库数据，不再有发布流程（见 `migrations/017_drop_shoe_library_status.sql`）。
+
 > 2026-08-05 更新：接入确认后的球鞋库表结构（`shoe_brands` / `shoe_series` / `shoe_library`），完整 DDL 见 `migrations/015_create_shoe_tables.sql`；`shoe`（我的球鞋）表未包含在确认的 DDL 中，本节保留 v1 草案，最终需确认（见 12.6）。
 
 ---
@@ -28,7 +31,7 @@
 ## 2. 设计原则
 
 - 与球拍流程一一对应，接口路径、请求/响应结构、状态枚举、软删除规则全部对齐球拍。
-- 球鞋表名使用单数 `shoe`，与球拍表 `racket` 保持一致；品牌/系列/库表使用复数。
+- 我的球鞋表名使用 `my_shoes`；品牌/系列/库表使用复数。
 - 所有接口沿用统一响应格式 `{code, message, data}`。
 - 所有用户数据归属只来自 JWT 中的当前用户 ID，不接收前端 `userId`。
 - 所有查询/统计过滤 `deleted_at IS NULL`。
@@ -42,7 +45,7 @@
 | `racket_brands` | `shoe_brands` | 品牌表 |
 | `racket_series` | `shoe_series` | 系列表 |
 | `racket_library` | `shoe_library` | 球鞋库 |
-| `racket` | `shoe` | 我的球鞋表 |
+| `racket` | `my_shoes` | 我的球鞋表 |
 | `GET /api/racket-brands` | `GET /api/shoe-brands` | 品牌列表 |
 | `GET /api/racket-series` | `GET /api/shoe-series` | 系列列表 |
 | `GET /api/racket-library` | `GET /api/shoe-library` | 球鞋库（按品牌分组） |
@@ -66,7 +69,7 @@
 | 名词 | 含义 |
 |---|---|
 | 球鞋库（`shoe_library`） | 系统维护的球鞋型号库，按品牌/系列/型号组织 |
-| 我的球鞋（`shoe`） | 当前用户添加到自己的球鞋 |
+| 我的球鞋（`my_shoes`） | 当前用户添加到自己的球鞋 |
 | 主力鞋 | 状态 `1`，同一用户同一时间最多一支 |
 | 在用 | 状态 `2`，默认状态 |
 | 已退役 | 状态 `3`，默认列表不展示 |
@@ -154,12 +157,12 @@ CREATE TABLE IF NOT EXISTS `shoe_library` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='球鞋库表（业务主表）';
 ```
 
-#### 我的球鞋表 `shoe`（草案，待确认）
+#### 我的球鞋表 `my_shoes`（已确认）
 
-确认的 DDL 中未包含"我的球鞋"表。为保证添加球鞋流程闭环，此处保留 v1 草案，最终结构需确认后追加到迁移脚本：
+已确认并追加到迁移脚本，实际 DDL 见 `migrations/015_create_shoe_tables.sql`：
 
 ```sql
-CREATE TABLE IF NOT EXISTS shoe (
+CREATE TABLE IF NOT EXISTS my_shoes (
   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT COMMENT '球鞋ID',
   user_id BIGINT NOT NULL COMMENT '用户ID',
   library_id BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '球鞋库ID',
@@ -177,18 +180,18 @@ CREATE TABLE IF NOT EXISTS shoe (
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   deleted_at DATETIME(3) DEFAULT NULL COMMENT '删除时间',
 
-  CONSTRAINT shoe_status_check CHECK (status IN (1, 2, 3)),
-  INDEX idx_shoe_user_deleted_status (user_id, deleted_at, status),
-  INDEX idx_shoe_user_deleted_created (user_id, deleted_at, created_at),
-  INDEX idx_shoe_user_library (user_id, library_id)
+  CONSTRAINT my_shoes_status_check CHECK (status IN (1, 2, 3)),
+  INDEX idx_my_shoes_user_deleted_status (user_id, deleted_at, status),
+  INDEX idx_my_shoes_user_deleted_created (user_id, deleted_at, created_at),
+  INDEX idx_my_shoes_user_library (user_id, library_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='我的球鞋表';
 ```
 
 草案说明：
 
-- `size` 是用户维度字段（每个人尺码不同），放在 `shoe` 表；球鞋库不保存尺码。
+- `size` 是用户维度字段（每个人尺码不同），放在 `my_shoes` 表；球鞋库不保存尺码。
 - `colorway` 同时在球鞋库和我的球鞋中出现：从库选择时默认带入，用户可修改。
-- `release_year`、`file_id` 通过 `libraryId` 关联球鞋库实时补全，不冗余到 `shoe` 表（与球拍一致）。
+- `release_year`、`file_id` 通过 `libraryId` 关联球鞋库实时补全，不冗余到 `my_shoes` 表（与球拍一致）。
 
 ### 6.2 状态枚举
 
@@ -457,7 +460,7 @@ Content-Type: application/json
 - 请求体显式传入的 `brand`、`model` 优先于库补全。
 - `name` 为空时，用 `brand + " " + model` 补全。
 - `colorway` 为空时，可由球鞋库补全（新增能力，球拍没有对应字段）。
-- `gender`、`releaseYear`、`fileId` 通过 `libraryId` 关联球鞋库实时补全，不冗余到 `shoe` 表。
+- `gender`、`releaseYear`、`fileId` 通过 `libraryId` 关联球鞋库实时补全，不冗余到 `my_shoes` 表。
 - 从库选择时，库中的 `price`（当前售价）可作为 `purchasePrice` 的前端默认值，由前端带入，后端不强制覆盖。
 - `libraryId` 不存在时返回 `40001 invalid request`。
 
@@ -668,7 +671,7 @@ authed.POST("/shoes/:id/retire", shoeHandler.Retire)
 
 建议按 AGENTS.md 第 19 节顺序实施：
 
-1. `migrations/015_create_shoe_tables.sql`（已确认的 3 张库表；`shoe` 我的球鞋表 DDL 确认后追加到该脚本）。
+1. `migrations/015_create_shoe_tables.sql`（已确认的 3 张库表 + `my_shoes` 我的球鞋表）。
 2. `internal/model/shoe.go`：`Shoe`、`ShoeResponse`、`CreateShoeRequest`、`UpdateShoeRequest`、库相关 DTO。
 3. `internal/repository/shoe_repository.go`：品牌/系列/库查询、CRUD、`SetPrimary`、`Retire`、`SoftDelete`、`Stats`。
 4. `internal/service/shoe_service.go`：库补全、状态规则、内容安全、日期解析、响应组装。
@@ -707,13 +710,10 @@ authed.POST("/shoes/:id/retire", shoeHandler.Retire)
 
 球鞋没有与穿线对应的记录类型。如需要"磨损程度/更换日期"等记录，请确认后另行设计，本次不包含。
 
-### 12.6 我的球鞋表 `shoe` 的 DDL
+### 12.6 我的球鞋表 `my_shoes` 的 DDL
 
-本轮确认的 DDL 只包含 `shoe_brands` / `shoe_series` / `shoe_library` 三张库表，未包含"我的球鞋"表 `shoe`。添加球鞋流程需要该表，请确认：
+已确认（2026-08-05）："我的球鞋"表名定为 `my_shoes`（不沿用单数 `shoe`），DDL 已追加到 `migrations/015_create_shoe_tables.sql`，并补充 `PRIMARY KEY (id)`。
 
-- 是否沿用 6.1 中的 v1 草案（含 `size`、`colorway`、`status`、软删除），还是另行提供 DDL；
 - `shoe_library.price`（当前售价）是否作为添加时 `purchasePrice` 的后端兜底默认值（目前设计为前端默认带入，后端不强制）。
 
-确认后把 `shoe` 表 DDL 追加到 `migrations/015_create_shoe_tables.sql`。
-
-> 已实现（2026-08-05）：`shoe` 表已按本草案追加到 `migrations/015_create_shoe_tables.sql`。
+> 已实现（2026-08-05）：`my_shoes` 表已按确认结果追加到 `migrations/015_create_shoe_tables.sql` 并完成建表。
