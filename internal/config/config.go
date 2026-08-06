@@ -31,6 +31,7 @@ type Config struct {
 	StorageRunOnStart       bool
 	SessionCategoryResolver *SessionCategoryResolver
 	PolyesterStringHealth   *PolyesterStringHealthResolver
+	ShoeWear                *ShoeWearResolver
 }
 
 type fileConfig struct {
@@ -42,6 +43,7 @@ type fileConfig struct {
 	Storage               storageConfig               `yaml:"storage"`
 	SessionEnums          SessionEnumsConfig          `yaml:"sessionEnums"`
 	PolyesterStringHealth PolyesterStringHealthConfig `yaml:"polyesterStringHealth"`
+	ShoeWear              ShoeWearConfig              `yaml:"shoeWear"`
 }
 
 type serverConfig struct {
@@ -153,6 +155,11 @@ func Load() Config {
 		panic(fmt.Errorf("invalid polyesterStringHealth config: %w", err))
 	}
 
+	shoeWear, err := NewShoeWearResolver(fc.ShoeWear)
+	if err != nil {
+		panic(fmt.Errorf("invalid shoeWear config: %w", err))
+	}
+
 	logger.Debug("config loaded logger.level source=%s value=%s", logLevelSource, logLevel)
 	logger.Debug("config loaded server.port source=%s value=%s", portSource, port)
 	logger.Debug("config loaded database.dsn source=%s value=%s", databaseDSNSource, maskDSN(databaseDSN))
@@ -184,6 +191,7 @@ func Load() Config {
 		StorageRunOnStart:       storageRunOnStart,
 		SessionCategoryResolver: sessionCategoryResolver,
 		PolyesterStringHealth:   polyesterStringHealth,
+		ShoeWear:                shoeWear,
 	}
 }
 

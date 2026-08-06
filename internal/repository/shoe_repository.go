@@ -152,6 +152,38 @@ func (r *ShoeRepository) NamesByIDs(userID int64, ids []int64) (map[int64]string
 	return names, nil
 }
 
+// UsageStats 按 shoe_id 聚合当前用户未删除打球记录的上场次数与时长，用于球鞋使用统计。
+func (r *ShoeRepository) UsageStats(userID int64, shoeIDs []int64) (map[int64]model.ShoeUsageStats, error) {
+	usage := make(map[int64]model.ShoeUsageStats)
+	if len(shoeIDs) == 0 {
+		return usage, nil
+	}
+
+	type row struct {
+		ShoeID  int64 `gorm:"column:shoe_id"`
+		Count   int   `gorm:"column:count"`
+		Minutes int   `gorm:"column:minutes"`
+	}
+	var rows []row
+	err := r.db.Model(&model.TennisSession{}).
+		Select("shoe_id, COUNT(id) AS count, COALESCE(SUM(duration_minutes), 0) AS minutes").
+		Where("user_id = ? AND shoe_id IN ? AND deleted_at IS NULL", userID, shoeIDs).
+		Group("shoe_id").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, row := range rows {
+		usage[row.ShoeID] = model.ShoeUsageStats{
+			Count:   row.Count,
+			Minutes: row.Minutes,
+			Hours:   row.Minutes / 60,
+		}
+	}
+	return usage, nil
+}
+
 func (r *ShoeRepository) FindByID(userID, id int64) (*model.Shoe, error) {
 	var shoe model.Shoe
 	err := r.db.Where("user_id = ? AND id = ? AND deleted_at IS NULL", userID, id).First(&shoe).Error

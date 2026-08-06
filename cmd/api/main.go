@@ -40,7 +40,7 @@ func main() {
 	sessionService := service.NewSessionService(sessionRepo, userRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver, contentSecurityService)
 	statsService := service.NewStatsService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth)
-	shoeService := service.NewShoeService(shoeRepo, userRepo, contentSecurityService)
+	shoeService := service.NewShoeService(shoeRepo, userRepo, contentSecurityService, cfg.ShoeWear)
 	homeService := service.NewHomeService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 

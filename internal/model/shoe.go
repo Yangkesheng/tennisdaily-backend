@@ -28,23 +28,29 @@ func (s ShoeStatus) Label() string {
 }
 
 type Shoe struct {
-	ID            int64          `json:"id" gorm:"primaryKey"`
-	UserID        int64          `json:"userId" gorm:"not null;index"`
-	LibraryID     int64          `json:"libraryId" gorm:"column:library_id;not null;default:0;index"`
-	Name          string         `json:"name" gorm:"size:100;not null"`
-	Brand         string         `json:"brand" gorm:"size:50"`
-	Model         string         `json:"model" gorm:"size:100"`
-	Status        ShoeStatus     `json:"status" gorm:"not null;default:2"`
-	Size          string         `json:"size" gorm:"size:20"`
-	Colorway      string         `json:"colorway" gorm:"size:128"`
-	PurchaseDate  *time.Time     `json:"purchaseDate" gorm:"type:date"`
-	PurchasePrice *float64       `json:"purchasePrice" gorm:"type:decimal(10,2)"`
-	Gender        int            `json:"gender" gorm:"-"`
-	ReleaseYear   int            `json:"releaseYear" gorm:"-"`
-	FileID        string         `json:"fileId" gorm:"-"`
-	CreatedAt     time.Time      `json:"createdAt"`
-	UpdatedAt     time.Time      `json:"updatedAt"`
-	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
+	ID            int64             `json:"id" gorm:"primaryKey"`
+	UserID        int64             `json:"userId" gorm:"not null;index"`
+	LibraryID     int64             `json:"libraryId" gorm:"column:library_id;not null;default:0;index"`
+	Name          string            `json:"name" gorm:"size:100;not null"`
+	Brand         string            `json:"brand" gorm:"size:50"`
+	Model         string            `json:"model" gorm:"size:100"`
+	Status        ShoeStatus        `json:"status" gorm:"not null;default:2"`
+	Size          string            `json:"size" gorm:"size:20"`
+	Colorway      string            `json:"colorway" gorm:"size:128"`
+	PurchaseDate  *time.Time        `json:"purchaseDate" gorm:"type:date"`
+	PurchasePrice *float64          `json:"purchasePrice" gorm:"type:decimal(10,2)"`
+	Gender        int               `json:"gender" gorm:"-"`
+	ReleaseYear   int               `json:"releaseYear" gorm:"-"`
+	FileID        string            `json:"fileId" gorm:"-"`
+	UsageCount    int               `json:"usageCount" gorm:"-"`
+	UsageMinutes  int               `json:"usageMinutes" gorm:"-"`
+	UsageHours    int               `json:"usageHours" gorm:"-"`
+	TotalMinutes  int               `json:"totalMinutes" gorm:"-"`
+	TotalHours    int               `json:"totalHours" gorm:"-"`
+	Wear          *ShoeWearResponse `json:"wear" gorm:"-"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	DeletedAt     gorm.DeletedAt    `json:"-" gorm:"index"`
 }
 
 func (Shoe) TableName() string {
@@ -180,22 +186,41 @@ type ShoeLibrarySeriesStatsResponse struct {
 	Count    int    `json:"count"`
 }
 
+type ShoeUsageStats struct {
+	Count   int
+	Minutes int
+	Hours   int
+}
+
+type ShoeWearResponse struct {
+	State          string  `json:"state"`
+	Display        string  `json:"display"`
+	Score          float64 `json:"score"`
+	RemainingHours int     `json:"remainingHours"`
+}
+
 type ShoeResponse struct {
-	ID            int64      `json:"id"`
-	LibraryID     int64      `json:"libraryId"`
-	Name          string     `json:"name"`
-	Brand         string     `json:"brand"`
-	Model         string     `json:"model"`
-	Status        ShoeStatus `json:"status"`
-	Gender        int        `json:"gender"`
-	Size          string     `json:"size"`
-	Colorway      string     `json:"colorway"`
-	PurchaseDate  string     `json:"purchaseDate"`
-	PurchasePrice *float64   `json:"purchasePrice"`
-	ReleaseYear   int        `json:"releaseYear"`
-	FileID        string     `json:"fileId"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
+	ID            int64             `json:"id"`
+	LibraryID     int64             `json:"libraryId"`
+	Name          string            `json:"name"`
+	Brand         string            `json:"brand"`
+	Model         string            `json:"model"`
+	Status        ShoeStatus        `json:"status"`
+	Gender        int               `json:"gender"`
+	Size          string            `json:"size"`
+	Colorway      string            `json:"colorway"`
+	PurchaseDate  string            `json:"purchaseDate"`
+	PurchasePrice *float64          `json:"purchasePrice"`
+	ReleaseYear   int               `json:"releaseYear"`
+	FileID        string            `json:"fileId"`
+	UsageCount    int               `json:"usageCount"`
+	UsageMinutes  int               `json:"usageMinutes"`
+	UsageHours    int               `json:"usageHours"`
+	TotalMinutes  int               `json:"totalMinutes"`
+	TotalHours    int               `json:"totalHours"`
+	Wear          *ShoeWearResponse `json:"wear"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
 }
 
 type ShoeStatsResponse struct {
@@ -288,6 +313,12 @@ func NewShoeResponse(shoe Shoe) ShoeResponse {
 		PurchasePrice: shoe.PurchasePrice,
 		ReleaseYear:   shoe.ReleaseYear,
 		FileID:        shoe.FileID,
+		UsageCount:    shoe.UsageCount,
+		UsageMinutes:  shoe.UsageMinutes,
+		UsageHours:    shoe.UsageHours,
+		TotalMinutes:  shoe.TotalMinutes,
+		TotalHours:    shoe.TotalHours,
+		Wear:          shoe.Wear,
 		CreatedAt:     shoe.CreatedAt,
 		UpdatedAt:     shoe.UpdatedAt,
 	}

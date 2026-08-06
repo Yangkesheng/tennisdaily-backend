@@ -3,9 +3,11 @@ package service
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
+	"tennisdaily-backend/internal/config"
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/repository"
 
@@ -16,15 +18,16 @@ type ShoeService struct {
 	repo            *repository.ShoeRepository
 	userRepo        *repository.UserRepository
 	contentSecurity *ContentSecurityService
+	shoeWear        *config.ShoeWearResolver
 	loc             *time.Location
 }
 
-func NewShoeService(repo *repository.ShoeRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService) *ShoeService {
+func NewShoeService(repo *repository.ShoeRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService, shoeWear *config.ShoeWearResolver) *ShoeService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &ShoeService{repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, loc: loc}
+	return &ShoeService{repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, shoeWear: shoeWear, loc: loc}
 }
 
 func (s *ShoeService) Brands() ([]model.ShoeBrandResponse, error) {
@@ -357,9 +360,11 @@ func (s *ShoeService) checkUserInputTexts(userID int64, texts ...string) error {
 }
 
 func (s *ShoeService) enrichShoes(userID int64, shoes []model.Shoe) ([]model.ShoeResponse, error) {
+	ids := make([]int64, 0, len(shoes))
 	libraryIDs := make([]int64, 0, len(shoes))
 	libraryIDSet := make(map[int64]struct{})
 	for _, shoe := range shoes {
+		ids = append(ids, shoe.ID)
 		if shoe.LibraryID > 0 {
 			if _, ok := libraryIDSet[shoe.LibraryID]; !ok {
 				libraryIDSet[shoe.LibraryID] = struct{}{}
@@ -371,6 +376,10 @@ func (s *ShoeService) enrichShoes(userID int64, shoes []model.Shoe) ([]model.Sho
 	if err != nil {
 		return nil, err
 	}
+	usage, err := s.repo.UsageStats(userID, ids)
+	if err != nil {
+		return nil, err
+	}
 
 	responses := make([]model.ShoeResponse, 0, len(shoes))
 	for _, shoe := range shoes {
@@ -379,9 +388,55 @@ func (s *ShoeService) enrichShoes(userID int64, shoes []model.Shoe) ([]model.Sho
 			shoe.ReleaseYear = library.ReleaseYear
 			shoe.FileID = library.FileID
 		}
+		stats := usage[shoe.ID]
+		shoe.UsageCount = stats.Count
+		shoe.UsageMinutes = stats.Minutes
+		shoe.UsageHours = stats.Hours
+		shoe.TotalMinutes = stats.Minutes
+		shoe.TotalHours = stats.Hours
+		shoe.Wear = s.calculateShoeWear(shoe.PurchaseDate, stats.Minutes)
 		responses = append(responses, model.NewShoeResponse(shoe))
 	}
 	return responses, nil
+}
+
+func (s *ShoeService) calculateShoeWear(purchaseDate *time.Time, usageMinutes int) *model.ShoeWearResponse {
+	if s.shoeWear == nil {
+		return nil
+	}
+	var purchase time.Time
+	if purchaseDate != nil {
+		purchase = *purchaseDate
+	}
+	wear := calculateShoeWearAt(time.Now().In(s.loc), purchase, usageMinutes, s.loc, s.shoeWear)
+	return &wear
+}
+
+// calculateShoeWearAt 参考球线健康度估算球鞋磨损度：
+// effectiveWear = 上场小时数 + 购买后天数 * 每日静置老化系数，
+// score = 100 * (1 - effectiveWear / 标准寿命)，剩余寿命按小时取整。
+func calculateShoeWearAt(now, purchaseDate time.Time, usageMinutes int, loc *time.Location, wear *config.ShoeWearResolver) model.ShoeWearResponse {
+	now = now.In(loc)
+	daysSincePurchase := 0
+	if !purchaseDate.IsZero() && now.After(purchaseDate) {
+		startDay := time.Date(purchaseDate.Year(), purchaseDate.Month(), purchaseDate.Day(), 0, 0, 0, 0, loc)
+		nowDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+		daysSincePurchase = int(nowDay.Sub(startDay).Hours() / 24)
+	}
+
+	hoursPlayed := float64(usageMinutes) / 60
+	effectiveWear := hoursPlayed + float64(daysSincePurchase)*wear.RestWearPerDay()
+	standardLifeHours := wear.StandardLifeHours()
+	score := math.Max(0, 100*(1-effectiveWear/standardLifeHours))
+	remainingHours := int(math.Round(math.Max(0, standardLifeHours-effectiveWear)))
+
+	state := wear.State(score)
+	return model.ShoeWearResponse{
+		State:          state.Key,
+		Display:        wear.RenderDisplay(state.Display, remainingHours),
+		Score:          score,
+		RemainingHours: remainingHours,
+	}
 }
 
 // applyLibraryDefaults 从球鞋库补全品牌、型号、名称与配色；

@@ -2509,10 +2509,21 @@ Content-Type: application/json
   "gender": 1,
   "size": "42",
   "colorway": "White/Orewood Brown",
-  "purchaseDate": "2026-01-01",
+  "purchaseDate": "2026-07-15",
   "purchasePrice": 1090,
   "releaseYear": 2025,
   "fileId": "cloud://tennisdaily/shoes/gel9.png",
+  "usageCount": 4,
+  "usageMinutes": 480,
+  "usageHours": 8,
+  "totalMinutes": 480,
+  "totalHours": 8,
+  "wear": {
+    "state": "good",
+    "display": "状态良好 · 预计还可打 49h",
+    "score": 82.5,
+    "remainingHours": 49
+  },
   "createdAt": "2026-08-05T10:00:00+08:00",
   "updatedAt": "2026-08-05T10:00:00+08:00"
 }
@@ -2535,7 +2546,27 @@ Content-Type: application/json
 | purchasePrice | number | 购买价格，可为 `null` |
 | releaseYear | number | 关联球鞋库的上市年份，无 `libraryId` 时为 `0` |
 | fileId | string | 关联球鞋库的图片文件 ID，无 `libraryId` 时为空字符串 |
+| usageCount | number | 关联打球记录（按 `shoeId`）的上场次数 |
+| usageMinutes | number | 关联打球记录的上场总分钟数 |
+| usageHours | number | 上场总分钟数换算的小时数（分钟数 `/60` 取整） |
+| totalMinutes / totalHours | number | 累计使用时长，当前口径与 `usageMinutes` / `usageHours` 一致 |
+| wear | object | 磨损度估算，无购买日期时按场上用时估算；`null` 时表示未启用磨损度配置 |
 | createdAt / updatedAt | string | 创建/更新时间，RFC3339 格式 |
+
+`wear` 字段说明（口径参考球线健康度估算）：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| state | string | 状态 key：`fresh` 全新 / `good` 状态良好 / `worn` 开始磨损 / `tired` 磨损明显 / `dead` 缓震衰减 / `expired` 已超期 |
+| display | string | 展示文案，`{remainingHours}` 已替换为剩余小时数 |
+| score | number | 磨损度得分，`0-100`，越高越新 |
+| remainingHours | number | 预计剩余可使用小时数 |
+
+磨损度估算规则（`config.yaml` 的 `shoeWear` 段可配置）：
+
+- `effectiveWear = 上场小时数 + 购买后天数 × restWearPerDay`
+- `score = max(0, 100 × (1 − effectiveWear / standardLifeHours))`
+- 默认 `standardLifeHours = 60`（约 45-60 小时的中底寿命经验值）、`restWearPerDay = 0.06`（约 1000 天自然老化归零）
 
 ### 23.8 获取球鞋详情
 
@@ -2629,4 +2660,4 @@ Authorization: Bearer <token>
 说明：
 
 - `/api/shoes/selectable`、`/api/my-shoes` 只返回状态 `1`、`2` 的未删除球鞋，供打球记录页选择；打球记录新增/编辑传 `shoeId` 即可关联。
-- `/api/my-shoes/primary` 返回当前主力鞋，没有时返回 `null`。
+- `/api/my-shoes/primary` 返回当前主力鞋，没有时返回 `null`；返回结构与 `/api/shoes/:id` 一致，同样带 `usageCount`、`usageMinutes`、`usageHours`、`totalMinutes`、`totalHours` 和 `wear` 磨损度估算。

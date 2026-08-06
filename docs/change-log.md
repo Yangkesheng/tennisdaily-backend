@@ -1,5 +1,86 @@
 # Change Log
 
+## 2026-08-07 调低球鞋自然老化系数（restWearPerDay 0.12 -> 0.06）
+
+### 需求/变更内容
+
+- 球鞋磨损度估算中自然老化过快：原默认 `restWearPerDay = 0.12` 意味着仅自然老化约 500 天（约 16.5 个月）即耗尽标准寿命。
+- 调整为 `0.06`：仅自然老化约 1000 天（约 2.7 年）耗尽标准寿命，上场小时数仍是磨损主导因素。
+
+### 修改文件
+
+- `config.yaml`（`shoeWear.restWearPerDay` 0.12 -> 0.06）
+- `internal/config/shoe_wear.go`（`applyShoeWearDefaults` 默认值同步 0.12 -> 0.06）
+- `internal/config/shoe_wear_test.go`（默认值断言同步更新）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- 无。响应结构不变，`wear.score` / `wear.remainingHours` 数值随参数变化。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 纯参数调整，同一双球鞋的磨损度得分会整体升高（更晚报废），前端无需改动；如需继续调整，改 `config.yaml` 的 `shoeWear.restWearPerDay` 即可。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-06 球鞋使用统计与磨损度估算
+
+### 需求/变更内容
+
+- 参考球拍使用统计，为球鞋接口补充使用数据：按 `shoeId` 聚合当前用户未删除打球记录的出场次数与时长。
+- 参考球线健康度估算，新增球鞋磨损度估算（`wear`）：以购买日期和上场小时数为输入，按 `effectiveWear = 上场小时数 + 购买后天数 × restWearPerDay` 计算得分和剩余寿命，阈值、标准寿命、静置老化系数通过 `config.yaml` 的 `shoeWear` 段配置。
+
+### 修改文件
+
+- `internal/config/shoe_wear.go`（新增 `ShoeWearConfig` / `ShoeWearResolver`，默认 `standardLifeHours = 60`、`restWearPerDay = 0.12`、6 档状态）
+- `internal/config/config.go`（`Config` / `fileConfig` 增加 `ShoeWear`，`Load()` 校验并装配）
+- `internal/config/shoe_wear_test.go`（新增默认值、校验、config.yaml 加载测试）
+- `config.yaml`（新增 `shoeWear` 配置段）
+- `internal/model/shoe.go`（`Shoe` / `ShoeResponse` 增加 `UsageCount`、`UsageMinutes`、`UsageHours`、`TotalMinutes`、`TotalHours`、`Wear`；新增 `ShoeUsageStats`、`ShoeWearResponse`）
+- `internal/repository/shoe_repository.go`（新增 `UsageStats`，按 `shoe_id` 聚合 `tennis_sessions`）
+- `internal/service/shoe_service.go`（`enrichShoes` 补全使用统计与磨损度；新增 `calculateShoeWear` / `calculateShoeWearAt`；构造函数增加 `ShoeWearResolver` 参数）
+- `internal/service/shoe_service_test.go`（新增磨损度估算测试）
+- `cmd/api/main.go`（装配 `cfg.ShoeWear`）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- `GET /api/shoes`、`GET /api/shoes/selectable`、`GET /api/my-shoes`、`GET /api/my-shoes/primary`、`GET /api/shoes/:id` 及创建/编辑/设主力/退役接口返回的 `ShoeResponse` 新增字段：
+  - `usageCount` / `usageMinutes` / `usageHours`：关联打球记录的上场次数与时长
+  - `totalMinutes` / `totalHours`：累计使用时长（当前口径与 `usageMinutes` / `usageHours` 一致）
+  - `wear`：磨损度估算对象 `{ state, display, score, remainingHours }`
+- 均为新增可选字段，不改变既有字段语义。
+
+### 数据库变化
+
+- 无表结构变化。使用统计只读 `tennis_sessions`（`shoe_id`、`duration_minutes`、`deleted_at`），磨损度只读 `my_shoes.purchase_date`。
+
+### 兼容性说明
+
+- 响应为纯新增字段，旧客户端忽略新字段即可，无需同步升级。
+- 磨损度默认参数（60 小时标准寿命、每日 0.12 静置老化）为经验默认值，后续可按需在 `config.yaml` 的 `shoeWear` 段调整。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-06 球鞋库 stats 系列统计改为按性别分组的哈希返回
 
 ### 需求/变更内容
