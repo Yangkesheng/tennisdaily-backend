@@ -100,6 +100,126 @@ func (r *ShoeRepository) LibraryFindByIDs(ids []int64) (map[int64]model.ShoeLibr
 	return items, nil
 }
 
+// ---- 管理员维护球鞋库 ----
+
+func (r *ShoeRepository) BrandFindByID(id int64) (*model.ShoeBrand, error) {
+	var item model.ShoeBrand
+	err := r.db.Where("id = ?", id).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *ShoeRepository) BrandFindByName(name string) (*model.ShoeBrand, error) {
+	var item model.ShoeBrand
+	err := r.db.Where("name = ?", name).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *ShoeRepository) CreateBrand(brand *model.ShoeBrand) error {
+	return r.db.Create(brand).Error
+}
+
+func (r *ShoeRepository) SeriesFindByID(id int64) (*model.ShoeSeries, error) {
+	var item model.ShoeSeries
+	err := r.db.Where("id = ?", id).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *ShoeRepository) SeriesFindUnique(brandID int64, gender int, name string) (*model.ShoeSeries, error) {
+	var item model.ShoeSeries
+	err := r.db.Where("brand_id = ? AND gender = ? AND name = ?", brandID, gender, name).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *ShoeRepository) CreateSeries(series *model.ShoeSeries) error {
+	return r.db.Create(series).Error
+}
+
+// LibraryFindDuplicate 按 品牌+系列+型号+性别+配色 查重，避免管理员重复录入。
+func (r *ShoeRepository) LibraryFindDuplicate(brandID, seriesID int64, modelName string, gender int, colorway string) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.ShoeLibrary{}).
+		Where("brand_id = ? AND series_id = ? AND model = ? AND gender = ? AND colorway = ?",
+			brandID, seriesID, modelName, gender, colorway).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// CreateLibraryItems 批量写入鞋库条目（一个配色一行），整体在一个事务内。
+func (r *ShoeRepository) CreateLibraryItems(items []model.ShoeLibrary) error {
+	if len(items) == 0 {
+		return nil
+	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for i := range items {
+			if err := tx.Create(&items[i]).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// LibraryImagesPending 返回待上传对象存储的球鞋库图片：
+// image_url 非空，且尚未写入上传记录表（记录表是幂等依据，不依赖 file_id）。
+func (r *ShoeRepository) LibraryImagesPending() ([]model.ShoeLibrary, error) {
+	var items []model.ShoeLibrary
+	err := r.db.Model(&model.ShoeLibrary{}).
+		Where("image_url IS NOT NULL AND image_url <> ''").
+		Where("NOT EXISTS (SELECT 1 FROM shoe_library_image_upload u WHERE u.shoe_library_id = shoe_library.id)").
+		Order("id ASC").
+		Find(&items).Error
+	return items, err
+}
+
+// ApplyLibraryImageUpload 在事务中更新 file_id（不动 image_url）并写入上传记录。
+func (r *ShoeRepository) ApplyLibraryImageUpload(libraryID int64, fileID, objectKey, sourceURL string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.ShoeLibrary{}).
+			Where("id = ?", libraryID).
+			Update("file_id", fileID).Error; err != nil {
+			return err
+		}
+
+		record := model.ShoeLibraryImageUpload{
+			ShoeLibraryID: libraryID,
+			FileID:        fileID,
+			ObjectKey:     objectKey,
+			SourceURL:     sourceURL,
+		}
+		if err := tx.Create(&record).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (r *ShoeRepository) List(userID int64, includeRetired bool) ([]model.Shoe, error) {
 	var shoes []model.Shoe
 	query := r.db.Where("user_id = ? AND deleted_at IS NULL", userID)

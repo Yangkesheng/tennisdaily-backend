@@ -13,42 +13,42 @@ import (
 	"tennisdaily-backend/internal/storage"
 )
 
-// RacketImageMigration 将 racket_library.image_url 的旧外链图片迁移到微信云托管对象存储：
+// ShoeImageMigration 将 shoe_library.image_url 的旧外链图片迁移到微信云托管对象存储：
 // 下载 → 上传（带文件元数据）→ 更新 file_id（不动 image_url）→ 写入上传记录表。
-type RacketImageMigration struct {
-	repo       *repository.RacketRepository
+type ShoeImageMigration struct {
+	repo       *repository.ShoeRepository
 	cloudStore *storage.CloudStorage
 	httpClient *http.Client
 	running    atomic.Bool
 }
 
-func NewRacketImageMigration(repo *repository.RacketRepository, cloudStore *storage.CloudStorage) *RacketImageMigration {
-	return &RacketImageMigration{
+func NewShoeImageMigration(repo *repository.ShoeRepository, cloudStore *storage.CloudStorage) *ShoeImageMigration {
+	return &ShoeImageMigration{
 		repo:       repo,
 		cloudStore: cloudStore,
 		httpClient: &http.Client{Timeout: imageDownloadTimeout},
 	}
 }
 
-// Pending 返回当前待迁移的球拍库图片（用于日志/预览）。
-func (m *RacketImageMigration) Pending() ([]model.RacketLibrary, error) {
+// Pending 返回当前待迁移的球鞋库图片（用于日志/预览）。
+func (m *ShoeImageMigration) Pending() ([]model.ShoeLibrary, error) {
 	return m.repo.LibraryImagesPending()
 }
 
 // Run 执行一轮迁移。同一时间只允许一轮运行，避免定时任务与手动触发重叠。
-func (m *RacketImageMigration) Run(ctx context.Context) (*ImageMigrationResult, error) {
+func (m *ShoeImageMigration) Run(ctx context.Context) (*ImageMigrationResult, error) {
 	if !m.running.CompareAndSwap(false, true) {
-		return nil, errors.New("racket image migration already running")
+		return nil, errors.New("shoe image migration already running")
 	}
 	defer m.running.Store(false)
 
 	items, err := m.repo.LibraryImagesPending()
 	if err != nil {
-		return nil, fmt.Errorf("query pending racket images: %w", err)
+		return nil, fmt.Errorf("query pending shoe images: %w", err)
 	}
 
 	result := &ImageMigrationResult{Total: len(items)}
-	logger.Debug("racket image migration start total=%d", len(items))
+	logger.Debug("shoe image migration start total=%d", len(items))
 
 	for _, item := range items {
 		fileID, err := m.migrateOne(ctx, item)
@@ -59,19 +59,19 @@ func (m *RacketImageMigration) Run(ctx context.Context) (*ImageMigrationResult, 
 				URL:   item.ImageURL,
 				Error: err.Error(),
 			})
-			logger.Warn("racket image migration failed id=%d url=%s err=%v", item.ID, item.ImageURL, err)
+			logger.Warn("shoe image migration failed id=%d url=%s err=%v", item.ID, item.ImageURL, err)
 			continue
 		}
 
 		result.Uploaded++
-		logger.Debug("racket image migration ok id=%d fileID=%s", item.ID, fileID)
+		logger.Debug("shoe image migration ok id=%d fileID=%s", item.ID, fileID)
 	}
 
-	logger.Debug("racket image migration finish total=%d uploaded=%d failed=%d", result.Total, result.Uploaded, result.Failed)
+	logger.Debug("shoe image migration finish total=%d uploaded=%d failed=%d", result.Total, result.Uploaded, result.Failed)
 	return result, nil
 }
 
-func (m *RacketImageMigration) migrateOne(ctx context.Context, item model.RacketLibrary) (string, error) {
+func (m *ShoeImageMigration) migrateOne(ctx context.Context, item model.ShoeLibrary) (string, error) {
 	if item.ImageURL == "" {
 		return "", errors.New("empty image url")
 	}

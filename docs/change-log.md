@@ -1,5 +1,134 @@
 # Change Log
 
+## 2026-08-07 管理员新增鞋款：配色多选合并为单条配色
+
+### 需求/变更内容
+
+- 管理员新增鞋款时，多选主流颜色不再每个配色插入一行，而是合并为一条组合配色（如 `Red/Black`，颜色首字母大写）后插入单条 `shoe_library` 记录。
+
+### 修改文件
+
+- `internal/model/shoe.go`（`CreateShoeLibraryRequest.Colorways []string` 改为 `Colorway string`）
+- `internal/service/shoe_service.go`（`CreateLibraryItems` 改为单配色写入；移除 `normalizeColorways`）
+- `internal/service/shoe_admin_test.go`（移除配色数组规范化测试）
+- `internal/handler/shoe_handler.go`（日志字段改为 `colorway`）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/admin/shoe-library` 请求体由 `colorways: string[]` 改为 `colorway: string`，每次请求只插入一条。
+
+### 数据库变化
+
+- 无表结构变化。
+
+### 兼容性说明
+
+- 接口为本轮新增，尚无其他调用方；按新协议提交即可。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-07 球鞋库图片迁移到微信云托管对象存储
+
+### 需求/变更内容
+
+- 新增定时任务：将 `shoe_library.image_url` 的旧外链图片下载并上传到微信云托管对象存储，逻辑与球拍库图片迁移任务一致。
+- 上传成功后仅更新 `shoe_library.file_id`（不动 `image_url`，保留旧链接兜底/回退），并写入上传记录表 `shoe_library_image_upload`，保证幂等与审计。
+- 存储路径：`{folder}/{brand}/{series}/{id}{ext}`，默认 `shoe_library/{brand}/{series}/{id}.jpg`；brand/series 会清洗为 cloudPath 允许的字符。
+- 下载采用内存方式，不落临时文件；同一时间只允许一轮迁移运行（防重入）；单条失败保留原样，下个周期自动重试。
+- 与球拍库共用同一 `storage.enabled`/`envId`/`bucket`/`region` 配置与 gocron 调度装配；球鞋库有独立的 `shoeFolder`/`shoeSchedule`/`shoeRunOnStart` 配置项。
+
+### 修改文件
+
+- `config.yaml`（storage 段新增 `shoeFolder`/`shoeSchedule`/`shoeRunOnStart`）
+- `internal/config/config.go`（加载球鞋库 storage 配置，支持 `SHOE_STORAGE_FOLDER`/`SHOE_STORAGE_SCHEDULE`/`SHOE_STORAGE_RUN_ON_START` 环境变量覆盖，默认 `shoe_library`/`0 3 * * *`/false）
+- `internal/model/shoe.go`（新增 `ShoeLibraryImageUpload` 模型）
+- `migrations/018_create_shoe_library_image_upload.sql`（新增上传记录表）
+- `internal/repository/shoe_repository.go`（待迁移查询 + 事务更新 file_id 与记录表）
+- `internal/service/image_migration.go`（新增，图片迁移共用下载/结果类型）
+- `internal/service/racket_image_migration.go`（改为复用共用下载与结果类型，行为不变）
+- `internal/service/shoe_image_migration.go`（新增，球鞋库迁移服务）
+- `cmd/api/main.go`（gocron 定时任务装配，球拍/球鞋共用调度器公共函数）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无 HTTP 接口变化。
+
+### 数据库变化
+
+- 新增表 `shoe_library_image_upload`（`shoe_library_id` 唯一、`file_id`、`object_key`、`source_url`、`created_at`）。
+
+### 兼容性说明
+
+- `storage.enabled` 默认 `false`，不开启不影响现有服务；球鞋库配置缺省时使用默认目录 `shoe_library` 与默认 cron `0 3 * * *`。
+- `image_url` 不被修改，前端在 `fileId` 为空时才回退 `imageUrl`，兼容迁移前/迁移中状态。
+- 迁移依赖云托管「开放接口服务」已开启且服务版本已重建；对象存储读权限需允许所有用户读取。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/config/config.go internal/model/shoe.go internal/repository/shoe_repository.go internal/service/image_migration.go internal/service/racket_image_migration.go internal/service/shoe_image_migration.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过（`go test ./...` 全部包通过）。
+
+## 2026-08-07 管理员维护球鞋库接口与小程序入口
+
+### 需求/变更内容
+
+- 新增“管理员新增球鞋”能力：管理员在小程序“选鞋”页品牌下拉里看到“新增鞋款”入口，可新增品牌、系列和鞋款（配色多选，一个配色一行入库）。
+- 管理员身份采用配置白名单（`config.yaml` 的 `admin.userIds`），不新增数据库字段；新增 `RequireAdmin` 中间件保护管理员接口。
+
+### 修改文件
+
+- `config.yaml`（新增 `admin.userIds` 管理员白名单）
+- `internal/config/config.go`（`Config` / `fileConfig` 增加 `AdminUserIDs`，`Load()` 装配）
+- `internal/service/admin.go`（新增 `IsAdminUser`）
+- `internal/middleware/admin_middleware.go`（新增 `RequireAdmin`）
+- `internal/model/shoe.go`（新增 `CreateShoeBrandRequest` / `CreateShoeSeriesRequest` / `CreateShoeLibraryRequest` / `CreateShoeLibraryResponse`）
+- `internal/repository/shoe_repository.go`（新增品牌/系列查询与创建、库条目查重与批量事务写入）
+- `internal/service/shoe_service.go`（新增 `CreateBrand` / `CreateSeries` / `CreateLibraryItems` 与 slug、配色规范化纯函数）
+- `internal/service/shoe_admin_test.go`（新增 slug、配色去重、管理员判断测试）
+- `internal/handler/shoe_handler.go`（新增管理员三个接口 handler）
+- `internal/handler/auth_handler.go`（新增 `AdminPermissions`，构造函数增加管理员白名单参数）
+- `cmd/api/main.go`（注册 `/api/admin/permissions` 与 `/api/admin/*` 路由）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- 新增 `GET /api/admin/permissions`：返回 `{isAdmin}`，前端控制管理员入口显隐。
+- 新增 `POST /api/admin/shoe-brands`：管理员新增球鞋品牌，`name` 必填且唯一，`slug` 可选自动生成。
+- 新增 `POST /api/admin/shoe-series`：管理员新增球鞋系列，同品牌同性别下系列名唯一。
+- 新增 `POST /api/admin/shoe-library`：管理员新增鞋款，`colorways` 配色数组多选，一个配色一行，逐配色查重后批量事务写入。
+
+### 数据库变化
+
+- 无表结构变化，仅写入 `shoe_brands` / `shoe_series` / `shoe_library` 数据。
+
+### 兼容性说明
+
+- 全部为新增接口，既有接口无改动；`GET /api/auth/me` 等响应结构保持不变。
+- 管理员白名单为空时所有用户都是普通用户，管理员接口一律 `403`。
+- 默认白名单为 `[1]`，实际账号 ID 不同时改 `config.yaml` 即可。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-07 调低球鞋自然老化系数（restWearPerDay 0.12 -> 0.06）
 
 ### 需求/变更内容

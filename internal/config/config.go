@@ -29,6 +29,10 @@ type Config struct {
 	StorageFolder           string
 	StorageSchedule         string
 	StorageRunOnStart       bool
+	StorageShoeFolder       string
+	StorageShoeSchedule     string
+	StorageShoeRunOnStart   bool
+	AdminUserIDs            []int64
 	SessionCategoryResolver *SessionCategoryResolver
 	PolyesterStringHealth   *PolyesterStringHealthResolver
 	ShoeWear                *ShoeWearResolver
@@ -41,6 +45,7 @@ type fileConfig struct {
 	Wechat                wechatConfig                `yaml:"wechat"`
 	Logger                loggerConfig                `yaml:"logger"`
 	Storage               storageConfig               `yaml:"storage"`
+	Admin                 adminConfig                 `yaml:"admin"`
 	SessionEnums          SessionEnumsConfig          `yaml:"sessionEnums"`
 	PolyesterStringHealth PolyesterStringHealthConfig `yaml:"polyesterStringHealth"`
 	ShoeWear              ShoeWearConfig              `yaml:"shoeWear"`
@@ -73,17 +78,24 @@ type wechatConfig struct {
 }
 
 type storageConfig struct {
-	Enabled    bool   `yaml:"enabled"`
-	EnvID      string `yaml:"envId"`
-	Bucket     string `yaml:"bucket"`
-	Region     string `yaml:"region"`
-	Folder     string `yaml:"folder"`
-	Schedule   string `yaml:"schedule"`
-	RunOnStart bool   `yaml:"runOnStart"`
+	Enabled        bool   `yaml:"enabled"`
+	EnvID          string `yaml:"envId"`
+	Bucket         string `yaml:"bucket"`
+	Region         string `yaml:"region"`
+	Folder         string `yaml:"folder"`
+	Schedule       string `yaml:"schedule"`
+	RunOnStart     bool   `yaml:"runOnStart"`
+	ShoeFolder     string `yaml:"shoeFolder"`
+	ShoeSchedule   string `yaml:"shoeSchedule"`
+	ShoeRunOnStart bool   `yaml:"shoeRunOnStart"`
 }
 
 type loggerConfig struct {
 	Level string `yaml:"level"`
+}
+
+type adminConfig struct {
+	UserIDs []int64 `yaml:"userIds"`
 }
 
 func Load() Config {
@@ -145,6 +157,25 @@ func Load() Config {
 		storageRunOnStart = parsed
 	}
 
+	storageShoeFolder, _ := envOrDefaultWithSource("SHOE_STORAGE_FOLDER", fc.Storage.ShoeFolder)
+	if storageShoeFolder == "" {
+		storageShoeFolder = "shoe_library"
+	}
+	storageShoeSchedule, _ := envOrDefaultWithSource("SHOE_STORAGE_SCHEDULE", fc.Storage.ShoeSchedule)
+	if storageShoeSchedule == "" {
+		storageShoeSchedule = "0 3 * * *"
+	}
+	storageShoeRunOnStart := fc.Storage.ShoeRunOnStart
+	if value := os.Getenv("SHOE_STORAGE_RUN_ON_START"); value != "" {
+		parsed, err := strconv.ParseBool(value)
+		if err != nil {
+			panic(fmt.Errorf("invalid SHOE_STORAGE_RUN_ON_START: %s", value))
+		}
+		storageShoeRunOnStart = parsed
+	}
+
+	adminUserIDs := fc.Admin.UserIDs
+
 	sessionCategoryResolver, err := NewSessionCategoryResolver(fc.SessionEnums)
 	if err != nil {
 		panic(fmt.Errorf("invalid sessionEnums config: %w", err))
@@ -174,6 +205,10 @@ func Load() Config {
 	logger.Debug("config loaded storage.folder source=%s value=%s", "config", storageFolder)
 	logger.Debug("config loaded storage.schedule source=%s value=%s", "config", storageSchedule)
 	logger.Debug("config loaded storage.runOnStart source=%s value=%t", "config", storageRunOnStart)
+	logger.Debug("config loaded storage.shoeFolder source=%s value=%s", "config", storageShoeFolder)
+	logger.Debug("config loaded storage.shoeSchedule source=%s value=%s", "config", storageShoeSchedule)
+	logger.Debug("config loaded storage.shoeRunOnStart source=config value=%t", storageShoeRunOnStart)
+	logger.Debug("config loaded admin.userIds source=config value=%v", adminUserIDs)
 
 	return Config{
 		Port:                    port,
@@ -189,6 +224,10 @@ func Load() Config {
 		StorageFolder:           storageFolder,
 		StorageSchedule:         storageSchedule,
 		StorageRunOnStart:       storageRunOnStart,
+		StorageShoeFolder:       storageShoeFolder,
+		StorageShoeSchedule:     storageShoeSchedule,
+		StorageShoeRunOnStart:   storageShoeRunOnStart,
+		AdminUserIDs:            adminUserIDs,
 		SessionCategoryResolver: sessionCategoryResolver,
 		PolyesterStringHealth:   polyesterStringHealth,
 		ShoeWear:                shoeWear,

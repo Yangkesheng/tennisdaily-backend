@@ -323,6 +323,10 @@ Authorization: Bearer <token>
 | DELETE | `/api/shoes/:id` | 是 | 删除球鞋，软删除 |
 | GET | `/api/shoes/stats` | 是 | 获取球鞋统计 |
 | GET | `/api/my-shoes` | 是 | 获取可选球鞋，新增打球记录选择用 |
+| GET | `/api/admin/permissions` | 是 | 查询当前用户是否为管理员 |
+| POST | `/api/admin/shoe-brands` | 是（管理员） | 新增球鞋品牌 |
+| POST | `/api/admin/shoe-series` | 是（管理员） | 新增球鞋系列 |
+| POST | `/api/admin/shoe-library` | 是（管理员） | 新增球鞋库鞋款，配色合并为单条 |
 
 ---
 
@@ -2661,3 +2665,152 @@ Authorization: Bearer <token>
 
 - `/api/shoes/selectable`、`/api/my-shoes` 只返回状态 `1`、`2` 的未删除球鞋，供打球记录页选择；打球记录新增/编辑传 `shoeId` 即可关联。
 - `/api/my-shoes/primary` 返回当前主力鞋，没有时返回 `null`；返回结构与 `/api/shoes/:id` 一致，同样带 `usageCount`、`usageMinutes`、`usageHours`、`totalMinutes`、`totalHours` 和 `wear` 磨损度估算。
+
+### 23.15 管理员维护球鞋库接口
+
+管理员白名单在 `config.yaml` 的 `admin.userIds` 配置（用户 ID 来自 JWT）。非管理员访问返回 `40301 forbidden`。
+
+#### 23.15.1 查询管理员权限
+
+```http
+GET /api/admin/permissions
+Authorization: Bearer <token>
+```
+
+响应 data：
+
+```json
+{
+  "isAdmin": true
+}
+```
+
+前端用它控制管理员入口显隐。
+
+#### 23.15.2 新增球鞋品牌
+
+```http
+POST /api/admin/shoe-brands
+Authorization: Bearer <token>
+```
+
+请求体：
+
+```json
+{
+  "name": "Asics",
+  "slug": "",
+  "fileId": ""
+}
+```
+
+规则：
+
+- `name` 必填且唯一，重复返回 `invalid request: 品牌已存在`。
+- `slug` 可选，内部品牌标识；为空时由品牌名自动生成（转小写、保留字母数字与连字符，纯中文退化为 `brand-<hash>`）。
+- `fileId` 可选，品牌图片云存储文件 ID。
+
+响应 data：
+
+```json
+{
+  "id": 5,
+  "name": "Asics",
+  "fileId": ""
+}
+```
+
+#### 23.15.3 新增球鞋系列
+
+```http
+POST /api/admin/shoe-series
+Authorization: Bearer <token>
+```
+
+请求体：
+
+```json
+{
+  "brandId": 5,
+  "gender": 1,
+  "name": "Gel Resolution"
+}
+```
+
+规则：
+
+- `brandId`、`name` 必填；`gender` 取值 `0` 未知 / `1` 男 / `2` 女 / `3` 童，默认 `0`。
+- 同一品牌、性别下系列名唯一，重复返回 `invalid request: 该品牌下同名系列已存在`。
+
+响应 data：
+
+```json
+{
+  "id": 202,
+  "brandId": 5,
+  "gender": 1,
+  "name": "Gel Resolution"
+}
+```
+
+#### 23.15.4 新增球鞋库鞋款（配色合并为单条）
+
+```http
+POST /api/admin/shoe-library
+Authorization: Bearer <token>
+```
+
+请求体：
+
+```json
+{
+  "brandId": 5,
+  "seriesId": 202,
+  "model": "Gel Resolution 9",
+  "gender": 1,
+  "colorway": "Red/Black",
+  "releaseYear": 2025,
+  "weight": "14.6 ounces (size 10.5)",
+  "width": "Snug Medium",
+  "surface": "Hard (all court)",
+  "price": 1090,
+  "colorwayCount": 5,
+  "fileId": "",
+  "imageUrl": ""
+}
+```
+
+规则：
+
+- `brandId`、`seriesId`、`model` 必填；`seriesId` 必须属于 `brandId`。
+- `colorway` 为单条配色字符串，前端多选主流颜色后合并为 `Red/Black` 形式提交；每次请求只插入一行 `shoe_library` 记录。
+- 按 品牌+系列+型号+性别+配色 查重，配色已存在则返回 `invalid request: 配色 <名称> 已存在`。
+- `gender`、`releaseYear`、`weight`、`width`、`surface`、`price`、`colorwayCount`、`fileId`、`imageUrl` 均可选。
+
+响应 data：
+
+```json
+{
+  "created": 1,
+  "items": [
+    {
+      "id": 301,
+      "brandId": 5,
+      "brand": "Asics",
+      "seriesId": 202,
+      "series": "Gel Resolution",
+      "model": "Gel Resolution 9",
+      "gender": 1,
+      "releaseYear": 2025,
+      "colorway": "Red/Black",
+      "weight": "14.6 ounces (size 10.5)",
+      "width": "Snug Medium",
+      "surface": "Hard (all court)",
+      "price": 1090,
+      "colorwayCount": 5,
+      "fileId": "",
+      "imageUrl": ""
+    }
+  ]
+}
+```

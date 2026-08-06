@@ -109,6 +109,20 @@ func (ShoeLibrary) TableName() string {
 	return "shoe_library"
 }
 
+// ShoeLibraryImageUpload 记录球鞋库图片已上传对象存储的日志，用于迁移幂等与审计回滚。
+type ShoeLibraryImageUpload struct {
+	ID            int64     `json:"id" gorm:"primaryKey"`
+	ShoeLibraryID int64     `json:"shoeLibraryId" gorm:"column:shoe_library_id;not null;uniqueIndex"`
+	FileID        string    `json:"fileId" gorm:"column:file_id;size:255;not null"`
+	ObjectKey     string    `json:"objectKey" gorm:"column:object_key;size:255;not null"`
+	SourceURL     string    `json:"sourceUrl" gorm:"column:source_url;size:500;not null;default:''"`
+	CreatedAt     time.Time `json:"createdAt"`
+}
+
+func (ShoeLibraryImageUpload) TableName() string {
+	return "shoe_library_image_upload"
+}
+
 type ShoeSeriesQuery struct {
 	BrandID int64 `form:"brandId" binding:"omitempty,min=1"`
 	Gender  *int  `form:"gender" binding:"omitempty,min=0,max=3"`
@@ -253,6 +267,41 @@ type UpdateShoeRequest struct {
 	Colorway      string     `json:"colorway"`
 	PurchaseDate  string     `json:"purchaseDate"`
 	PurchasePrice *float64   `json:"purchasePrice"`
+}
+
+// ---- 管理员维护球鞋库请求/响应 ----
+
+type CreateShoeBrandRequest struct {
+	Name   string `json:"name" binding:"required"`
+	Slug   string `json:"slug"`
+	FileID string `json:"fileId"`
+}
+
+type CreateShoeSeriesRequest struct {
+	BrandID int64  `json:"brandId" binding:"required,min=1"`
+	Gender  int    `json:"gender" binding:"omitempty,min=0,max=3"`
+	Name    string `json:"name" binding:"required"`
+}
+
+type CreateShoeLibraryRequest struct {
+	BrandID       int64   `json:"brandId" binding:"required,min=1"`
+	SeriesID      int64   `json:"seriesId" binding:"required,min=1"`
+	Model         string  `json:"model" binding:"required"`
+	Gender        int     `json:"gender" binding:"omitempty,min=0,max=3"`
+	Colorway      string  `json:"colorway"`
+	ReleaseYear   int     `json:"releaseYear"`
+	Weight        string  `json:"weight"`
+	Width         string  `json:"width"`
+	Surface       string  `json:"surface"`
+	Price         float64 `json:"price"`
+	ColorwayCount int     `json:"colorwayCount"`
+	FileID        string  `json:"fileId"`
+	ImageURL      string  `json:"imageUrl"`
+}
+
+type CreateShoeLibraryResponse struct {
+	Created int                       `json:"created"`
+	Items   []ShoeLibraryItemResponse `json:"items"`
 }
 
 func NewShoeBrandResponse(item ShoeBrand) ShoeBrandResponse {

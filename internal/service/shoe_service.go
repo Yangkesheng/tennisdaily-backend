@@ -1,10 +1,12 @@
 package service
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"tennisdaily-backend/internal/config"
@@ -476,4 +478,166 @@ func (s *ShoeService) parseOptionalDate(value string) (*time.Time, error) {
 		return nil, err
 	}
 	return &parsed, nil
+}
+
+// ---- 管理员维护球鞋库 ----
+
+// CreateBrand 管理员新增球鞋品牌；slug 未传时由品牌名自动生成。
+func (s *ShoeService) CreateBrand(req model.CreateShoeBrandRequest) (model.ShoeBrandResponse, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return model.ShoeBrandResponse{}, NewInvalidRequestError("品牌名称不能为空")
+	}
+	existing, err := s.repo.BrandFindByName(name)
+	if err != nil {
+		return model.ShoeBrandResponse{}, err
+	}
+	if existing != nil {
+		return model.ShoeBrandResponse{}, NewInvalidRequestError("品牌已存在")
+	}
+
+	slug := strings.TrimSpace(req.Slug)
+	if slug == "" {
+		slug = deriveBrandSlug(name)
+	}
+
+	brand := model.ShoeBrand{Name: name, Slug: slug, FileID: req.FileID}
+	if err := s.repo.CreateBrand(&brand); err != nil {
+		return model.ShoeBrandResponse{}, err
+	}
+	return model.NewShoeBrandResponse(brand), nil
+}
+
+// CreateSeries 管理员新增球鞋系列；同一品牌、性别下系列名唯一。
+func (s *ShoeService) CreateSeries(req model.CreateShoeSeriesRequest) (model.ShoeSeriesResponse, error) {
+	if req.BrandID <= 0 {
+		return model.ShoeSeriesResponse{}, NewInvalidRequestError("品牌不能为空")
+	}
+	brand, err := s.repo.BrandFindByID(req.BrandID)
+	if err != nil {
+		return model.ShoeSeriesResponse{}, err
+	}
+	if brand == nil {
+		return model.ShoeSeriesResponse{}, NewInvalidRequestError("品牌不存在")
+	}
+
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return model.ShoeSeriesResponse{}, NewInvalidRequestError("系列名称不能为空")
+	}
+	if req.Gender < 0 || req.Gender > 3 {
+		return model.ShoeSeriesResponse{}, NewInvalidRequestError("性别取值不合法")
+	}
+
+	existing, err := s.repo.SeriesFindUnique(req.BrandID, req.Gender, name)
+	if err != nil {
+		return model.ShoeSeriesResponse{}, err
+	}
+	if existing != nil {
+		return model.ShoeSeriesResponse{}, NewInvalidRequestError("该品牌下同名系列已存在")
+	}
+
+	series := model.ShoeSeries{BrandID: req.BrandID, Gender: req.Gender, Name: name}
+	if err := s.repo.CreateSeries(&series); err != nil {
+		return model.ShoeSeriesResponse{}, err
+	}
+	return model.NewShoeSeriesResponse(series), nil
+}
+
+// CreateLibraryItems 管理员新增球鞋库条目；一次只插入一条，配色为合并后的单值（如 Red/Black）。
+func (s *ShoeService) CreateLibraryItems(req model.CreateShoeLibraryRequest) (model.CreateShoeLibraryResponse, error) {
+	if req.BrandID <= 0 || req.SeriesID <= 0 {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("品牌和系列不能为空")
+	}
+	brand, err := s.repo.BrandFindByID(req.BrandID)
+	if err != nil {
+		return model.CreateShoeLibraryResponse{}, err
+	}
+	if brand == nil {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("品牌不存在")
+	}
+	series, err := s.repo.SeriesFindByID(req.SeriesID)
+	if err != nil {
+		return model.CreateShoeLibraryResponse{}, err
+	}
+	if series == nil {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("系列不存在")
+	}
+	if series.BrandID != req.BrandID {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("系列不属于该品牌")
+	}
+
+	modelName := strings.TrimSpace(req.Model)
+	if modelName == "" {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("型号不能为空")
+	}
+	if req.Gender < 0 || req.Gender > 3 {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("性别取值不合法")
+	}
+
+	colorway := strings.TrimSpace(req.Colorway)
+	exists, err := s.repo.LibraryFindDuplicate(req.BrandID, req.SeriesID, modelName, req.Gender, colorway)
+	if err != nil {
+		return model.CreateShoeLibraryResponse{}, err
+	}
+	if exists {
+		label := colorway
+		if label == "" {
+			label = "无配色"
+		}
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError(fmt.Sprintf("配色 %s 已存在", label))
+	}
+
+	items := []model.ShoeLibrary{{
+		BrandID:       req.BrandID,
+		Brand:         brand.Name,
+		SeriesID:      req.SeriesID,
+		Series:        series.Name,
+		Model:         modelName,
+		Gender:        req.Gender,
+		Colorway:      colorway,
+		ReleaseYear:   req.ReleaseYear,
+		Weight:        req.Weight,
+		Width:         req.Width,
+		Surface:       req.Surface,
+		Price:         req.Price,
+		ColorwayCount: req.ColorwayCount,
+		FileID:        req.FileID,
+		ImageURL:      req.ImageURL,
+	}}
+	if err := s.repo.CreateLibraryItems(items); err != nil {
+		return model.CreateShoeLibraryResponse{}, err
+	}
+
+	responses := make([]model.ShoeLibraryItemResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, model.NewShoeLibraryItemResponse(item))
+	}
+	return model.CreateShoeLibraryResponse{Created: len(responses), Items: responses}, nil
+}
+
+// deriveBrandSlug 由品牌名生成内部 slug：转小写、保留字母数字与连字符；
+// 纯中文等无法转换的名字退化为 brand-<md5 前 4 字节>。
+func deriveBrandSlug(name string) string {
+	source := strings.ToLower(strings.TrimSpace(name))
+	var builder strings.Builder
+	lastDash := false
+	for _, r := range source {
+		switch {
+		case (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9'):
+			builder.WriteRune(r)
+			lastDash = false
+		case r == ' ' || r == '-' || r == '_':
+			if !lastDash && builder.Len() > 0 {
+				builder.WriteByte('-')
+				lastDash = true
+			}
+		}
+	}
+	slug := strings.Trim(builder.String(), "-")
+	if slug != "" {
+		return slug
+	}
+	sum := md5.Sum([]byte(name))
+	return fmt.Sprintf("brand-%x", sum[:4])
 }

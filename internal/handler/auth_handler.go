@@ -12,11 +12,12 @@ import (
 )
 
 type AuthHandler struct {
-	authService *service.AuthService
+	authService  *service.AuthService
+	adminUserIDs []int64
 }
 
-func NewAuthHandler(authService *service.AuthService) *AuthHandler {
-	return &AuthHandler{authService: authService}
+func NewAuthHandler(authService *service.AuthService, adminUserIDs []int64) *AuthHandler {
+	return &AuthHandler{authService: authService, adminUserIDs: adminUserIDs}
 }
 
 func (h *AuthHandler) WechatLogin(c *gin.Context) {
@@ -95,6 +96,15 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 	response.OK(c, user)
+}
+
+func (h *AuthHandler) AdminPermissions(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	logger.Debug("GET /api/admin/permissions start userID=%d", userID)
+	response.OK(c, gin.H{"isAdmin": service.IsAdminUser(userID, h.adminUserIDs)})
 }
 
 func handleAuthError(c *gin.Context, err error) {

@@ -279,3 +279,54 @@ func (h *ShoeHandler) Retire(c *gin.Context) {
 	logger.Debug("POST /api/shoes/:id/retire success userID=%d shoeID=%d", userID, shoe.ID)
 	response.OK(c, shoe)
 }
+
+// ---- 管理员维护球鞋库 ----
+
+func (h *ShoeHandler) CreateBrand(c *gin.Context) {
+	var req model.CreateShoeBrandRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	logger.Debug("POST /api/admin/shoe-brands start name=%s", req.Name)
+	brand, err := h.shoeService.CreateBrand(req)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	logger.Debug("POST /api/admin/shoe-brands success brandID=%d", brand.ID)
+	response.OK(c, brand)
+}
+
+func (h *ShoeHandler) CreateSeries(c *gin.Context) {
+	var req model.CreateShoeSeriesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	logger.Debug("POST /api/admin/shoe-series start brandID=%d name=%s", req.BrandID, req.Name)
+	series, err := h.shoeService.CreateSeries(req)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	logger.Debug("POST /api/admin/shoe-series success seriesID=%d", series.ID)
+	response.OK(c, series)
+}
+
+func (h *ShoeHandler) CreateLibrary(c *gin.Context) {
+	var req model.CreateShoeLibraryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	logger.Debug("POST /api/admin/shoe-library start brandID=%d seriesID=%d model=%s colorway=%s",
+		req.BrandID, req.SeriesID, req.Model, req.Colorway)
+	result, err := h.shoeService.CreateLibraryItems(req)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	logger.Debug("POST /api/admin/shoe-library success created=%d", result.Created)
+	response.OK(c, result)
+}

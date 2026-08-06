@@ -43,7 +43,8 @@ wechat:
 # ------------------------------------------------------------------
 admin:
   userIds:
-    - 1
+    - 30
+    - 29
 
 # ------------------------------------------------------------------
 # 日志
@@ -57,16 +58,17 @@ logger:
   level: "debug"
 
 # ------------------------------------------------------------------
-# 微信云托管对象存储（球拍库图片迁移）
+# 微信云托管对象存储（球拍库 / 球鞋库图片迁移）
 #
-# 用途：定时把 racket_library.image_url 的旧外链图片下载并上传到对象存储，
-# 上传成功后只更新 racket_library.file_id（不动 image_url），并写入
-# racket_library_image_upload 记录表（幂等依据）。
+# 用途：定时把 racket_library.image_url / shoe_library.image_url 的旧外链图片
+# 下载并上传到对象存储，上传成功后只更新对应表的 file_id（不动 image_url），
+# 并写入 racket_library_image_upload / shoe_library_image_upload 记录表（幂等依据）。
 #
 # 使用前提（不满足则迁移失败，服务其余功能不受影响）：
 #   1. 微信云托管控制台已开启「开放接口服务」，且开启后重新构建了服务版本；
 #   2. 对象存储读权限允许所有用户读取（球拍库为共享图片）；
-#   3. 已执行 migrations/013_create_racket_library_image_upload.sql 建表。
+#   3. 已执行 migrations/013_create_racket_library_image_upload.sql 建表；
+#   4. 已执行 migrations/018_create_shoe_library_image_upload.sql 建表（球鞋库）。
 # ------------------------------------------------------------------
 storage:
   # 是否开启图片迁移定时任务；false 时不注册任务，不影响现有服务。
@@ -90,6 +92,16 @@ storage:
   # 服务启动时是否立即执行一轮迁移，用于首次部署验证；
   # 首次跑通后建议改回 false；也支持环境变量 STORAGE_RUN_ON_START 覆盖。
   runOnStart: true
+  # 球鞋库图片存储根目录，最终路径为 {folder}/{品牌}/{系列}/{id}.{ext}；
+  # 与球拍库共用同一对象存储与环境，目录相互独立；
+  # 也支持环境变量 SHOE_STORAGE_FOLDER 覆盖。
+  shoeFolder: "shoe_library"
+  # 球鞋库图片每日执行时间，默认同球拍库 "0 3 * * *"；
+  # 也支持环境变量 SHOE_STORAGE_SCHEDULE 覆盖。
+  shoeSchedule: "0 3 * * *"
+  # 服务启动时是否立即执行一轮球鞋库图片迁移，用于首次部署验证；
+  # 首次跑通后建议改回 false；也支持环境变量 SHOE_STORAGE_RUN_ON_START 覆盖。
+  shoeRunOnStart: false
 
 
 

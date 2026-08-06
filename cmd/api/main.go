@@ -44,7 +44,7 @@ func main() {
 	homeService := service.NewHomeService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 
-	authHandler := handler.NewAuthHandler(authService)
+	authHandler := handler.NewAuthHandler(authService, cfg.AdminUserIDs)
 	sessionHandler := handler.NewSessionHandler(sessionService)
 	statsHandler := handler.NewStatsHandler(statsService)
 	racketHandler := handler.NewRacketHandler(racketService)
@@ -60,6 +60,7 @@ func main() {
 	})
 
 	startRacketImageMigration(cfg, racketRepo)
+	startShoeImageMigration(cfg, shoeRepo)
 
 	api := r.Group("/api")
 	api.POST("/auth/wechat-login", authHandler.WechatLogin)
@@ -72,6 +73,7 @@ func main() {
 		authed.GET("/auth/me", authHandler.Me)
 		authed.POST("/auth/logout", authHandler.Logout)
 		authed.PUT("/auth/profile", authHandler.UpdateProfile)
+		authed.GET("/admin/permissions", authHandler.AdminPermissions)
 
 		authed.GET("/home/summary", homeHandler.Summary)
 
@@ -121,6 +123,14 @@ func main() {
 		authed.POST("/shoes/:id/retire", shoeHandler.Retire)
 	}
 
+	admin := authed.Group("/admin")
+	admin.Use(middleware.RequireAdmin(cfg.AdminUserIDs))
+	{
+		admin.POST("/shoe-brands", shoeHandler.CreateBrand)
+		admin.POST("/shoe-series", shoeHandler.CreateSeries)
+		admin.POST("/shoe-library", shoeHandler.CreateLibrary)
+	}
+
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("run server: %v", err)
 	}
@@ -128,31 +138,51 @@ func main() {
 
 // startRacketImageMigration 配置开启时，注册球拍库图片每日迁移定时任务。
 func startRacketImageMigration(cfg config.Config, racketRepo *repository.RacketRepository) {
+	startImageMigration("racket", cfg, cfg.StorageFolder, cfg.StorageSchedule, cfg.StorageRunOnStart,
+		func(ctx context.Context, cloudStore *storage.CloudStorage) error {
+			migrationService := service.NewRacketImageMigration(racketRepo, cloudStore)
+			_, err := migrationService.Run(ctx)
+			return err
+		})
+}
+
+// startShoeImageMigration 配置开启时，注册球鞋库图片每日迁移定时任务。
+func startShoeImageMigration(cfg config.Config, shoeRepo *repository.ShoeRepository) {
+	startImageMigration("shoe", cfg, cfg.StorageShoeFolder, cfg.StorageShoeSchedule, cfg.StorageShoeRunOnStart,
+		func(ctx context.Context, cloudStore *storage.CloudStorage) error {
+			migrationService := service.NewShoeImageMigration(shoeRepo, cloudStore)
+			_, err := migrationService.Run(ctx)
+			return err
+		})
+}
+
+// startImageMigration 配置开启时，注册图片库每日迁移定时任务：
+// 下载 image_url 旧外链图片 → 上传对象存储 → 更新 file_id 并写入上传记录表。
+func startImageMigration(name string, cfg config.Config, folder, schedule string, runOnStart bool, run func(context.Context, *storage.CloudStorage) error) {
 	if !cfg.StorageEnabled {
 		return
 	}
-	if cfg.StorageEnvID == "" || cfg.StorageBucket == "" || cfg.StorageRegion == "" || cfg.StorageFolder == "" || cfg.StorageSchedule == "" {
-		log.Fatalf("storage enabled but envId/bucket/region/folder/schedule missing")
+	if cfg.StorageEnvID == "" || cfg.StorageBucket == "" || cfg.StorageRegion == "" || folder == "" || schedule == "" {
+		log.Fatalf("storage enabled but envId/bucket/region/folder/schedule missing for %s image migration", name)
 	}
 
 	cloudStore := storage.New(storage.Config{
 		EnvID:  cfg.StorageEnvID,
 		Bucket: cfg.StorageBucket,
 		Region: cfg.StorageRegion,
-		Folder: cfg.StorageFolder,
+		Folder: folder,
 	})
-	migrationService := service.NewRacketImageMigration(racketRepo, cloudStore)
 
 	runOnce := func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
 		defer cancel()
-		if _, err := migrationService.Run(ctx); err != nil {
-			logger.Error("racket image migration error: %v", err)
+		if err := run(ctx, cloudStore); err != nil {
+			logger.Error("%s image migration error: %v", name, err)
 		}
 	}
 
-	if cfg.StorageRunOnStart {
-		logger.Debug("racket image migration runOnStart triggered")
+	if runOnStart {
+		logger.Debug("%s image migration runOnStart triggered", name)
 		go runOnce()
 	}
 
@@ -165,11 +195,11 @@ func startRacketImageMigration(cfg config.Config, racketRepo *repository.RacketR
 		log.Fatalf("create gocron scheduler: %v", err)
 	}
 	if _, err := scheduler.NewJob(
-		gocron.CronJob(cfg.StorageSchedule, false),
+		gocron.CronJob(schedule, false),
 		gocron.NewTask(runOnce),
 	); err != nil {
-		log.Fatalf("register racket image migration job: %v", err)
+		log.Fatalf("register %s image migration job: %v", name, err)
 	}
 	scheduler.Start()
-	logger.Debug("racket image migration scheduler started schedule=%s", cfg.StorageSchedule)
+	logger.Debug("%s image migration scheduler started schedule=%s", name, schedule)
 }
