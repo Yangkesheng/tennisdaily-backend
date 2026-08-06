@@ -35,6 +35,17 @@ wechat:
   appSecret: ""
 
 # ------------------------------------------------------------------
+# 管理员（球鞋库等后台维护入口）
+#
+# userIds: 管理员用户 ID 白名单，ID 来自 JWT 中的当前用户 ID。
+# 个人项目默认管理员为第一个注册用户（ID=1）；如果实际账号 ID
+# 不是 1，改这里即可，无需改代码。支持配置多个管理员。
+# ------------------------------------------------------------------
+admin:
+  userIds:
+    - 1
+
+# ------------------------------------------------------------------
 # 日志
 #
 # level: debug / info / warn / error
@@ -154,4 +165,39 @@ polyesterStringHealth:
       minScore: 0
       label: "已超期"
       display: "已超期 · 不建议比赛使用"
+      color: "red"
+
+shoeWear:
+  standardLifeHours: 60
+  restWearPerDay: 0.06
+  states:
+    - key: fresh
+      minScore: 85
+      label: "全新"
+      display: "全新 · 缓震充足"
+      color: "green"
+    - key: good
+      minScore: 65
+      label: "状态良好"
+      display: "状态良好 · 预计还可打 {remainingHours}h"
+      color: "teal"
+    - key: worn
+      minScore: 40
+      label: "开始磨损"
+      display: "开始磨损 · 建议关注中底"
+      color: "orange"
+    - key: tired
+      minScore: 20
+      label: "磨损明显"
+      display: "磨损明显 · 建议考虑换鞋"
+      color: "deep_orange"
+    - key: dead
+      minScore: 8
+      label: "缓震衰减"
+      display: "缓震衰减 · 建议尽快换鞋"
+      color: "red"
+    - key: expired
+      minScore: 0
+      label: "已超期"
+      display: "已超期 · 不建议继续使用"
       color: "red"
