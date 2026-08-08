@@ -546,8 +546,8 @@ func (s *ShoeService) CreateSeries(req model.CreateShoeSeriesRequest) (model.Sho
 
 // CreateLibraryItems 管理员新增球鞋库条目；一次只插入一条，配色为合并后的单值（如 Red/Black）。
 func (s *ShoeService) CreateLibraryItems(req model.CreateShoeLibraryRequest) (model.CreateShoeLibraryResponse, error) {
-	if req.BrandID <= 0 || req.SeriesID <= 0 {
-		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("品牌和系列不能为空")
+	if req.BrandID <= 0 {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("品牌不能为空")
 	}
 	brand, err := s.repo.BrandFindByID(req.BrandID)
 	if err != nil {
@@ -555,16 +555,6 @@ func (s *ShoeService) CreateLibraryItems(req model.CreateShoeLibraryRequest) (mo
 	}
 	if brand == nil {
 		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("品牌不存在")
-	}
-	series, err := s.repo.SeriesFindByID(req.SeriesID)
-	if err != nil {
-		return model.CreateShoeLibraryResponse{}, err
-	}
-	if series == nil {
-		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("系列不存在")
-	}
-	if series.BrandID != req.BrandID {
-		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("系列不属于该品牌")
 	}
 
 	modelName := strings.TrimSpace(req.Model)
@@ -575,8 +565,30 @@ func (s *ShoeService) CreateLibraryItems(req model.CreateShoeLibraryRequest) (mo
 		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("性别取值不合法")
 	}
 
+	seriesName := strings.TrimSpace(req.SeriesName)
+	if seriesName == "" {
+		return model.CreateShoeLibraryResponse{}, NewInvalidRequestError("系列名称不能为空")
+	}
+
+	// 按 品牌+性别+系列名 查找；不存在则插入系列，前端无需先调用创建系列接口。
+	series, err := s.repo.SeriesFindUnique(req.BrandID, req.Gender, seriesName)
+	if err != nil {
+		return model.CreateShoeLibraryResponse{}, err
+	}
+	if series == nil {
+		series = &model.ShoeSeries{BrandID: req.BrandID, Gender: req.Gender, Name: seriesName}
+		if err := s.repo.CreateSeries(series); err != nil {
+			// 并发或重复创建时（唯一键冲突），重新查找并复用已有系列。
+			existing, findErr := s.repo.SeriesFindUnique(req.BrandID, req.Gender, seriesName)
+			if findErr != nil || existing == nil {
+				return model.CreateShoeLibraryResponse{}, err
+			}
+			series = existing
+		}
+	}
+
 	colorway := strings.TrimSpace(req.Colorway)
-	exists, err := s.repo.LibraryFindDuplicate(req.BrandID, req.SeriesID, modelName, req.Gender, colorway)
+	exists, err := s.repo.LibraryFindDuplicate(req.BrandID, series.ID, modelName, req.Gender, colorway)
 	if err != nil {
 		return model.CreateShoeLibraryResponse{}, err
 	}
@@ -591,7 +603,7 @@ func (s *ShoeService) CreateLibraryItems(req model.CreateShoeLibraryRequest) (mo
 	items := []model.ShoeLibrary{{
 		BrandID:       req.BrandID,
 		Brand:         brand.Name,
-		SeriesID:      req.SeriesID,
+		SeriesID:      series.ID,
 		Series:        series.Name,
 		Model:         modelName,
 		Gender:        req.Gender,

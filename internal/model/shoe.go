@@ -246,7 +246,7 @@ type ShoeStatsResponse struct {
 }
 
 type CreateShoeRequest struct {
-	LibraryID     int64      `json:"libraryId"`
+	LibraryID     int64      `json:"libraryId" binding:"required"`
 	Name          string     `json:"name" binding:"required"`
 	Brand         string     `json:"brand"`
 	Model         string     `json:"model"`
@@ -285,7 +285,7 @@ type CreateShoeSeriesRequest struct {
 
 type CreateShoeLibraryRequest struct {
 	BrandID       int64   `json:"brandId" binding:"required,min=1"`
-	SeriesID      int64   `json:"seriesId" binding:"required,min=1"`
+	SeriesName    string  `json:"seriesName" binding:"required"`
 	Model         string  `json:"model" binding:"required"`
 	Gender        int     `json:"gender" binding:"omitempty,min=0,max=3"`
 	Colorway      string  `json:"colorway"`

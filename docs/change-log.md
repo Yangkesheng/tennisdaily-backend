@@ -1,5 +1,72 @@
 # Change Log
 
+## 2026-08-09 取消球鞋手动输入：POST /api/shoes 强制要求 libraryId
+
+### 需求/变更内容
+
+- 新增球鞋不再支持手动输入（前端移除选鞋页「手动输入」入口，后端创建接口强制从球鞋库选择）。
+
+### 修改文件
+
+- `internal/model/shoe.go`（`CreateShoeRequest.LibraryID` 增加 `binding:"required"`）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/shoes`：`libraryId` 由可选变为必填，缺失或传 `0` 返回 `40001 invalid request`。
+- `PUT /api/shoes/:id` 不变：已存在的球鞋（含历史手动输入的球鞋）仍可编辑。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 历史手动创建的球鞋数据不受影响，仍可查看与编辑。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-09 管理员新增鞋款：系列改为按名称查找/自动插入
+
+### 需求/变更内容
+
+- 新增鞋款时前端不再单独调用 `POST /api/admin/shoe-series`，也不传系列 ID；只传 `seriesName`，后端按 品牌+性别+系列名 查找，不存在则自动插入系列后写入鞋款。
+
+### 修改文件
+
+- `internal/model/shoe.go`（`CreateShoeLibraryRequest`：`SeriesID` 改为 `SeriesName`）
+- `internal/service/shoe_service.go`（`CreateLibraryItems`：按系列名查找或创建，删除系列 ID 校验）
+- `internal/handler/shoe_handler.go`（日志字段改为 `seriesName`）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/admin/shoe-library` 请求体由 `seriesId` 改为 `seriesName`；前端不再调用 `POST /api/admin/shoe-series`（该接口保留，仍可用于单独维护系列）。
+
+### 数据库变化
+
+- 无表结构变化；`shoe_series` 仍按 `(brand_id, gender, name)` 唯一键保证不重复。
+
+### 兼容性说明
+
+- 接口为本轮新增，尚无其他调用方；前端同步修改。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-07 管理员新增鞋款：配色多选合并为单条配色
 
 ### 需求/变更内容

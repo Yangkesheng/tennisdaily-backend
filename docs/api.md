@@ -2453,7 +2453,7 @@ Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
-从球鞋库选择：
+从球鞋库选择（新增必须选择球鞋库配色行，不支持手动输入）：
 
 ```json
 {
@@ -2467,23 +2467,11 @@ Content-Type: application/json
 }
 ```
 
-手动输入库中没有的球鞋：
-
-```json
-{
-  "name": "我的旧款备用鞋",
-  "brand": "Babolat",
-  "model": "Jet Mach III",
-  "size": "42.5",
-  "purchasePrice": 899
-}
-```
-
 请求体字段：
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|:---:|---|
-| libraryId | number | 否 | 球鞋库配色行 ID，不同配色各占一行；传 `0` 或不传表示手动输入 |
+| libraryId | number | 是 | 球鞋库配色行 ID，不同配色各占一行；必须为已存在的库记录 |
 | name | string | 是 | 球鞋名称 |
 | brand | string | 否 | 品牌；从库选择时后端按 `libraryId` 补全 |
 | model | string | 否 | 型号；从库选择时后端按 `libraryId` 补全 |
@@ -2765,7 +2753,7 @@ Authorization: Bearer <token>
 ```json
 {
   "brandId": 5,
-  "seriesId": 202,
+  "seriesName": "Gel Resolution",
   "model": "Gel Resolution 9",
   "gender": 1,
   "colorway": "Red/Black",
@@ -2782,7 +2770,7 @@ Authorization: Bearer <token>
 
 规则：
 
-- `brandId`、`seriesId`、`model` 必填；`seriesId` 必须属于 `brandId`。
+- `brandId`、`seriesName`、`model` 必填；系列不再由前端传 ID，后端按 品牌+性别+系列名 查找，不存在则自动插入系列，前端无需先调用 `POST /api/admin/shoe-series`。
 - `colorway` 为单条配色字符串，前端多选主流颜色后合并为 `Red/Black` 形式提交；每次请求只插入一行 `shoe_library` 记录。
 - 按 品牌+系列+型号+性别+配色 查重，配色已存在则返回 `invalid request: 配色 <名称> 已存在`。
 - `gender`、`releaseYear`、`weight`、`width`、`surface`、`price`、`colorwayCount`、`fileId`、`imageUrl` 均可选。

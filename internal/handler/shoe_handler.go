@@ -320,8 +320,8 @@ func (h *ShoeHandler) CreateLibrary(c *gin.Context) {
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
 		return
 	}
-	logger.Debug("POST /api/admin/shoe-library start brandID=%d seriesID=%d model=%s colorway=%s",
-		req.BrandID, req.SeriesID, req.Model, req.Colorway)
+	logger.Debug("POST /api/admin/shoe-library start brandID=%d seriesName=%s model=%s colorway=%s",
+		req.BrandID, req.SeriesName, req.Model, req.Colorway)
 	result, err := h.shoeService.CreateLibraryItems(req)
 	if err != nil {
 		handleServiceError(c, err)
