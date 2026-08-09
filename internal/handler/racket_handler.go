@@ -73,6 +73,25 @@ func (h *RacketHandler) LibraryStats(c *gin.Context) {
 	response.OK(c, stats)
 }
 
+// ---- 管理员维护球拍库 ----
+
+func (h *RacketHandler) CreateLibrary(c *gin.Context) {
+	var req model.CreateRacketLibraryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	logger.Debug("POST /api/admin/racket-library start brandName=%s seriesName=%s model=%s",
+		req.BrandName, req.SeriesName, req.Model)
+	result, err := h.racketService.CreateLibraryItems(req)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	logger.Debug("POST /api/admin/racket-library success created=%d", result.Created)
+	response.OK(c, result)
+}
+
 func (h *RacketHandler) MyRackets(c *gin.Context) {
 	userID, ok := currentUserID(c)
 	if !ok {

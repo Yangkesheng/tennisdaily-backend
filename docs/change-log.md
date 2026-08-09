@@ -1,5 +1,82 @@
 # Change Log
 
+## 2026-08-10 管理员新增球拍：移除品牌/系列管理接口，改为后端自动插入
+
+### 需求/变更内容
+
+- 参照“新增鞋款”系列自动插入方案，去掉球拍管理员侧的 `POST /api/admin/racket-brands` 与 `POST /api/admin/racket-series` 两个接口；前端新增球拍时只调用 `POST /api/admin/racket-library`。
+- `POST /api/admin/racket-library` 请求体由 `brandId` 改为 `brandName`；后端按品牌名查找 `racket_brands`，不存在则自动插入；系列按 品牌+系列名 查找 `racket_series`，不存在则自动插入，再写入 `racket_library`。
+
+### 修改文件
+
+- `internal/model/racket_library.go`（删除 `CreateRacketBrandRequest` / `CreateRacketSeriesRequest`；`CreateRacketLibraryRequest.BrandID` 改为 `BrandName`）
+- `internal/repository/racket_repository.go`（删除不再使用的 `BrandFindByID` / `SeriesFindByID`）
+- `internal/service/racket_service.go`（删除 `CreateBrand` / `CreateSeries`；`CreateLibraryItems` 增加品牌按名称自动插入）
+- `internal/handler/racket_handler.go`（删除 `CreateBrand` / `CreateSeries` handler）
+- `cmd/api/main.go`（移除 `/api/admin/racket-brands`、`/api/admin/racket-series` 路由）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- 删除 `POST /api/admin/racket-brands`、`POST /api/admin/racket-series`（本次新增但尚未发布，直接移除，无兼容负担）。
+- `POST /api/admin/racket-library` 请求体改为 `brandName` + `seriesName` + `model`，其余可选字段不变；重复录入校验仍为 品牌+系列+型号+年份。
+
+### 数据库变化
+
+- 无（复用 `racket_brands` / `racket_series` / `racket_library` 现有表结构）。
+
+### 兼容性说明
+
+- 接口为本次新增后立即调整，未对外发布，无旧客户端兼容问题。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-10 管理员新增球拍：球拍库新增管理员维护接口
+
+### 需求/变更内容
+
+- 参照“管理员新增鞋款”实现，为球拍库新增管理员添加球拍能力：管理员在小程序“选拍”页品牌下拉里看到“新增球拍”入口，可新增品牌、系列和球拍（型号、年份、重量、拍面、穿线模式、图片）。
+- 复用已有管理员白名单（`config.yaml` 的 `admin.userIds`）与 `RequireAdmin` 中间件，不新增数据库表或字段。
+
+### 修改文件
+
+- `internal/model/racket_library.go`（新增 `CreateRacketBrandRequest` / `CreateRacketSeriesRequest` / `CreateRacketLibraryRequest` / `CreateRacketLibraryResponse`）
+- `internal/repository/racket_repository.go`（新增 `BrandFindByID` / `BrandFindByName` / `CreateBrand` / `SeriesFindByID` / `SeriesFindUnique` / `CreateSeries` / `LibraryFindDuplicate` / `CreateLibraryItems`）
+- `internal/service/racket_service.go`（新增 `CreateBrand` / `CreateSeries` / `CreateLibraryItems`）
+- `internal/handler/racket_handler.go`（新增 `CreateBrand` / `CreateSeries` / `CreateLibrary`）
+- `cmd/api/main.go`（管理员分组注册 `/api/admin/racket-brands`、`/api/admin/racket-series`、`/api/admin/racket-library`）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- 新增 `POST /api/admin/racket-brands`：管理员新增球拍品牌，`name` 必填且唯一。
+- 新增 `POST /api/admin/racket-series`：管理员新增球拍系列，同品牌下系列名唯一。
+- 新增 `POST /api/admin/racket-library`：管理员新增球拍库条目；系列不存在时自动插入，按 品牌+系列+型号+年份 查重。
+
+### 数据库变化
+
+- 无（复用 `racket_brands` / `racket_series` / `racket_library` 现有表结构）。
+
+### 兼容性说明
+
+- 新增接口均为管理员专用，不影响现有球拍库查询与我的球拍流程。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-10 stats 品牌分组改为按 brand_id + JOIN shoe_brands 取规范品牌名
 
 ### 需求/变更内容

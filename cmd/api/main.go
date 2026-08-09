@@ -126,6 +126,7 @@ func main() {
 	admin := authed.Group("/admin")
 	admin.Use(middleware.RequireAdmin(cfg.AdminUserIDs))
 	{
+		admin.POST("/racket-library", racketHandler.CreateLibrary)
 		admin.POST("/shoe-brands", shoeHandler.CreateBrand)
 		admin.POST("/shoe-series", shoeHandler.CreateSeries)
 		admin.POST("/shoe-library", shoeHandler.CreateLibrary)

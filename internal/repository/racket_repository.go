@@ -95,6 +95,67 @@ func (r *RacketRepository) LibraryFindByIDs(ids []int64) (map[int64]model.Racket
 	return items, nil
 }
 
+// ---- 管理员维护球拍库 ----
+
+func (r *RacketRepository) BrandFindByName(name string) (*model.RacketBrand, error) {
+	var item model.RacketBrand
+	err := r.db.Where("name = ?", name).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *RacketRepository) CreateBrand(brand *model.RacketBrand) error {
+	return r.db.Create(brand).Error
+}
+
+func (r *RacketRepository) SeriesFindUnique(brandID int64, name string) (*model.RacketSeries, error) {
+	var item model.RacketSeries
+	err := r.db.Where("brand_id = ? AND name = ?", brandID, name).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *RacketRepository) CreateSeries(series *model.RacketSeries) error {
+	return r.db.Create(series).Error
+}
+
+// LibraryFindDuplicate 按 品牌+系列+型号+年份 查重，避免管理员重复录入。
+func (r *RacketRepository) LibraryFindDuplicate(brandID, seriesID int64, modelName string, releaseYear int) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.RacketLibrary{}).
+		Where("brand_id = ? AND series_id = ? AND model = ? AND release_year = ?",
+			brandID, seriesID, modelName, releaseYear).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *RacketRepository) CreateLibraryItems(items []model.RacketLibrary) error {
+	if len(items) == 0 {
+		return nil
+	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for i := range items {
+			if err := tx.Create(&items[i]).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 // LibraryImagesPending 返回待上传对象存储的球拍库图片：
 // image_url 非空，且尚未写入上传记录表（记录表是幂等依据，不依赖 file_id）。
 func (r *RacketRepository) LibraryImagesPending() ([]model.RacketLibrary, error) {

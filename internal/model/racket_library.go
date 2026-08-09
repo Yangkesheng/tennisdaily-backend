@@ -160,3 +160,22 @@ func NewRacketLibraryItemResponse(item RacketLibrary) RacketLibraryItemResponse 
 		ImageURL:      item.ImageURL,
 	}
 }
+
+// ---- 管理员维护球拍库请求/响应 ----
+
+type CreateRacketLibraryRequest struct {
+	BrandName     string `json:"brandName" binding:"required"`
+	SeriesName    string `json:"seriesName" binding:"required"`
+	Model         string `json:"model" binding:"required"`
+	ReleaseYear   int    `json:"releaseYear"`
+	Weight        int    `json:"weight"`
+	HeadSize      int    `json:"headSize"`
+	StringPattern string `json:"stringPattern"`
+	FileID        string `json:"fileId"`
+	ImageURL      string `json:"imageUrl"`
+}
+
+type CreateRacketLibraryResponse struct {
+	Created int                         `json:"created"`
+	Items   []RacketLibraryItemResponse `json:"items"`
+}

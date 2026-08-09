@@ -73,7 +73,7 @@ logger:
 storage:
   # 是否开启图片迁移定时任务；false 时不注册任务，不影响现有服务。
   # 也支持环境变量 STORAGE_ENABLED 覆盖。
-  enabled: false
+  enabled: true
   # 微信云托管环境 ID，用于拼接 cloudID：cloud://{envId}.{bucket}/{path}
   # 从云托管控制台「环境管理」获取；也支持环境变量 STORAGE_ENV_ID 覆盖。
   envId: "prod-d6gkg1meqce4aaa7e"

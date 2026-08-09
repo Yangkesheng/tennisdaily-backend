@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"tennisdaily-backend/internal/config"
@@ -110,6 +111,93 @@ func (s *RacketService) LibraryStats() ([]model.RacketLibraryBrandStatsResponse,
 		})
 	}
 	return responses, nil
+}
+
+// ---- 管理员维护球拍库 ----
+
+// CreateLibraryItems 管理员新增球拍库条目；品牌、系列不存在时自动插入，前端无需先调用创建接口。
+func (s *RacketService) CreateLibraryItems(req model.CreateRacketLibraryRequest) (model.CreateRacketLibraryResponse, error) {
+	brandName := strings.TrimSpace(req.BrandName)
+	if brandName == "" {
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("品牌名称不能为空")
+	}
+	modelName := strings.TrimSpace(req.Model)
+	if modelName == "" {
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("型号不能为空")
+	}
+	seriesName := strings.TrimSpace(req.SeriesName)
+	if seriesName == "" {
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("系列名称不能为空")
+	}
+
+	// 按品牌名查找；不存在则插入品牌。
+	brand, err := s.repo.BrandFindByName(brandName)
+	if err != nil {
+		return model.CreateRacketLibraryResponse{}, err
+	}
+	if brand == nil {
+		brand = &model.RacketBrand{Name: brandName}
+		if err := s.repo.CreateBrand(brand); err != nil {
+			// 并发或重复创建时（唯一键冲突），重新查找并复用已有品牌。
+			existing, findErr := s.repo.BrandFindByName(brandName)
+			if findErr != nil || existing == nil {
+				return model.CreateRacketLibraryResponse{}, err
+			}
+			brand = existing
+		}
+	}
+
+	// 按 品牌+系列名 查找；不存在则插入系列。
+	series, err := s.repo.SeriesFindUnique(brand.ID, seriesName)
+	if err != nil {
+		return model.CreateRacketLibraryResponse{}, err
+	}
+	if series == nil {
+		series = &model.RacketSeries{BrandID: brand.ID, Name: seriesName}
+		if err := s.repo.CreateSeries(series); err != nil {
+			// 并发或重复创建时（唯一键冲突），重新查找并复用已有系列。
+			existing, findErr := s.repo.SeriesFindUnique(brand.ID, seriesName)
+			if findErr != nil || existing == nil {
+				return model.CreateRacketLibraryResponse{}, err
+			}
+			series = existing
+		}
+	}
+
+	exists, err := s.repo.LibraryFindDuplicate(brand.ID, series.ID, modelName, req.ReleaseYear)
+	if err != nil {
+		return model.CreateRacketLibraryResponse{}, err
+	}
+	if exists {
+		label := modelName
+		if req.ReleaseYear > 0 {
+			label = fmt.Sprintf("%s（%d）", modelName, req.ReleaseYear)
+		}
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError(fmt.Sprintf("型号 %s 已存在", label))
+	}
+
+	items := []model.RacketLibrary{{
+		BrandID:       brand.ID,
+		Brand:         brand.Name,
+		SeriesID:      series.ID,
+		Series:        series.Name,
+		Model:         modelName,
+		ReleaseYear:   req.ReleaseYear,
+		Weight:        req.Weight,
+		HeadSize:      req.HeadSize,
+		StringPattern: req.StringPattern,
+		FileID:        req.FileID,
+		ImageURL:      req.ImageURL,
+	}}
+	if err := s.repo.CreateLibraryItems(items); err != nil {
+		return model.CreateRacketLibraryResponse{}, err
+	}
+
+	responses := make([]model.RacketLibraryItemResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, model.NewRacketLibraryItemResponse(item))
+	}
+	return model.CreateRacketLibraryResponse{Created: len(responses), Items: responses}, nil
 }
 
 func (s *RacketService) MyRacketsForSession(userID int64) ([]model.RacketResponse, error) {

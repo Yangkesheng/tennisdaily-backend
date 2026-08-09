@@ -324,6 +324,7 @@ Authorization: Bearer <token>
 | GET | `/api/shoes/stats` | 是 | 获取球鞋统计 |
 | GET | `/api/my-shoes` | 是 | 获取可选球鞋，新增打球记录选择用 |
 | GET | `/api/admin/permissions` | 是 | 查询当前用户是否为管理员 |
+| POST | `/api/admin/racket-library` | 是（管理员） | 新增球拍库球拍，品牌/系列不存在时自动插入 |
 | POST | `/api/admin/shoe-brands` | 是（管理员） | 新增球鞋品牌 |
 | POST | `/api/admin/shoe-series` | 是（管理员） | 新增球鞋系列 |
 | POST | `/api/admin/shoe-library` | 是（管理员） | 新增球鞋库鞋款，配色合并为单条 |
@@ -2079,6 +2080,63 @@ Authorization: Bearer <token>
 ```json
 {
   "racketId": 1
+}
+```
+
+### 21.7 管理员维护球拍库接口
+
+管理员白名单在 `config.yaml` 的 `admin.userIds` 配置（用户 ID 来自 JWT）。非管理员访问返回 `40301 forbidden`。
+
+#### 21.7.1 新增球拍库球拍
+
+```http
+POST /api/admin/racket-library
+Authorization: Bearer <token>
+```
+
+请求体：
+
+```json
+{
+  "brandName": "Head",
+  "seriesName": "Speed",
+  "model": "Speed MP",
+  "releaseYear": 2025,
+  "weight": 300,
+  "headSize": 100,
+  "stringPattern": "16x19",
+  "fileId": "",
+  "imageUrl": ""
+}
+```
+
+规则：
+
+- `brandName`、`seriesName`、`model` 必填；品牌不存在时后端按名称自动插入 `racket_brands`，系列不存在时按 品牌+系列名 自动插入 `racket_series`，前端无需先调用创建品牌/系列接口。
+- `releaseYear`、`weight`、`headSize`、`stringPattern`、`fileId`、`imageUrl` 均可选。
+- 按 品牌+系列+型号+年份 查重，已存在则返回 `invalid request: 型号 <型号>（<年份>）已存在`。
+
+响应 data：
+
+```json
+{
+  "created": 1,
+  "items": [
+    {
+      "id": 301,
+      "brandId": 5,
+      "brand": "Head",
+      "seriesId": 202,
+      "series": "Speed",
+      "model": "Speed MP",
+      "releaseYear": 2025,
+      "weight": 300,
+      "headSize": 100,
+      "stringPattern": "16x19",
+      "fileId": "",
+      "imageUrl": ""
+    }
+  ]
 }
 ```
 
