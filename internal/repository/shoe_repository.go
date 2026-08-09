@@ -55,8 +55,9 @@ func (r *ShoeRepository) LibraryList(query model.ShoeLibraryQuery) ([]model.Shoe
 func (r *ShoeRepository) LibraryBrandStats() ([]model.ShoeLibraryBrandStats, error) {
 	var rows []model.ShoeLibraryBrandStats
 	err := r.db.Model(&model.ShoeLibrary{}).
-		Select("brand_id, brand, COUNT(*) AS count").
-		Group("brand, brand_id").
+		Joins("LEFT JOIN shoe_brands ON shoe_brands.id = shoe_library.brand_id").
+		Select("shoe_library.brand_id, COALESCE(MAX(shoe_brands.name), MAX(shoe_library.brand)) AS brand, COUNT(*) AS count").
+		Group("shoe_library.brand_id").
 		Order("count DESC").
 		Scan(&rows).Error
 	return rows, err
@@ -65,8 +66,9 @@ func (r *ShoeRepository) LibraryBrandStats() ([]model.ShoeLibraryBrandStats, err
 func (r *ShoeRepository) LibrarySeriesStats() ([]model.ShoeLibrarySeriesStats, error) {
 	var rows []model.ShoeLibrarySeriesStats
 	err := r.db.Model(&model.ShoeLibrary{}).
-		Select("brand_id, brand, series_id, series, gender, COUNT(*) AS count").
-		Group("brand, brand_id, series, series_id, gender").
+		Joins("LEFT JOIN shoe_brands ON shoe_brands.id = shoe_library.brand_id").
+		Select("shoe_library.brand_id, COALESCE(MAX(shoe_brands.name), MAX(shoe_library.brand)) AS brand, shoe_library.series_id, shoe_library.series, shoe_library.gender, COUNT(*) AS count").
+		Group("shoe_library.brand_id, shoe_library.series_id, shoe_library.series, shoe_library.gender").
 		Order("count DESC").
 		Scan(&rows).Error
 	return rows, err

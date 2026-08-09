@@ -1,5 +1,70 @@
 # Change Log
 
+## 2026-08-10 stats 品牌分组改为按 brand_id + JOIN shoe_brands 取规范品牌名
+
+### 需求/变更内容
+
+- `GET /api/shoe-library/stats` 的品牌/系列统计改为只按 `brand_id` 分组，品牌显示名 LEFT JOIN `shoe_brands` 取主表规范写法，避免 `shoe_library.brand` 历史大小写不一致导致同一品牌被拆成多条。
+
+### 修改文件
+
+- `internal/repository/shoe_repository.go`（`LibraryBrandStats` / `LibrarySeriesStats` 增加 `LEFT JOIN shoe_brands`，`GROUP BY shoe_library.brand_id`；品牌名用 `COALESCE(MAX(shoe_brands.name), MAX(shoe_library.brand))` 兼容 `only_full_group_by`）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 响应结构不变；品牌名统一来自 `shoe_brands.name`（如 `ASICS`）。
+
+### 数据库变化
+
+- 无（只读查询变更）。
+
+### 兼容性说明
+
+- `shoe_brands` 中不存在的孤儿 brand_id 回退使用 `shoe_library.brand`。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-10 球鞋品牌名数据规范化（shoe_brands / shoe_library.brand）
+
+### 需求/变更内容
+
+- 修正品牌名大小写不一致：`shoe_brands` 的 `Asics` 改为官方全大写 `ASICS`；K-Swiss 合并重复品牌行（删除未使用的 id=8，规范 id=37 为 `K-Swiss`）。
+- `shoe_library.brand` 与主表对齐：`ASICS`、`HEAD`、`K-Swiss`。
+
+### 修改文件
+
+- `migrations/018_normalize_shoe_brand_names.sql`（新增，需在本地与云端数据库各执行一次）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。
+
+### 数据库变化
+
+- `shoe_brands`：id=3 名称 `Asics -> ASICS`；删除未使用的 id=8；id=37 名称 `KSwiss -> K-Swiss`、slug `k-swiss`。
+- `shoe_library`：brand_id=3/17/37 的冗余品牌名修正为 `ASICS` / `HEAD` / `K-Swiss`；引用 brand_id=8 的行归并到 37。
+
+### 兼容性说明
+
+- 品牌 ID 保持稳定（除未使用的 8 删除外），不影响现有球鞋与系列关联。
+
+### 已执行检查命令
+
+- 本地数据库执行迁移并验证分组结果。
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-09 取消球鞋手动输入：POST /api/shoes 强制要求 libraryId
 
 ### 需求/变更内容
