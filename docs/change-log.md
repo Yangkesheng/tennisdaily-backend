@@ -1,5 +1,258 @@
 # Change Log
 
+## 2026-08-11 代际模糊型号按最新款补齐 release_year（全部清零）
+
+### 需求/变更内容
+
+- 上一轮补齐后仍为 0 的型号，按「代际模糊一律按最新款上市年份处理」补齐，不确定具体年份的系列取该系列最新一代的上市年份。
+
+### 修改文件
+
+- `migrations/022_fix_racket_library_release_year_latest.sql`（新增，幂等脚本）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。
+
+### 数据库变化
+
+- `racket_library.release_year` 本轮再补齐 90 行（Babolat 14、Dunlop 18、HEAD 5、Prince 32、Tecnifibre 17、Yonex 4）；另有 9 行在本轮前已由其他会话按同样口径填入（Evo Aero 4 行=2026、Pure Aero 98=2026、Pure Aero PA U=2026、Pure Strike=2024、Rafael Nadal 2 行=2023）。
+- 补齐后全库 `release_year = 0` 行数 = 0。
+
+### 年份依据（最新一代/最新在售款）
+
+- Babolat：Boost Aero=2024、Boost Strike=2024、Boost Drive=2025、Evo Drive=2025、Evo Strike=2024、Evoke=2024、Evo Aero Gen2=2026
+- Dunlop：CX 200 系=2024（CX 200 Limited=2025）、FX Team 100=2026、LX Team 107=2024、SX 全系=2025（新模）、Tristorm=2025
+- HEAD：Radical=2023（Auxetic 2.0）、Boom MP Orlinski=2025、Squared=2026
+- Prince：Beast=2025、Neon=2025、O3 Legacy=2025、Phantom=2024、Premier=2025、Ripcord/TXTZ=2025、Skulls=2025、Tour（第 4 代）=2025、Tour 100P=2023（末代）、Warrior=2021、Classic Graphite 100=2015（复刻）
+- Tecnifibre：Fire 全系=2026、T-Fight=2022（ISO 代）、TEMPO=2024（V2 代）、TF-40=2024（V3 代）、TF-X1=2024（V2 代）
+- Yonex：Muse=2026（首发）、Astrel=2020（第二代）、VCORE Alpha L=2026、Vcore 98=2026（第八代 VCORE）
+
+### 兼容性说明
+
+- 仅数据更新，无表结构与接口变化；脚本幂等可重复执行。
+- 部分代际模糊行（如 T-Fight 270 RSX/300 IG 等明显老代型号）按用户要求取该系列最新款年份，如需精确到具体代际可后续按型号细分。
+
+### 已执行检查命令
+
+- 连接线上库执行 UPDATE（单事务，失败回滚），执行后复核品牌分布与剩余 0 行（为空）。
+
+### 测试结果
+
+- 通过；全库 `release_year = 0` 已清零。
+
+## 2026-08-11 球拍库列表排序调整
+
+### 需求/变更内容
+
+- `GET /api/racket-library` 排序由「品牌 → 型号 → 上市年份」改为「品牌 → 上市年份（新→旧）→ 型号」，型号相同时按克重（weight）升序排。
+
+### 修改文件
+
+- `internal/repository/racket_repository.go`（`LibraryList` 的 `Order`）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 响应结构不变，仅列表顺序变化。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 无。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-11 管理员新增球拍页面：上市年份/重量/拍面/穿线改为必填下拉
+
+### 需求/变更内容
+
+- 管理员球拍库新增球拍页面更名为“球拍库新增球拍”。
+- 年份改为“上市年份”，与重量、拍面、穿线模式一并改为必填；穿线模式只允许从预设值中选择（16x19、16x20、18x20 等），不支持自由输入。
+
+### 修改文件
+
+- `internal/model/racket_library.go`（`CreateRacketLibraryRequest` 的 `releaseYear` / `weight` / `headSize` / `stringPattern` 改为必填）
+- `internal/service/racket_service.go`（新增必填校验与友好提示，穿线模式存储前统一去空格）
+- 前端 `miniprogram/pages/admin-racket-edit/admin-racket-edit.ts/.wxml/.wxss`（页面标题、下拉选择、必填校验）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- `POST /api/admin/racket-library`：`releaseYear`、`weight`、`headSize`、`stringPattern` 由可选变为必填；缺省时返回 `invalid request`。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 接口为本次新增后立即调整，未对外发布，无旧客户端兼容问题。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
+## 2026-08-11 补齐 Babolat / Dunlop / HEAD / Prince / Tecnifibre / Yonex 的 release_year
+
+### 需求/变更内容
+
+- 上一轮 Wilson 修复后，Babolat（36 行）、Dunlop（24 行）、Prince（40 行）、Tecnifibre（31 行）仍全部为 0，HEAD 14 行、Yonex 10 行为 0。按同样方式查证各系列/版本上市年份后补齐，不确定的一律保持 0。
+- Blade 100L V9 Rouge Limited Edition（美网限定红配色）确认 2025 年上市：id=517 更名为 `Blade 100L V9 Rouge` 并设年份 2025，与 id=679 普通配色（2024）并存。
+
+### 修改文件
+
+- `migrations/021_fix_racket_library_release_year_other_brands.sql`（新增，幂等脚本）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。
+
+### 数据库变化
+
+- `racket_library.release_year` 本次补齐 54 行：Babolat 13、Dunlop 6、HEAD 9、Prince 8、Tecnifibre 14、Yonex 4；Blade 100L V9 Rouge 1 行。
+- 补齐后剩余为 0：Babolat 23、Dunlop 18、HEAD 5、Prince 32、Tecnifibre 17、Yonex 6（均为代际模糊或无法确认上市年份的型号）。
+
+### 年份依据
+
+- HEAD Graphene XT = 2015、Boom Pro = 2021
+- Yonex Percept = 2024
+- Tecnifibre TF-40 V3 = 2024、T-Fight ISO = 2022、TF-X1 V2 = 2024、TEMPO V2 = 2024
+- Dunlop CX 200 Tour 16x19 = 2024、FX 500 系列（2026 代）= 2026
+- Prince Synergy 98 = 2021、Beast 100 (265g) 及 Smiley 限定 = 2025
+- Babolat Pure Drive Gen11 = 2025、Pure Drive Spectra = 2026、Pure Aero 2026 系列 = 2026
+
+### 兼容性说明
+
+- 仅数据更新，无表结构与接口变化；脚本幂等可重复执行。
+- 未填年份的型号（如 Pure Aero 98、Pure Strike、Rafael Nadal 系列、Boost/Evo/Evoke、Dunlop CX/SX/LX/Tristorm、Prince Tour/Phantom/Warrior 等、Tecnifibre FIRE/Fire/T-Fight 非 ISO、HEAD Radical/Squared、Yonex Muse/Astrel/VCORE Alpha L）待后续确认后补充。
+
+### 已执行检查命令
+
+- 连接线上库执行 UPDATE（单事务，失败回滚），执行前后对比品牌分布与剩余 0 行清单。
+
+### 测试结果
+
+- 通过；其余品牌按上表补齐，剩余 0 行为预期清单。
+
+## 2026-08-11 线上数据修复：racket_library.release_year 补齐 + string_pattern 统一
+
+### 需求/变更内容
+
+- 线上库 `racket_library` 大量行 `release_year = 0`（Wilson 94 行，其余品牌更多），按各系列/版本的上市年份补齐。
+- 统一 `string_pattern` 格式：`/`、`×`、大写 `X`、空格 统一为小写 `x`（如 `16/19` → `16x19`）。
+- Blade 100L V9 存在两行（id=517 年份 0、id=679 年份 2024），用户确认为不同配色，保留两行；id=517 暂不设年份，等待配色信息后处理。
+
+### 修改文件
+
+- `migrations/020_fix_racket_library_release_year.sql`（新增，幂等脚本）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。
+
+### 数据库变化
+
+- `racket_library.release_year` 补齐（Wilson 品牌由 94 行缺失降到 1 行）。
+- `racket_library.string_pattern` 全表统一为 `16x19` 风格。
+
+### 兼容性说明
+
+- 仅数据更新，无表结构与接口变化；脚本幂等可重复执行。
+- 平价/休闲系列（Envy、Allure、Hyper、Triad、Six、Roland、US）年份为估算值 2025，可按需调整。
+- 其他品牌（Babolat、Dunlop、Prince、Tecnifibre 全部，HEAD、Yonex 部分）仍为 0，待确认后处理。
+
+### 已执行检查命令
+
+- 连接线上库执行 UPDATE（单事务，失败回滚），执行后复核品牌分布与 Blade 系列数据。
+
+### 测试结果
+
+- 通过；Wilson 剩余 `release_year = 0` 仅 Blade 100L V9（id=517）。
+
+## 2026-08-11 调整球拍库 Wilson Blade V9 插入型号范围
+
+### 需求/变更内容
+
+- 按最新排除清单调整 `migrations/019_insert_racket_library_wilson_blade_v9.sql`：新增排除 Blade 104 V9、Blade 98L V9、Noir Blade 98 V9。
+- 插入型号由 7 个调整为 6 个（移除 Blade 104 V9），排除清单合计：Blade 100L V9、Blade 104 V9、Blade 98 (16x19) V9、Blade 98L V9、Blade 98S V9、Noir Blade 98 V9。
+
+### 修改文件
+
+- `migrations/019_insert_racket_library_wilson_blade_v9.sql`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。
+
+### 数据库变化
+
+- `racket_library` 插入型号范围变化，无表结构变化。
+
+### 兼容性说明
+
+- 脚本幂等，已执行过旧版本可重复执行，不会产生重复行。
+
+### 已执行检查命令
+
+- 无 Go 代码变更，未执行 `go test ./...`。
+
+### 测试结果
+
+- 待执行 SQL 脚本后验证。
+
+## 2026-08-11 球拍库新增 Wilson Blade V9 系列数据
+
+### 需求/变更内容
+
+- 为球拍库 `racket_library` 插入 Wilson Blade V9 系列 7 个型号，统一使用云存储图片 `file_id`。
+- 排除型号：Blade 100L V9、Blade 98S V9、Blade 98 (16x19) V9。
+- 新增可重复执行的 SQL 脚本：品牌/系列不存在时自动插入，型号已存在时按唯一键 `uk_brand_model_year` 更新规格与图片。
+
+### 修改文件
+
+- `migrations/019_insert_racket_library_wilson_blade_v9.sql`（新增）
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。
+
+### 数据库变化
+
+- `racket_library` 新增数据行（Wilson / Blade / V9 各型号），无表结构变化。
+
+### 兼容性说明
+
+- 仅数据新增，不涉及现有接口与字段；脚本幂等，可重复执行。
+
+### 已执行检查命令
+
+- 无 Go 代码变更，未执行 `go test ./...`。
+
+### 测试结果
+
+- 待执行 SQL 脚本后验证。
+
 ## 2026-08-10 管理员新增球拍：移除品牌/系列管理接口，改为后端自动插入
 
 ### 需求/变更内容

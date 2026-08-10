@@ -167,10 +167,10 @@ type CreateRacketLibraryRequest struct {
 	BrandName     string `json:"brandName" binding:"required"`
 	SeriesName    string `json:"seriesName" binding:"required"`
 	Model         string `json:"model" binding:"required"`
-	ReleaseYear   int    `json:"releaseYear"`
-	Weight        int    `json:"weight"`
-	HeadSize      int    `json:"headSize"`
-	StringPattern string `json:"stringPattern"`
+	ReleaseYear   int    `json:"releaseYear" binding:"required"`
+	Weight        int    `json:"weight" binding:"required"`
+	HeadSize      int    `json:"headSize" binding:"required"`
+	StringPattern string `json:"stringPattern" binding:"required"`
 	FileID        string `json:"fileId"`
 	ImageURL      string `json:"imageUrl"`
 }

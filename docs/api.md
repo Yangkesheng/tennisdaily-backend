@@ -2112,8 +2112,9 @@ Authorization: Bearer <token>
 
 规则：
 
-- `brandName`、`seriesName`、`model` 必填；品牌不存在时后端按名称自动插入 `racket_brands`，系列不存在时按 品牌+系列名 自动插入 `racket_series`，前端无需先调用创建品牌/系列接口。
-- `releaseYear`、`weight`、`headSize`、`stringPattern`、`fileId`、`imageUrl` 均可选。
+- `brandName`、`seriesName`、`model`、`releaseYear`、`weight`、`headSize`、`stringPattern` 必填；品牌不存在时后端按名称自动插入 `racket_brands`，系列不存在时按 品牌+系列名 自动插入 `racket_series`，前端无需先调用创建品牌/系列接口。
+- `releaseYear` 为上市年份；`weight` 为裸拍重量（克）；`headSize` 为拍面大小（平方英寸）；`stringPattern` 为穿线模式，仅支持预设值（如 `16x19`、`16x20`、`18x20`）。
+- `fileId`、`imageUrl` 可选。
 - 按 品牌+系列+型号+年份 查重，已存在则返回 `invalid request: 型号 <型号>（<年份>）已存在`。
 
 响应 data：

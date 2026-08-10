@@ -129,6 +129,19 @@ func (s *RacketService) CreateLibraryItems(req model.CreateRacketLibraryRequest)
 	if seriesName == "" {
 		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("系列名称不能为空")
 	}
+	if req.ReleaseYear <= 0 {
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("请选择上市年份")
+	}
+	if req.Weight <= 0 {
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("请选择重量")
+	}
+	if req.HeadSize <= 0 {
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("请选择拍面")
+	}
+	stringPattern := strings.TrimSpace(req.StringPattern)
+	if stringPattern == "" {
+		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("请选择穿线模式")
+	}
 
 	// 按品牌名查找；不存在则插入品牌。
 	brand, err := s.repo.BrandFindByName(brandName)
@@ -185,7 +198,7 @@ func (s *RacketService) CreateLibraryItems(req model.CreateRacketLibraryRequest)
 		ReleaseYear:   req.ReleaseYear,
 		Weight:        req.Weight,
 		HeadSize:      req.HeadSize,
-		StringPattern: req.StringPattern,
+		StringPattern: stringPattern,
 		FileID:        req.FileID,
 		ImageURL:      req.ImageURL,
 	}}

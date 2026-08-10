@@ -43,7 +43,7 @@ func (r *RacketRepository) LibraryList(query model.RacketLibraryQuery) ([]model.
 	if query.SeriesID > 0 {
 		db = db.Where("series_id = ?", query.SeriesID)
 	}
-	err := db.Order("brand ASC, model ASC, release_year DESC").Find(&items).Error
+	err := db.Order("brand ASC, release_year DESC, model ASC, weight ASC").Find(&items).Error
 	return items, err
 }
 
