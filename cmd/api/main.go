@@ -89,6 +89,7 @@ func main() {
 		authed.DELETE("/sessions/:id", sessionHandler.Delete)
 		authed.GET("/stats/month", statsHandler.Month)
 		authed.GET("/stats/charts", statsHandler.Charts)
+		authed.GET("/stats/records", statsHandler.Records)
 
 		authed.GET("/racket-brands", racketHandler.Brands)
 		authed.GET("/racket-series", racketHandler.Series)

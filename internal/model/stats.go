@@ -106,3 +106,55 @@ type StatsMonthlyRating struct {
 	Month  int     `gorm:"column:month"`
 	Rating float64 `gorm:"column:rating"`
 }
+
+type StatsSessionTotals struct {
+	TotalCount   int64   `gorm:"column:total_count"`
+	TotalMinutes int64   `gorm:"column:total_minutes"`
+	SessionCost  float64 `gorm:"column:session_cost"`
+	MaxMinutes   int     `gorm:"column:max_minutes"`
+}
+
+type StatsLongestSession struct {
+	Date            string `gorm:"column:date"`
+	DurationMinutes int    `gorm:"column:duration_minutes"`
+}
+
+type StatsBestMonthRow struct {
+	Year    int   `gorm:"column:year"`
+	Month   int   `gorm:"column:month"`
+	Minutes int64 `gorm:"column:minutes"`
+	Count   int64 `gorm:"column:count"`
+}
+
+type StatsMaxSessionsDay struct {
+	Date  string `gorm:"column:date"`
+	Count int    `gorm:"column:count"`
+}
+
+type StatsBestMonthCostRow struct {
+	Year  int     `gorm:"column:year"`
+	Month int     `gorm:"column:month"`
+	Cost  float64 `gorm:"column:cost"`
+}
+
+type StatsRecordsResponse struct {
+	TotalCount            int64   `json:"totalCount"`
+	TotalMinutes          int64   `json:"totalMinutes"`
+	TotalCost             float64 `json:"totalCost"`
+	CurrentStreakDays     int     `json:"currentStreakDays"`
+	LongestStreakDays     int     `json:"longestStreakDays"`
+	LongestSessionMinutes int     `json:"longestSessionMinutes"`
+	LongestSessionDate    string  `json:"longestSessionDate"`
+	BestMonthYear         int     `json:"bestMonthYear"`
+	BestMonthMonth        int     `json:"bestMonthMonth"`
+	BestMonthMinutes      int64   `json:"bestMonthMinutes"`
+	BestMonthSessionCount int64   `json:"bestMonthSessionCount"`
+	MaxSessionsPerDay     int     `json:"maxSessionsPerDay"`
+	MaxSessionsPerDayDate string  `json:"maxSessionsPerDayDate"`
+	BestMonthCostYear     int     `json:"bestMonthCostYear"`
+	BestMonthCostMonth    int     `json:"bestMonthCostMonth"`
+	BestMonthCost         float64 `json:"bestMonthCost"`
+	ChampionCount         int64   `json:"championCount"`
+	RunnerUpCount         int64   `json:"runnerUpCount"`
+	EarliestSessionDate   string  `json:"earliestSessionDate"`
+}

@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"math"
+	"sort"
 	"time"
 
 	"tennisdaily-backend/internal/config"
@@ -43,6 +44,150 @@ func (s *StatsService) Charts(userID int64, query model.StatsChartsQuery) (model
 		return s.yearCharts(userID, query.Year)
 	}
 	return model.StatsChartsResultResponse{}, ErrInvalidRequest
+}
+
+func (s *StatsService) Records(userID int64) (model.StatsRecordsResponse, error) {
+	totals, err := s.sessionRepo.StatsTotals(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+
+	racketCost, err := s.racketRepo.SumPurchaseCost(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	stringingCost, err := s.racketRepo.SumStringingCost(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	shoeCost, err := s.shoeRepo.SumPurchaseCost(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+
+	longest, err := s.sessionRepo.LongestSession(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	bestMonth, err := s.sessionRepo.BestMonth(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	earliest, err := s.sessionRepo.EarliestSessionDate(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	currentStreak, longestStreak, err := s.streakDays(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	maxSessionsDay, err := s.sessionRepo.MaxSessionsPerDay(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	bestCostMonth, err := s.sessionRepo.BestMonthCost(userID)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	championCount, err := s.sessionRepo.CountByMatchRank(userID, model.MatchRankChampion)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+	runnerUpCount, err := s.sessionRepo.CountByMatchRank(userID, model.MatchRankRunnerUp)
+	if err != nil {
+		return model.StatsRecordsResponse{}, err
+	}
+
+	records := model.StatsRecordsResponse{
+		TotalCount:        totals.TotalCount,
+		TotalMinutes:      totals.TotalMinutes,
+		TotalCost:         totals.SessionCost + racketCost + stringingCost + shoeCost,
+		CurrentStreakDays: currentStreak,
+		LongestStreakDays: longestStreak,
+		ChampionCount:     championCount,
+		RunnerUpCount:     runnerUpCount,
+	}
+	if longest != nil {
+		records.LongestSessionMinutes = longest.DurationMinutes
+		records.LongestSessionDate = longest.Date
+	}
+	if bestMonth != nil {
+		records.BestMonthYear = bestMonth.Year
+		records.BestMonthMonth = bestMonth.Month
+		records.BestMonthMinutes = bestMonth.Minutes
+		records.BestMonthSessionCount = bestMonth.Count
+	}
+	if maxSessionsDay != nil {
+		records.MaxSessionsPerDay = maxSessionsDay.Count
+		records.MaxSessionsPerDayDate = maxSessionsDay.Date
+	}
+	if bestCostMonth != nil {
+		records.BestMonthCostYear = bestCostMonth.Year
+		records.BestMonthCostMonth = bestCostMonth.Month
+		records.BestMonthCost = bestCostMonth.Cost
+	}
+	records.EarliestSessionDate = earliest
+	return records, nil
+}
+
+func (s *StatsService) streakDays(userID int64) (current int, longest int, err error) {
+	dates, err := s.sessionRepo.DistinctSessionDates(userID)
+	if err != nil {
+		return 0, 0, err
+	}
+	if len(dates) == 0 {
+		return 0, 0, nil
+	}
+	set := make(map[string]struct{}, len(dates))
+	for _, date := range dates {
+		set[date] = struct{}{}
+	}
+
+	now := time.Now().In(s.loc)
+	today := now.Format("2006-01-02")
+	anchor := today
+	if _, ok := set[today]; !ok {
+		yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
+		if _, ok := set[yesterday]; !ok {
+			anchor = ""
+		} else {
+			anchor = yesterday
+		}
+	}
+
+	if anchor != "" {
+		t, parseErr := time.ParseInLocation("2006-01-02", anchor, s.loc)
+		if parseErr != nil {
+			return 0, 0, parseErr
+		}
+		for {
+			if _, ok := set[t.Format("2006-01-02")]; !ok {
+				break
+			}
+			current++
+			t = t.AddDate(0, 0, -1)
+		}
+	}
+
+	sort.Strings(dates)
+	run := 0
+	var prev time.Time
+	for index, date := range dates {
+		t, parseErr := time.ParseInLocation("2006-01-02", date, s.loc)
+		if parseErr != nil {
+			continue
+		}
+		if index == 0 || t.Sub(prev) == 24*time.Hour {
+			run++
+		} else {
+			run = 1
+		}
+		if run > longest {
+			longest = run
+		}
+		prev = t
+	}
+	return current, longest, nil
 }
 
 func (s *StatsService) monthCharts(userID int64, year, month int) (model.StatsChartsResultResponse, error) {

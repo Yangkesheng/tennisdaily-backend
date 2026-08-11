@@ -302,6 +302,30 @@ func (r *RacketRepository) SumStringingCostByRange(userID int64, start, end time
 	return result.Cost, err
 }
 
+func (r *RacketRepository) SumPurchaseCost(userID int64) (float64, error) {
+	type row struct {
+		Cost float64 `gorm:"column:cost"`
+	}
+	var result row
+	err := r.db.Model(&model.Racket{}).
+		Select("COALESCE(SUM(purchase_price), 0) AS cost").
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Scan(&result).Error
+	return result.Cost, err
+}
+
+func (r *RacketRepository) SumStringingCost(userID int64) (float64, error) {
+	type row struct {
+		Cost float64 `gorm:"column:cost"`
+	}
+	var result row
+	err := r.db.Model(&model.RacketStringingRecord{}).
+		Select("COALESCE(SUM(cost), 0) AS cost").
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Scan(&result).Error
+	return result.Cost, err
+}
+
 func (r *RacketRepository) Create(racket *model.Racket) error {
 	return r.db.Create(racket).Error
 }

@@ -191,3 +191,118 @@ func (r *SessionRepository) MonthlyRatingTrend(userID int64, start, end time.Tim
 		Scan(&rows).Error
 	return rows, err
 }
+
+func (r *SessionRepository) StatsTotals(userID int64) (model.StatsSessionTotals, error) {
+	var totals model.StatsSessionTotals
+	err := r.db.Model(&model.TennisSession{}).
+		Select(`
+			COUNT(*) AS total_count,
+			COALESCE(SUM(duration_minutes), 0) AS total_minutes,
+			COALESCE(SUM(cost), 0) AS session_cost,
+			COALESCE(MAX(duration_minutes), 0) AS max_minutes
+		`).
+		Where("user_id = ?", userID).
+		Scan(&totals).Error
+	return totals, err
+}
+
+func (r *SessionRepository) LongestSession(userID int64) (*model.StatsLongestSession, error) {
+	var row model.StatsLongestSession
+	err := r.db.Model(&model.TennisSession{}).
+		Select("DATE_FORMAT(date, '%Y-%m-%d %H:%i') AS date, duration_minutes").
+		Where("user_id = ?", userID).
+		Order("duration_minutes DESC, date ASC, id ASC").
+		Limit(1).
+		Scan(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	if row.Date == "" {
+		return nil, nil
+	}
+	return &row, nil
+}
+
+func (r *SessionRepository) BestMonth(userID int64) (*model.StatsBestMonthRow, error) {
+	var row model.StatsBestMonthRow
+	err := r.db.Model(&model.TennisSession{}).
+		Select("YEAR(date) AS year, MONTH(date) AS month, SUM(duration_minutes) AS minutes, COUNT(*) AS count").
+		Where("user_id = ?", userID).
+		Group("YEAR(date), MONTH(date)").
+		Order("minutes DESC, year ASC, month ASC").
+		Limit(1).
+		Scan(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	if row.Year == 0 {
+		return nil, nil
+	}
+	return &row, nil
+}
+
+func (r *SessionRepository) MaxSessionsPerDay(userID int64) (*model.StatsMaxSessionsDay, error) {
+	var row model.StatsMaxSessionsDay
+	dateExpr := "DATE_FORMAT(date, '%Y-%m-%d')"
+	err := r.db.Model(&model.TennisSession{}).
+		Select(dateExpr+" AS date, COUNT(*) AS count").
+		Where("user_id = ?", userID).
+		Group(dateExpr).
+		Order("count DESC, date ASC").
+		Limit(1).
+		Scan(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	if row.Date == "" {
+		return nil, nil
+	}
+	return &row, nil
+}
+
+func (r *SessionRepository) BestMonthCost(userID int64) (*model.StatsBestMonthCostRow, error) {
+	var row model.StatsBestMonthCostRow
+	err := r.db.Model(&model.TennisSession{}).
+		Select("YEAR(date) AS year, MONTH(date) AS month, COALESCE(SUM(cost), 0) AS cost").
+		Where("user_id = ?", userID).
+		Group("YEAR(date), MONTH(date)").
+		Order("cost DESC, year ASC, month ASC").
+		Limit(1).
+		Scan(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	if row.Year == 0 {
+		return nil, nil
+	}
+	return &row, nil
+}
+
+func (r *SessionRepository) CountByMatchRank(userID int64, matchRank model.MatchRank) (int64, error) {
+	var count int64
+	err := r.db.Model(&model.TennisSession{}).
+		Where("user_id = ? AND match_rank = ?", userID, matchRank).
+		Count(&count).Error
+	return count, err
+}
+
+func (r *SessionRepository) DistinctSessionDates(userID int64) ([]string, error) {
+	var dates []string
+	err := r.db.Model(&model.TennisSession{}).
+		Select("DISTINCT DATE_FORMAT(date, '%Y-%m-%d') AS date").
+		Where("user_id = ?", userID).
+		Order("date DESC").
+		Scan(&dates).Error
+	return dates, err
+}
+
+func (r *SessionRepository) EarliestSessionDate(userID int64) (string, error) {
+	var date string
+	err := r.db.Model(&model.TennisSession{}).
+		Select("DATE_FORMAT(date, '%Y-%m-%d %H:%i')").
+		Where("user_id = ?", userID).
+		Order("date ASC, id ASC").
+		Limit(1).
+		Scan(&date).Error
+	return date, err
+}

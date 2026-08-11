@@ -63,3 +63,20 @@ func (h *StatsHandler) Charts(c *gin.Context) {
 	logger.Debug("GET /api/stats/charts success userID=%d period=%s year=%d month=%d sessionCount=%d totalCost=%.2f", userID, charts.Period, charts.Year, charts.Month, charts.Summary.SessionCount, charts.Summary.TotalCost)
 	response.OK(c, charts)
 }
+
+func (h *StatsHandler) Records(c *gin.Context) {
+	userID, ok := middleware.CurrentUserID(c)
+	if !ok {
+		response.Error(c, 401, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+	logger.Debug("GET /api/stats/records start userID=%d", userID)
+
+	records, err := h.statsService.Records(userID)
+	if err != nil {
+		response.Error(c, 500, response.CodeInternalError, "internal error")
+		return
+	}
+	logger.Debug("GET /api/stats/records success userID=%d totalCount=%d totalMinutes=%d streakDays=%d", userID, records.TotalCount, records.TotalMinutes, records.CurrentStreakDays)
+	response.OK(c, records)
+}

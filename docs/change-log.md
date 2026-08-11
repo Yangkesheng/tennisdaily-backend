@@ -1,5 +1,115 @@
 # Change Log
 
+## 2026-08-12 个人记录统计扩展（单日最高、历史最长连续、单月最高花费、冠亚军次数）
+
+### 需求/变更内容
+
+- 扩展 `GET /api/stats/records` 返回值，新增：
+  - 单日最高场次 `maxSessionsPerDay` 及日期 `maxSessionsPerDayDate`
+  - 历史最长连续天数 `longestStreakDays`
+  - 单月最高花费 `bestMonthCost` 及年份/月份 `bestMonthCostYear` / `bestMonthCostMonth`
+  - 冠军次数 `championCount`、亚军次数 `runnerUpCount`
+- 个人记录页新增对应记录行；“我的”页个人记录入口保持不变。
+- 同步更新前端接口设计文档与功能设计文档。
+
+### 修改文件
+
+后端：
+
+- `internal/model/stats.go`
+- `internal/repository/session_repository.go`
+- `internal/service/stats_service.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+前端：
+
+- `tennisdaily/docs/api-stats-records.md`
+- `tennisdaily/docs/personal-records-design.md`
+- `tennisdaily/miniprogram/models/records.ts`
+- `tennisdaily/miniprogram/services/records-api-service.ts`
+- `tennisdaily/miniprogram/pages/records/records.*`
+
+### 接口变化
+
+- `GET /api/stats/records` 新增 8 个响应字段，见 `docs/api.md` 16.3。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 纯新增响应字段，旧字段不变，不影响既有客户端。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/stats.go internal/repository/session_repository.go internal/service/stats_service.go`
+- `go test ./...`
+- `npm run typecheck`（tennisdaily 前端）
+
+### 测试结果
+
+- 后端 `go test ./...` 通过。
+- 前端 TypeScript 类型检查通过。
+
+## 2026-08-12 新增个人记录统计接口与“我的”页记录入口
+
+### 需求/变更内容
+
+- 新增个人记录统计接口 `GET /api/stats/records`，返回累计场次、累计时长、累计花费、连续打球天数、最长单次时长、单月最高时长、最早记录。
+- 连续打球天数口径：从今天往前连续有打球记录的天数；今天还没记录时不打断，从昨天开始往前计算。
+- 累计花费与现有统计口径一致：打球消费 + 球拍购买费用 + 穿线费用 + 球鞋购买费用。
+- 小程序“我的”页按新设计重做：连续打球天数徽章、我的坚持（累计数据）、个人记录卡片（含“查看全部”入口）、我的装备合并卡片、常用功能分组。
+- 新增个人记录页 `pages/records/records`，展示连续天数、最长单次、单月最高、最早记录与累计数据。
+
+### 修改文件
+
+后端：
+
+- `cmd/api/main.go`
+- `internal/model/stats.go`
+- `internal/repository/session_repository.go`
+- `internal/repository/racket_repository.go`
+- `internal/repository/shoe_repository.go`
+- `internal/service/stats_service.go`
+- `internal/handler/stats_handler.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+前端：
+
+- `tennisdaily/docs/personal-records-design.md`（新增）
+- `tennisdaily/docs/api-stats-records.md`（新增）
+- `tennisdaily/miniprogram/models/records.ts`（新增）
+- `tennisdaily/miniprogram/services/records-api-service.ts`（新增）
+- `tennisdaily/miniprogram/pages/records/records.*`（新增）
+- `tennisdaily/miniprogram/pages/profile/profile.*`
+- `tennisdaily/miniprogram/app.json`
+
+### 接口变化
+
+- 新增 `GET /api/stats/records`，需登录，返回字段见 `docs/api.md` 16.3。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 纯新增接口与新页面，不影响既有接口与字段。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/model/stats.go internal/repository/session_repository.go internal/repository/racket_repository.go internal/repository/shoe_repository.go internal/service/stats_service.go internal/handler/stats_handler.go`
+- `go test ./...`
+- `npm run typecheck`（tennisdaily 前端）
+
+### 测试结果
+
+- 后端 `go test ./...` 通过。
+- 前端 TypeScript 类型检查通过。
+
 ## 2026-08-11 新增意见反馈接口
 
 ### 需求/变更内容

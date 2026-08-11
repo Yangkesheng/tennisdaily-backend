@@ -1226,6 +1226,121 @@ curl 'http://localhost:8081/api/stats/charts?period=month&year=2026&month=6' \
   -H 'Authorization: Bearer <token>'
 ```
 
+### 16.3 GET /api/stats/records
+
+获取当前登录用户的个人记录（里程碑类统计数据）。
+
+统计口径：
+
+- 使用服务器 `Asia/Shanghai` 时区
+- 按 `tennis_sessions.date` 统计
+- 默认只统计未删除记录
+- `totalCost` 与现有统计口径一致：打球消费 + 球拍购买费用 + 穿线费用 + 球鞋购买费用
+- `currentStreakDays`：从今天往前连续有打球记录的天数；今天还没记录时不打断，从昨天开始往前计算
+- `longestStreakDays`：历史连续有打球记录的最长天数，同日多场按一天计
+- `longestSessionMinutes`：单场 `duration_minutes` 最大值，取最早达成该记录的一场
+- `bestMonth*`：按自然月聚合 `duration_minutes`，取合计最高的月份
+- `maxSessionsPerDay`：按自然日聚合记录数，取单日最高的日期，并列取较早日期
+- `bestMonthCost*`：按自然月聚合打球消费 `cost`，取合计最高的月份，并列取较早月份；不含装备与穿线费用
+- `championCount` / `runnerUpCount`：`match_rank = 1` / `match_rank = 2` 的记录数
+- `earliestSessionDate`：第一条打球记录的日期时间
+
+#### 请求
+
+```http
+GET /api/stats/records
+Authorization: Bearer <token>
+```
+
+#### 响应 data
+
+```json
+{
+  "totalCount": 86,
+  "totalMinutes": 10280,
+  "totalCost": 5800,
+  "currentStreakDays": 4,
+  "longestStreakDays": 18,
+  "longestSessionMinutes": 240,
+  "longestSessionDate": "2026-06-13 19:30",
+  "bestMonthYear": 2026,
+  "bestMonthMonth": 6,
+  "bestMonthMinutes": 1440,
+  "bestMonthSessionCount": 12,
+  "maxSessionsPerDay": 3,
+  "maxSessionsPerDayDate": "2026-06-13",
+  "bestMonthCostYear": 2026,
+  "bestMonthCostMonth": 6,
+  "bestMonthCost": 1280,
+  "championCount": 3,
+  "runnerUpCount": 2,
+  "earliestSessionDate": "2024-03-02 19:00"
+}
+```
+
+字段说明：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| totalCount | number | 累计打球记录数 |
+| totalMinutes | number | 累计打球总分钟数 |
+| totalCost | number | 累计总花费（打球 + 球拍 + 穿线 + 球鞋） |
+| currentStreakDays | number | 当前连续打球天数 |
+| longestStreakDays | number | 历史最长连续打球天数；无记录时为 0 |
+| longestSessionMinutes | number | 最长单次打球时长，单位分钟；无记录时为 0 |
+| longestSessionDate | string | 最长单次发生的日期时间 `YYYY-MM-DD HH:mm`；无记录时为空字符串 |
+| bestMonthYear | number | 单月最高时长所在年份；无记录时为 0 |
+| bestMonthMonth | number | 单月最高时长所在月份；无记录时为 0 |
+| bestMonthMinutes | number | 单月最高时长，单位分钟 |
+| bestMonthSessionCount | number | 该月打球记录数 |
+| maxSessionsPerDay | number | 单日最高场次；无记录时为 0 |
+| maxSessionsPerDayDate | string | 单日最高场次发生的日期 `YYYY-MM-DD`；无记录时为空字符串 |
+| bestMonthCostYear | number | 单月最高花费所在年份；无记录时为 0 |
+| bestMonthCostMonth | number | 单月最高花费所在月份；无记录时为 0 |
+| bestMonthCost | number | 单月最高花费合计（仅打球消费 `cost`） |
+| championCount | number | 冠军次数（`match_rank = 1`） |
+| runnerUpCount | number | 亚军次数（`match_rank = 2`） |
+| earliestSessionDate | string | 最早打球记录日期时间 `YYYY-MM-DD HH:mm`；无记录时为空字符串 |
+
+#### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "totalCount": 86,
+    "totalMinutes": 10280,
+    "totalCost": 5800,
+    "currentStreakDays": 4,
+    "longestStreakDays": 18,
+    "longestSessionMinutes": 240,
+    "longestSessionDate": "2026-06-13 19:30",
+    "bestMonthYear": 2026,
+    "bestMonthMonth": 6,
+    "bestMonthMinutes": 1440,
+    "bestMonthSessionCount": 12,
+    "maxSessionsPerDay": 3,
+    "maxSessionsPerDayDate": "2026-06-13",
+    "bestMonthCostYear": 2026,
+    "bestMonthCostMonth": 6,
+    "bestMonthCost": 1280,
+    "championCount": 3,
+    "runnerUpCount": 2,
+    "earliestSessionDate": "2024-03-02 19:00"
+  }
+}
+```
+
+#### curl 示例
+
+```bash
+curl http://localhost:8081/api/stats/records \
+  -H 'Authorization: Bearer <token>'
+```
+
+> 前端侧接口设计文档见 `tennisdaily/docs/api-stats-records.md`（前端仓库），功能设计文档见 `tennisdaily/docs/personal-records-design.md`。
+
 ---
 
 ## 17. 前端联调建议

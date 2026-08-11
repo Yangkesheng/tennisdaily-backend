@@ -397,3 +397,15 @@ func (r *ShoeRepository) SumPurchaseCostByRange(userID int64, start, end time.Ti
 		Scan(&result).Error
 	return result.Cost, err
 }
+
+func (r *ShoeRepository) SumPurchaseCost(userID int64) (float64, error) {
+	type row struct {
+		Cost float64 `gorm:"column:cost"`
+	}
+	var result row
+	err := r.db.Model(&model.Shoe{}).
+		Select("COALESCE(SUM(purchase_price), 0) AS cost").
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Scan(&result).Error
+	return result.Cost, err
+}
