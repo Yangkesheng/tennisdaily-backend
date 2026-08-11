@@ -1,5 +1,44 @@
 # Change Log
 
+## 2026-08-11 新增意见反馈接口
+
+### 需求/变更内容
+
+- 新增意见反馈提交接口 `POST /api/feedback`。
+- 反馈归属当前登录用户，支持选填联系方式，写入后状态为待处理。
+
+### 修改文件
+
+- `cmd/api/main.go`
+- `internal/model/feedback.go`（新增）
+- `internal/repository/feedback_repository.go`（新增）
+- `internal/service/feedback_service.go`（新增）
+- `internal/handler/feedback_handler.go`（新增）
+- `migrations/023_create_feedback.sql`（新增）
+- `docs/api.md`
+- `docs/change-log.md`
+
+### 接口变化
+
+- 新增 `POST /api/feedback`，请求字段 `content`（必填，最长 1000 字）、`contact`（选填，最长 100 字）。
+
+### 数据库变化
+
+- 新增 `feedback` 表：`id`、`user_id`、`content`、`contact`、`status`、`created_at`、`updated_at`、`deleted_at`，软删除。
+
+### 兼容性说明
+
+- 纯新增接口，不影响既有接口与字段。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/model/feedback.go internal/repository/feedback_repository.go internal/service/feedback_service.go internal/handler/feedback_handler.go`
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-11 代际模糊型号按最新款补齐 release_year（全部清零）
 
 ### 需求/变更内容

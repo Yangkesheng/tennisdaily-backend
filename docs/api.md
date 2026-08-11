@@ -323,6 +323,7 @@ Authorization: Bearer <token>
 | DELETE | `/api/shoes/:id` | 是 | 删除球鞋，软删除 |
 | GET | `/api/shoes/stats` | 是 | 获取球鞋统计 |
 | GET | `/api/my-shoes` | 是 | 获取可选球鞋，新增打球记录选择用 |
+| POST | `/api/feedback` | 是 | 提交意见反馈 |
 | GET | `/api/admin/permissions` | 是 | 查询当前用户是否为管理员 |
 | POST | `/api/admin/racket-library` | 是（管理员） | 新增球拍库球拍，品牌/系列不存在时自动插入 |
 | POST | `/api/admin/shoe-brands` | 是（管理员） | 新增球鞋品牌 |
@@ -421,6 +422,8 @@ GET /api/session-config
   ]
 }
 ```
+
+---
 
 #### 字段说明
 
@@ -2861,3 +2864,60 @@ Authorization: Bearer <token>
   ]
 }
 ```
+
+---
+
+## 24. 意见反馈
+
+### 24.1 提交意见反馈
+
+```http
+POST /api/feedback
+Authorization: Bearer <token>
+```
+
+请求体：
+
+```json
+{
+  "content": "希望支持按周查看统计",
+  "contact": "微信：tennisday"
+}
+```
+
+字段说明：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `content` | string | 是 | 反馈内容，去除首尾空格后不能为空，最长 1000 字 |
+| `contact` | string | 否 | 联系方式，选填，最长 100 字 |
+
+规则：
+
+- 需要登录。
+- 反馈归属当前登录用户，不接受前端传 `userId`。
+- 反馈内容和联系方式会经过微信内容安全校验，命中敏感内容返回 `输入内容包含敏感信息，请修改后重试`。
+- 创建时 `status` 固定为 `0`（待处理）。
+- 采用软删除，普通查询只返回未删除数据。
+
+响应 data：
+
+```json
+{
+  "id": 1,
+  "content": "希望支持按周查看统计",
+  "contact": "微信：tennisday",
+  "status": 0,
+  "createdAt": "2026-08-11T10:00:00+08:00"
+}
+```
+
+字段说明：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | number | 反馈ID |
+| `content` | string | 反馈内容 |
+| `contact` | string | 联系方式，未填为空字符串 |
+| `status` | number | 处理状态：`0` 待处理、`1` 已处理 |
+| `createdAt` | string | 创建时间 |

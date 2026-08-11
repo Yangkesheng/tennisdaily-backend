@@ -34,6 +34,7 @@ func main() {
 
 	racketRepo := repository.NewRacketRepository(db)
 	shoeRepo := repository.NewShoeRepository(db)
+	feedbackRepo := repository.NewFeedbackRepository(db)
 
 	contentSecurityService := service.NewContentSecurityService(cfg)
 	authService := service.NewAuthService(cfg, userRepo, contentSecurityService)
@@ -41,6 +42,7 @@ func main() {
 	statsService := service.NewStatsService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth)
 	shoeService := service.NewShoeService(shoeRepo, userRepo, contentSecurityService, cfg.ShoeWear)
+	feedbackService := service.NewFeedbackService(feedbackRepo, userRepo, contentSecurityService)
 	homeService := service.NewHomeService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 
@@ -49,6 +51,7 @@ func main() {
 	statsHandler := handler.NewStatsHandler(statsService)
 	racketHandler := handler.NewRacketHandler(racketService)
 	shoeHandler := handler.NewShoeHandler(shoeService)
+	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
 	homeHandler := handler.NewHomeHandler(homeService)
 	enumHandler := handler.NewEnumHandler(enumService)
 
@@ -121,6 +124,8 @@ func main() {
 		authed.DELETE("/shoes/:id", shoeHandler.Delete)
 		authed.POST("/shoes/:id/set-primary", shoeHandler.SetPrimary)
 		authed.POST("/shoes/:id/retire", shoeHandler.Retire)
+
+		authed.POST("/feedback", feedbackHandler.Create)
 	}
 
 	admin := authed.Group("/admin")
