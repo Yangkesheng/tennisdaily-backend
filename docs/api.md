@@ -1356,6 +1356,67 @@ curl http://localhost:8081/api/stats/records \
 
 ---
 
+### 16.4 用户设置
+
+用户设置采用键值结构，存储用户可编辑的小字段（个性签名、默认球场、默认时长）。
+
+#### 16.4.1 GET /api/user-settings
+
+获取当前登录用户全部设置。
+
+```http
+GET /api/user-settings
+Authorization: Bearer <token>
+```
+
+响应 data：
+
+```json
+{
+  "signature": "底线抽球爱好者",
+  "defaultCourtName": "奥森网球场",
+  "defaultDurationMinutes": 120
+}
+```
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| signature | string | 个性签名，最长 30 字；未设置为空字符串 |
+| defaultCourtName | string | 默认球场，最长 20 字；未设置为空字符串 |
+| defaultDurationMinutes | number | 默认时长（分钟）；`0` 表示未设置（记录页保持默认 120） |
+
+#### 16.4.2 PUT /api/user-settings
+
+部分更新用户设置，传哪个字段更新哪个。
+
+```http
+PUT /api/user-settings
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+请求体示例：
+
+```json
+{
+  "signature": "底线抽球爱好者",
+  "defaultCourtName": "奥森网球场",
+  "defaultDurationMinutes": 150
+}
+```
+
+字段说明：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| signature | string | 可选；最长 30 字；空字符串表示清除 |
+| defaultCourtName | string | 可选；最长 20 字；空字符串表示清除 |
+| defaultDurationMinutes | number | 可选；`0` 表示清除，否则范围 `30-600` |
+
+响应 data 与 `GET /api/user-settings` 一致。
+
+---
+
 ## 17. 前端联调建议
 
 ### 17.1 小程序开发者工具

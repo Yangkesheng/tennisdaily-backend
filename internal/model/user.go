@@ -8,14 +8,15 @@ import (
 )
 
 type User struct {
-	ID        int64          `json:"id" gorm:"primaryKey"`
-	OpenID    string         `json:"openid" gorm:"column:openid;size:128;uniqueIndex"`
-	Phone     string         `json:"phone" gorm:"size:32;index"`
-	Nickname  string         `json:"nickname" gorm:"size:128;not null;default:''"`
-	AvatarURL string         `json:"avatarUrl" gorm:"not null;default:''"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	ID               int64          `json:"id" gorm:"primaryKey"`
+	OpenID           string         `json:"openid" gorm:"column:openid;size:128;uniqueIndex"`
+	Phone            string         `json:"phone" gorm:"size:32;index"`
+	Nickname         string         `json:"nickname" gorm:"size:128;not null;default:''"`
+	AvatarURL        string         `json:"avatarUrl" gorm:"not null;default:''"`
+	StartPlayingDate *int           `json:"startPlayingDate" gorm:"column:start_playing_date"`
+	CreatedAt        time.Time      `json:"createdAt"`
+	UpdatedAt        time.Time      `json:"updatedAt"`
+	DeletedAt        gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func (User) TableName() string {
@@ -38,24 +39,26 @@ func (UserWechatIdentity) TableName() string {
 }
 
 type UserResponse struct {
-	ID          int64     `json:"id"`
-	Phone       string    `json:"phone"`
-	MaskedPhone string    `json:"maskedPhone"`
-	Nickname    string    `json:"nickname"`
-	AvatarURL   string    `json:"avatarUrl"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID               int64     `json:"id"`
+	Phone            string    `json:"phone"`
+	MaskedPhone      string    `json:"maskedPhone"`
+	Nickname         string    `json:"nickname"`
+	AvatarURL        string    `json:"avatarUrl"`
+	StartPlayingDate *int      `json:"startPlayingDate"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
 }
 
 func NewUserResponse(user User) UserResponse {
 	return UserResponse{
-		ID:          user.ID,
-		Phone:       user.Phone,
-		MaskedPhone: MaskPhone(user.Phone),
-		Nickname:    user.Nickname,
-		AvatarURL:   user.AvatarURL,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
+		ID:               user.ID,
+		Phone:            user.Phone,
+		MaskedPhone:      MaskPhone(user.Phone),
+		Nickname:         user.Nickname,
+		AvatarURL:        user.AvatarURL,
+		StartPlayingDate: user.StartPlayingDate,
+		CreatedAt:        user.CreatedAt,
+		UpdatedAt:        user.UpdatedAt,
 	}
 }
 

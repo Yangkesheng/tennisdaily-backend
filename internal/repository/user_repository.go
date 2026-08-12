@@ -129,8 +129,15 @@ func (r *UserRepository) FindByPhone(phone string) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateProfile(userID int64, nickname string, avatarURL string) (*model.User, error) {
+func (r *UserRepository) UpdateProfile(userID int64, nickname string, avatarURL string, startPlayingDate *int) (*model.User, error) {
 	updates := map[string]interface{}{"nickname": nickname, "avatar_url": avatarURL}
+	if startPlayingDate != nil {
+		if *startPlayingDate == 0 {
+			updates["start_playing_date"] = nil
+		} else {
+			updates["start_playing_date"] = *startPlayingDate
+		}
+	}
 	if err := r.db.Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", userID).Updates(updates).Error; err != nil {
 		return nil, err
 	}

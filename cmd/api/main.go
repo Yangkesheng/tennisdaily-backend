@@ -35,9 +35,11 @@ func main() {
 	racketRepo := repository.NewRacketRepository(db)
 	shoeRepo := repository.NewShoeRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
+	userSettingRepo := repository.NewUserSettingRepository(db)
 
 	contentSecurityService := service.NewContentSecurityService(cfg)
 	authService := service.NewAuthService(cfg, userRepo, contentSecurityService)
+	userSettingsService := service.NewUserSettingsService(userSettingRepo, userRepo, contentSecurityService)
 	sessionService := service.NewSessionService(sessionRepo, userRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver, contentSecurityService)
 	statsService := service.NewStatsService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth)
@@ -47,6 +49,7 @@ func main() {
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 
 	authHandler := handler.NewAuthHandler(authService, cfg.AdminUserIDs)
+	userSettingsHandler := handler.NewUserSettingsHandler(userSettingsService)
 	sessionHandler := handler.NewSessionHandler(sessionService)
 	statsHandler := handler.NewStatsHandler(statsService)
 	racketHandler := handler.NewRacketHandler(racketService)
@@ -77,6 +80,9 @@ func main() {
 		authed.POST("/auth/logout", authHandler.Logout)
 		authed.PUT("/auth/profile", authHandler.UpdateProfile)
 		authed.GET("/admin/permissions", authHandler.AdminPermissions)
+
+		authed.GET("/user-settings", userSettingsHandler.Get)
+		authed.PUT("/user-settings", userSettingsHandler.Update)
 
 		authed.GET("/home/summary", homeHandler.Summary)
 

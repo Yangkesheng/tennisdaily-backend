@@ -22,6 +22,7 @@ type PhoneLoginResponse struct {
 }
 
 type UpdateProfileRequest struct {
-	Nickname  string `json:"nickname"`
-	AvatarURL string `json:"avatarUrl"`
+	Nickname         string `json:"nickname"`
+	AvatarURL        string `json:"avatarUrl"`
+	StartPlayingDate *int   `json:"startPlayingDate"`
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"tennisdaily-backend/internal/config"
@@ -146,8 +147,11 @@ func (s *AuthService) UpdateProfile(userID int64, req model.UpdateProfileRequest
 	if err := s.contentSecurity.CheckTexts(user.OpenID, req.Nickname); err != nil {
 		return model.UserResponse{}, err
 	}
+	if req.StartPlayingDate != nil && !isValidStartPlayingDate(*req.StartPlayingDate) {
+		return model.UserResponse{}, ErrInvalidRequest
+	}
 
-	updated, err := s.userRepo.UpdateProfile(userID, req.Nickname, req.AvatarURL)
+	updated, err := s.userRepo.UpdateProfile(userID, req.Nickname, req.AvatarURL, req.StartPlayingDate)
 	if err != nil {
 		return model.UserResponse{}, err
 	}
@@ -155,6 +159,26 @@ func (s *AuthService) UpdateProfile(userID int64, req model.UpdateProfileRequest
 		return model.UserResponse{}, ErrNotFound
 	}
 	return model.NewUserResponse(*updated), nil
+}
+
+func isValidStartPlayingDate(value int) bool {
+	if value < 190001 {
+		return false
+	}
+	month := value % 100
+	if month < 1 || month > 12 {
+		return false
+	}
+
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		loc = time.Local
+	}
+	current, err := strconv.Atoi(time.Now().In(loc).Format("200601"))
+	if err != nil {
+		return true
+	}
+	return value <= current
 }
 
 func (s *AuthService) Logout() map[string]bool {

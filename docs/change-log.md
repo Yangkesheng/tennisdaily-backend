@@ -1,5 +1,77 @@
 # Change Log
 
+## 2026-08-12 个人信息扩展与设置页（签名、开始打球、默认球场、默认时长）
+
+### 需求/变更内容
+
+- 用户资料新增“开始打球年月”，存 `users.start_playing_date`（`YYYYMM` 数字，如 `202308`）。
+- 新增用户设置键值表 `user_settings`（`user_id + setting_key + setting_value`），一期 key：
+  - `signature` 个性签名
+  - `default_court_name` 默认球场
+  - `default_duration_minutes` 默认时长
+- 新增 `GET /api/user-settings`、`PUT /api/user-settings` 接口。
+- 前端：
+  - 个人信息页新增个性签名（弹层输入）、开始打球年月（年月选择器）
+  - 新增设置页 `pages/settings/settings`：默认球场、默认时长（预设 + 自定义输入）
+  - “我的”页：昵称下展示签名，“已连续 X 天”与“球龄 X 年 Y 个月”徽章并排，常用功能新增“设置”入口
+  - 新增记录页读取默认球场 / 默认时长自动带入草稿
+
+### 修改文件
+
+后端：
+
+- `migrations/024_add_users_start_playing_date.sql`（新增）
+- `migrations/025_create_user_settings.sql`（新增）
+- `internal/model/user.go`
+- `internal/model/auth.go`
+- `internal/model/user_setting.go`（新增）
+- `internal/repository/user_repository.go`
+- `internal/repository/user_setting_repository.go`（新增）
+- `internal/service/auth_service.go`
+- `internal/service/user_settings_service.go`（新增）
+- `internal/handler/user_settings_handler.go`（新增）
+- `cmd/api/main.go`
+- `docs/api.md`
+- `docs/auth_api.md`
+- `docs/change-log.md`
+
+前端：
+
+- `tennisdaily/miniprogram/models/user-settings.ts`（新增）
+- `tennisdaily/miniprogram/services/user-settings-service.ts`（新增）
+- `tennisdaily/miniprogram/pages/settings/settings.*`（新增）
+- `tennisdaily/miniprogram/pages/user-profile/user-profile.*`
+- `tennisdaily/miniprogram/pages/profile/profile.*`
+- `tennisdaily/miniprogram/pages/session-edit/session-edit.ts`
+- `tennisdaily/miniprogram/services/auth-service.ts`
+- `tennisdaily/miniprogram/app.json`
+
+### 接口变化
+
+- `GET /api/auth/me` / `PUT /api/auth/profile` 新增 `startPlayingDate` 字段。
+- 新增 `GET /api/user-settings`、`PUT /api/user-settings`。
+
+### 数据库变化
+
+- `users` 表新增 `start_playing_date` 列。
+- 新建 `user_settings` 表（键值结构；`setting_key` 为 smallint 枚举：1 个性签名 / 2 默认球场 / 3 默认时长，中文名只在代码维护；软删除，`user_id + setting_key + deleted_at` 唯一）。
+
+### 兼容性说明
+
+- `startPlayingDate` 为新增可选字段，旧客户端不传不影响。
+- `user-settings` 为纯新增接口。
+
+### 已执行检查命令
+
+- `gofmt -w cmd/api/main.go internal/model/auth.go internal/model/user.go internal/model/user_setting.go internal/repository/user_repository.go internal/repository/user_setting_repository.go internal/service/auth_service.go internal/service/user_settings_service.go internal/handler/user_settings_handler.go`
+- `go test ./...`
+- `npm run typecheck`（tennisdaily 前端）
+
+### 测试结果
+
+- 后端 `go test ./...` 通过。
+- 前端 TypeScript 类型检查通过。
+
 ## 2026-08-12 个人记录点击跳转（列表过滤 + 日历定位 + 连续段起止日期）
 
 ### 需求/变更内容

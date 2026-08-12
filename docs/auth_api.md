@@ -247,6 +247,7 @@ Authorization: Bearer <token>
   "maskedPhone": "138****8000",
   "nickname": "",
   "avatarUrl": "",
+  "startPlayingDate": null,
   "createdAt": "2026-05-30T12:00:00+08:00",
   "updatedAt": "2026-05-30T12:00:00+08:00"
 }
@@ -264,6 +265,7 @@ Authorization: Bearer <token>
     "maskedPhone": "138****8000",
     "nickname": "",
     "avatarUrl": "",
+    "startPlayingDate": null,
     "createdAt": "2026-05-30T12:00:00+08:00",
     "updatedAt": "2026-05-30T12:00:00+08:00"
   }
@@ -344,7 +346,7 @@ curl http://localhost:8081/api/auth/logout \
 
 ### 7.1 PUT /api/auth/profile
 
-用于更新用户昵称、头像。
+用于更新用户昵称、头像、开始打球年月。
 
 #### 请求
 
@@ -359,7 +361,8 @@ Content-Type: application/json
 ```json
 {
   "nickname": "阿卡门徒",
-  "avatarUrl": "https://example.com/avatar.png"
+  "avatarUrl": "https://example.com/avatar.png",
+  "startPlayingDate": 202308
 }
 ```
 
@@ -369,6 +372,7 @@ Content-Type: application/json
 |---|---|---|---|
 | nickname | string | 否 | 用户昵称 |
 | avatarUrl | string | 否 | 用户头像 URL |
+| startPlayingDate | number | 否 | 开始打球年月，格式 `YYYYMM`（如 `202308`），范围 `190001` ~ 当前年月；传 `0` 清除 |
 
 #### 响应 data
 
@@ -379,6 +383,7 @@ Content-Type: application/json
   "maskedPhone": "138****8000",
   "nickname": "阿卡门徒",
   "avatarUrl": "https://example.com/avatar.png",
+  "startPlayingDate": 202308,
   "createdAt": "2026-05-30T12:00:00+08:00",
   "updatedAt": "2026-05-30T12:00:00+08:00"
 }
@@ -391,7 +396,7 @@ curl http://localhost:8081/api/auth/profile \
   -X PUT \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"nickname":"阿卡门徒","avatarUrl":"https://example.com/avatar.png"}'
+  -d '{"nickname":"阿卡门徒","avatarUrl":"https://example.com/avatar.png","startPlayingDate":202308}'
 ```
 
 ---
