@@ -32,14 +32,14 @@ func (h *SessionHandler) List(c *gin.Context) {
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
 		return
 	}
-	logger.Debug("GET /api/sessions start userID=%d date=%s page=%d pageSize=%d", userID, query.Date, query.Page, query.PageSize)
+	logger.Debug("GET /api/sessions start userID=%d date=%s page=%d pageSize=%d matchRank=%d", userID, query.Date, query.Page, query.PageSize, query.MatchRank)
 
 	page, err := h.sessionService.ListPage(userID, query)
 	if err != nil {
 		handleServiceError(c, err)
 		return
 	}
-	logger.Debug("GET /api/sessions success userID=%d date=%s count=%d total=%d page=%d pageSize=%d", userID, query.Date, len(page.List), page.Total, page.Page, page.PageSize)
+	logger.Debug("GET /api/sessions success userID=%d date=%s matchRank=%d count=%d total=%d page=%d pageSize=%d", userID, query.Date, query.MatchRank, len(page.List), page.Total, page.Page, page.PageSize)
 	response.OK(c, page)
 }
 

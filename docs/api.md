@@ -528,7 +528,7 @@ curl -X POST http://localhost:8081/api/auth/wechat-login \
 
 ### 9.1 GET /api/sessions
 
-获取当前登录用户的未删除打球记录。支持通过 `date` 查询某一天的打球记录。
+获取当前登录用户的未删除打球记录。支持通过 `date` 查询某一天的打球记录，通过 `matchRank` 查询指定比赛成绩的记录。
 
 排序规则：
 
@@ -547,6 +547,7 @@ Authorization: Bearer <token>
 | 参数 | 类型 | 必填 | 示例 | 说明 |
 |---|---|---:|---|---|
 | `date` | string | 否 | `2026-01-15` | 按自然日筛选，格式 `YYYY-MM-DD` |
+| `matchRank` | number | 否 | `1` | 按比赛成绩筛选，范围 `1-7`（`1` 冠军、`2` 亚军等）；不传不筛选 |
 
 #### 按日期查询示例
 
@@ -593,6 +594,11 @@ curl http://localhost:8081/api/sessions \
 
 ```bash
 curl 'http://localhost:8081/api/sessions?date=2026-01-15' \
+  -H 'Authorization: Bearer <token>'
+```
+
+```bash
+curl 'http://localhost:8081/api/sessions?matchRank=1' \
   -H 'Authorization: Bearer <token>'
 ```
 
@@ -1238,6 +1244,7 @@ curl 'http://localhost:8081/api/stats/charts?period=month&year=2026&month=6' \
 - `totalCost` 与现有统计口径一致：打球消费 + 球拍购买费用 + 穿线费用 + 球鞋购买费用
 - `currentStreakDays`：从今天往前连续有打球记录的天数；今天还没记录时不打断，从昨天开始往前计算
 - `longestStreakDays`：历史连续有打球记录的最长天数，同日多场按一天计
+- `longestStreakStartDate` / `longestStreakEndDate`：历史最长连续段的起止日期（`YYYY-MM-DD`）；并列时取较早达成的一段
 - `longestSessionMinutes`：单场 `duration_minutes` 最大值，取最早达成该记录的一场
 - `bestMonth*`：按自然月聚合 `duration_minutes`，取合计最高的月份
 - `maxSessionsPerDay`：按自然日聚合记录数，取单日最高的日期，并列取较早日期
@@ -1261,6 +1268,8 @@ Authorization: Bearer <token>
   "totalCost": 5800,
   "currentStreakDays": 4,
   "longestStreakDays": 18,
+  "longestStreakStartDate": "2026-05-20",
+  "longestStreakEndDate": "2026-06-06",
   "longestSessionMinutes": 240,
   "longestSessionDate": "2026-06-13 19:30",
   "bestMonthYear": 2026,
@@ -1287,6 +1296,8 @@ Authorization: Bearer <token>
 | totalCost | number | 累计总花费（打球 + 球拍 + 穿线 + 球鞋） |
 | currentStreakDays | number | 当前连续打球天数 |
 | longestStreakDays | number | 历史最长连续打球天数；无记录时为 0 |
+| longestStreakStartDate | string | 历史最长连续段起始日期 `YYYY-MM-DD`；无记录时为空字符串 |
+| longestStreakEndDate | string | 历史最长连续段结束日期 `YYYY-MM-DD`；无记录时为空字符串 |
 | longestSessionMinutes | number | 最长单次打球时长，单位分钟；无记录时为 0 |
 | longestSessionDate | string | 最长单次发生的日期时间 `YYYY-MM-DD HH:mm`；无记录时为空字符串 |
 | bestMonthYear | number | 单月最高时长所在年份；无记录时为 0 |
@@ -1314,6 +1325,8 @@ Authorization: Bearer <token>
     "totalCost": 5800,
     "currentStreakDays": 4,
     "longestStreakDays": 18,
+    "longestStreakStartDate": "2026-05-20",
+    "longestStreakEndDate": "2026-06-06",
     "longestSessionMinutes": 240,
     "longestSessionDate": "2026-06-13 19:30",
     "bestMonthYear": 2026,

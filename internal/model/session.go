@@ -169,9 +169,10 @@ func sessionCategoryTexts(category SessionCategory, subCategory SessionSubCatego
 }
 
 type SessionListQuery struct {
-	Date     string `form:"date"`
-	Page     int    `form:"page"`
-	PageSize int    `form:"pageSize"`
+	Date      string `form:"date"`
+	Page      int    `form:"page"`
+	PageSize  int    `form:"pageSize"`
+	MatchRank int16  `form:"matchRank"`
 }
 
 type SessionListPageResponse struct {

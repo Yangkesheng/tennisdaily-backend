@@ -77,7 +77,7 @@ func (s *StatsService) Records(userID int64) (model.StatsRecordsResponse, error)
 	if err != nil {
 		return model.StatsRecordsResponse{}, err
 	}
-	currentStreak, longestStreak, err := s.streakDays(userID)
+	currentStreak, longestStreak, longestStreakStart, longestStreakEnd, err := s.streakDays(userID)
 	if err != nil {
 		return model.StatsRecordsResponse{}, err
 	}
@@ -99,13 +99,15 @@ func (s *StatsService) Records(userID int64) (model.StatsRecordsResponse, error)
 	}
 
 	records := model.StatsRecordsResponse{
-		TotalCount:        totals.TotalCount,
-		TotalMinutes:      totals.TotalMinutes,
-		TotalCost:         totals.SessionCost + racketCost + stringingCost + shoeCost,
-		CurrentStreakDays: currentStreak,
-		LongestStreakDays: longestStreak,
-		ChampionCount:     championCount,
-		RunnerUpCount:     runnerUpCount,
+		TotalCount:             totals.TotalCount,
+		TotalMinutes:           totals.TotalMinutes,
+		TotalCost:              totals.SessionCost + racketCost + stringingCost + shoeCost,
+		CurrentStreakDays:      currentStreak,
+		LongestStreakDays:      longestStreak,
+		LongestStreakStartDate: longestStreakStart,
+		LongestStreakEndDate:   longestStreakEnd,
+		ChampionCount:          championCount,
+		RunnerUpCount:          runnerUpCount,
 	}
 	if longest != nil {
 		records.LongestSessionMinutes = longest.DurationMinutes
@@ -130,13 +132,13 @@ func (s *StatsService) Records(userID int64) (model.StatsRecordsResponse, error)
 	return records, nil
 }
 
-func (s *StatsService) streakDays(userID int64) (current int, longest int, err error) {
+func (s *StatsService) streakDays(userID int64) (current int, longest int, startDate string, endDate string, err error) {
 	dates, err := s.sessionRepo.DistinctSessionDates(userID)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, "", "", err
 	}
 	if len(dates) == 0 {
-		return 0, 0, nil
+		return 0, 0, "", "", nil
 	}
 	set := make(map[string]struct{}, len(dates))
 	for _, date := range dates {
@@ -158,7 +160,7 @@ func (s *StatsService) streakDays(userID int64) (current int, longest int, err e
 	if anchor != "" {
 		t, parseErr := time.ParseInLocation("2006-01-02", anchor, s.loc)
 		if parseErr != nil {
-			return 0, 0, parseErr
+			return 0, 0, "", "", parseErr
 		}
 		for {
 			if _, ok := set[t.Format("2006-01-02")]; !ok {
@@ -172,22 +174,29 @@ func (s *StatsService) streakDays(userID int64) (current int, longest int, err e
 	sort.Strings(dates)
 	run := 0
 	var prev time.Time
+	var runStart time.Time
 	for index, date := range dates {
 		t, parseErr := time.ParseInLocation("2006-01-02", date, s.loc)
 		if parseErr != nil {
 			continue
 		}
 		if index == 0 || t.Sub(prev) == 24*time.Hour {
+			if run == 0 {
+				runStart = t
+			}
 			run++
 		} else {
 			run = 1
+			runStart = t
 		}
 		if run > longest {
 			longest = run
+			startDate = runStart.Format("2006-01-02")
+			endDate = t.Format("2006-01-02")
 		}
 		prev = t
 	}
-	return current, longest, nil
+	return current, longest, startDate, endDate, nil
 }
 
 func (s *StatsService) monthCharts(userID int64, year, month int) (model.StatsChartsResultResponse, error) {

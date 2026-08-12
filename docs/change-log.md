@@ -1,5 +1,68 @@
 # Change Log
 
+## 2026-08-12 个人记录点击跳转（列表过滤 + 日历定位 + 连续段起止日期）
+
+### 需求/变更内容
+
+- 个人记录页每条记录支持点击跳转：
+  - 最长单次 / 单日最高场次 → 记录列表按日期筛选
+  - 单月最高时长 / 单月最高花费 / 历史最长连续 → 日历页定位到对应年月
+  - 冠军次数 / 亚军次数 → 记录列表按比赛成绩筛选（精确到冠军 / 亚军）
+  - 累计数据卡不跳转
+- 后端新增：
+  - `GET /api/sessions` 支持 `matchRank` 查询参数（`1-7`，不传不筛选）
+  - `GET /api/stats/records` 返回 `longestStreakStartDate` / `longestStreakEndDate`（历史最长连续段起止日期，并列取较早一段）
+
+### 修改文件
+
+后端：
+
+- `internal/model/session.go`
+- `internal/model/stats.go`
+- `internal/repository/session_repository.go`
+- `internal/service/session_service.go`
+- `internal/service/stats_service.go`
+- `internal/handler/session_handler.go`
+- `docs/api.md`
+- `docs/change-log.md`
+
+前端：
+
+- `tennisdaily/docs/api-stats-records.md`
+- `tennisdaily/docs/personal-records-design.md`
+- `tennisdaily/miniprogram/utils/calendar-nav.ts`（新增，tab 页定位跳转）
+- `tennisdaily/miniprogram/pages/records/records.*`
+- `tennisdaily/miniprogram/pages/calendar/calendar.ts`
+- `tennisdaily/miniprogram/pages/session-list/session-list.ts`
+- `tennisdaily/miniprogram/models/records.ts`
+- `tennisdaily/miniprogram/models/session.ts`
+- `tennisdaily/miniprogram/services/records-api-service.ts`
+- `tennisdaily/miniprogram/services/session-api-service.ts`
+
+### 接口变化
+
+- `GET /api/sessions` 新增可选 query 参数 `matchRank`，范围 `1-7`。
+- `GET /api/stats/records` 新增 `longestStreakStartDate` / `longestStreakEndDate` 字段。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- `matchRank` 为新增可选参数，旧调用不受影响；`/api/stats/records` 为纯新增字段。
+
+### 已执行检查命令
+
+- `gofmt -w internal/model/session.go internal/model/stats.go internal/repository/session_repository.go internal/service/session_service.go internal/service/stats_service.go internal/handler/session_handler.go`
+- `go test ./...`
+- `npm run typecheck`（tennisdaily 前端）
+
+### 测试结果
+
+- 后端 `go test ./...` 通过。
+- 前端 TypeScript 类型检查通过。
+
 ## 2026-08-12 个人记录统计扩展（单日最高、历史最长连续、单月最高花费、冠亚军次数）
 
 ### 需求/变更内容

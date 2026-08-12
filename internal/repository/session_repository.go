@@ -39,6 +39,22 @@ func (r *SessionRepository) ListPage(userID int64, page, pageSize int) ([]model.
 	return sessions, total, err
 }
 
+func (r *SessionRepository) ListPageByMatchRank(userID int64, matchRank model.MatchRank, page, pageSize int) ([]model.TennisSession, int64, error) {
+	var total int64
+	query := r.db.Model(&model.TennisSession{}).Where("user_id = ? AND match_rank = ?", userID, matchRank)
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var sessions []model.TennisSession
+	err := r.db.Where("user_id = ? AND match_rank = ?", userID, matchRank).
+		Order("date DESC, created_at DESC").
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		Find(&sessions).Error
+	return sessions, total, err
+}
+
 func (r *SessionRepository) ListByDate(userID int64, start, end time.Time) ([]model.TennisSession, error) {
 	var sessions []model.TennisSession
 	err := r.db.Where("user_id = ? AND date >= ? AND date < ?", userID, start, end).Order("date DESC, created_at DESC").Find(&sessions).Error

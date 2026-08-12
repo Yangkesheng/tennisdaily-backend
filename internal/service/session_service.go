@@ -81,7 +81,17 @@ func (s *SessionService) ListPage(userID int64, query model.SessionListQuery) (m
 		return model.SessionListPageResponse{}, ErrInvalidRequest
 	}
 
-	sessions, total, err := s.repo.ListPage(userID, page, pageSize)
+	var sessions []model.TennisSession
+	var total int64
+	var err error
+	if query.MatchRank != 0 {
+		if query.MatchRank < 1 || query.MatchRank > int16(model.MatchRankGroupStage) {
+			return model.SessionListPageResponse{}, ErrInvalidRequest
+		}
+		sessions, total, err = s.repo.ListPageByMatchRank(userID, model.MatchRank(query.MatchRank), page, pageSize)
+	} else {
+		sessions, total, err = s.repo.ListPage(userID, page, pageSize)
+	}
 	if err != nil {
 		return model.SessionListPageResponse{}, err
 	}

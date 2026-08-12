@@ -138,23 +138,25 @@ type StatsBestMonthCostRow struct {
 }
 
 type StatsRecordsResponse struct {
-	TotalCount            int64   `json:"totalCount"`
-	TotalMinutes          int64   `json:"totalMinutes"`
-	TotalCost             float64 `json:"totalCost"`
-	CurrentStreakDays     int     `json:"currentStreakDays"`
-	LongestStreakDays     int     `json:"longestStreakDays"`
-	LongestSessionMinutes int     `json:"longestSessionMinutes"`
-	LongestSessionDate    string  `json:"longestSessionDate"`
-	BestMonthYear         int     `json:"bestMonthYear"`
-	BestMonthMonth        int     `json:"bestMonthMonth"`
-	BestMonthMinutes      int64   `json:"bestMonthMinutes"`
-	BestMonthSessionCount int64   `json:"bestMonthSessionCount"`
-	MaxSessionsPerDay     int     `json:"maxSessionsPerDay"`
-	MaxSessionsPerDayDate string  `json:"maxSessionsPerDayDate"`
-	BestMonthCostYear     int     `json:"bestMonthCostYear"`
-	BestMonthCostMonth    int     `json:"bestMonthCostMonth"`
-	BestMonthCost         float64 `json:"bestMonthCost"`
-	ChampionCount         int64   `json:"championCount"`
-	RunnerUpCount         int64   `json:"runnerUpCount"`
-	EarliestSessionDate   string  `json:"earliestSessionDate"`
+	TotalCount             int64   `json:"totalCount"`
+	TotalMinutes           int64   `json:"totalMinutes"`
+	TotalCost              float64 `json:"totalCost"`
+	CurrentStreakDays      int     `json:"currentStreakDays"`
+	LongestStreakDays      int     `json:"longestStreakDays"`
+	LongestStreakStartDate string  `json:"longestStreakStartDate"`
+	LongestStreakEndDate   string  `json:"longestStreakEndDate"`
+	LongestSessionMinutes  int     `json:"longestSessionMinutes"`
+	LongestSessionDate     string  `json:"longestSessionDate"`
+	BestMonthYear          int     `json:"bestMonthYear"`
+	BestMonthMonth         int     `json:"bestMonthMonth"`
+	BestMonthMinutes       int64   `json:"bestMonthMinutes"`
+	BestMonthSessionCount  int64   `json:"bestMonthSessionCount"`
+	MaxSessionsPerDay      int     `json:"maxSessionsPerDay"`
+	MaxSessionsPerDayDate  string  `json:"maxSessionsPerDayDate"`
+	BestMonthCostYear      int     `json:"bestMonthCostYear"`
+	BestMonthCostMonth     int     `json:"bestMonthCostMonth"`
+	BestMonthCost          float64 `json:"bestMonthCost"`
+	ChampionCount          int64   `json:"championCount"`
+	RunnerUpCount          int64   `json:"runnerUpCount"`
+	EarliestSessionDate    string  `json:"earliestSessionDate"`
 }
