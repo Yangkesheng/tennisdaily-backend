@@ -180,7 +180,7 @@ polyesterStringHealth:
       color: "red"
 
 shoeWear:
-  standardLifeHours: 60
+  standardLifeHours: 100
   restWearPerDay: 0.06
   states:
     - key: fresh

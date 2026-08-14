@@ -1,5 +1,40 @@
 # Change Log
 
+## 2026-08-15 放宽球鞋标准寿命（standardLifeHours 60 -> 100）
+
+### 需求/变更内容
+
+- 球鞋磨损度仍感觉废弃过快：原默认 `standardLifeHours = 60` 对应网球界「高频玩家 45-60 小时中底报废」经验值，对普通球友偏苛刻。
+- 调整为 `100` 小时：常见打球场次下废弃时间约为原来的 1.7 倍，自然老化系数保持 `restWearPerDay = 0.06`（纯自然老化约 1667 天 / 约 4.6 年归零）。
+
+### 修改文件
+
+- `config.yaml`（`shoeWear.standardLifeHours` 60 -> 100）
+- `internal/config/shoe_wear.go`（`applyShoeWearDefaults` 默认值同步 60 -> 100）
+- `internal/config/shoe_wear_test.go`（默认值与 config.yaml 断言同步更新）
+- `docs/api.md`、`docs/change-log.md`
+
+### 接口变化
+
+- 无。响应结构不变，`wear.score` / `wear.remainingHours` 数值随参数变化（同一双鞋得分变高、剩余寿命变长）。
+
+### 数据库变化
+
+- 无。
+
+### 兼容性说明
+
+- 纯参数调整，前端无需改动；如需继续调整，改 `config.yaml` 的 `shoeWear.standardLifeHours` / `shoeWear.restWearPerDay` 即可。
+
+### 已执行检查命令
+
+- `gofmt -w` 相关 Go 文件
+- `go test ./...`
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-12 个人信息扩展与设置页（签名、开始打球、默认球场、默认时长）
 
 ### 需求/变更内容

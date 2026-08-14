@@ -122,7 +122,7 @@ func toShoeWearState(state ShoeWearStateConfig) ShoeWearState {
 
 func applyShoeWearDefaults(cfg ShoeWearConfig) ShoeWearConfig {
 	if len(cfg.States) == 0 {
-		cfg.StandardLifeHours = 60
+		cfg.StandardLifeHours = 100
 		cfg.RestWearPerDay = 0.06
 		cfg.States = []ShoeWearStateConfig{
 			{Key: "fresh", MinScore: 85, Label: "全新", Display: "全新 · 缓震充足", Color: "green"},

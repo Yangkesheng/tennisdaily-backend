@@ -11,8 +11,8 @@ func TestNewShoeWearResolverDefaults(t *testing.T) {
 		t.Fatalf("build resolver with defaults: %v", err)
 	}
 
-	if resolver.StandardLifeHours() != 60 {
-		t.Fatalf("expected standard life hours 60, got %v", resolver.StandardLifeHours())
+	if resolver.StandardLifeHours() != 100 {
+		t.Fatalf("expected standard life hours 100, got %v", resolver.StandardLifeHours())
 	}
 	if resolver.RestWearPerDay() != 0.06 {
 		t.Fatalf("expected rest wear per day 0.06, got %v", resolver.RestWearPerDay())
@@ -102,8 +102,8 @@ func TestRepoConfigShoeWear(t *testing.T) {
 	t.Setenv("CONFIG_PATH", "../../config.yaml")
 
 	fc := loadConfigFile()
-	if fc.ShoeWear.StandardLifeHours != 60 {
-		t.Fatalf("expected config.yaml standardLifeHours 60, got %v", fc.ShoeWear.StandardLifeHours)
+	if fc.ShoeWear.StandardLifeHours != 100 {
+		t.Fatalf("expected config.yaml standardLifeHours 100, got %v", fc.ShoeWear.StandardLifeHours)
 	}
 	if len(fc.ShoeWear.States) != 6 {
 		t.Fatalf("expected 6 states in config.yaml, got %d", len(fc.ShoeWear.States))

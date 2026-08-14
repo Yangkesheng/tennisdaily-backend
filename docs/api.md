@@ -2809,7 +2809,7 @@ Content-Type: application/json
 
 - `effectiveWear = 上场小时数 + 购买后天数 × restWearPerDay`
 - `score = max(0, 100 × (1 − effectiveWear / standardLifeHours))`
-- 默认 `standardLifeHours = 60`（约 45-60 小时的中底寿命经验值）、`restWearPerDay = 0.06`（约 1000 天自然老化归零）
+- 默认 `standardLifeHours = 100`（45-60 小时是高频玩家经验值，对普通球友放宽到 100 小时）、`restWearPerDay = 0.06`（约 1667 天自然老化归零）
 
 ### 23.8 获取球鞋详情
 
