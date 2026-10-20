@@ -148,6 +148,10 @@ CREATE TABLE IF NOT EXISTS racket_stringing_record (
 
 CREATE TABLE IF NOT EXISTS racket_library (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '球拍库ID',
+  is_reviewed TINYINT NOT NULL DEFAULT 0 COMMENT '0待审核 1已审核',
+  reviewed_by BIGINT NULL COMMENT '审核管理员ID',
+  reviewed_at DATETIME NULL COMMENT '审核时间',
+  KEY idx_review_brand_series (is_reviewed, brand_id, series_id),
   brand_id BIGINT NOT NULL DEFAULT 0 COMMENT '品牌ID',
   brand VARCHAR(50) NOT NULL COMMENT '品牌',
   series_id BIGINT NOT NULL DEFAULT 0 COMMENT '系列ID',

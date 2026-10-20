@@ -1,5 +1,43 @@
 # Change Log
 
+## 2026-08-15 修复 Wilson 球拍库系列命名（Pro → Pro Staff / Pro Open，RF → RF 01，Six → Six.One）
+
+### 需求/变更内容
+
+- 球拍库中 Wilson 的系列 "Pro"（series_id=76）命名错误：实际混入了两个官方系列 —— Pro Staff（13 条）与 Pro Open（2 条）。
+- 同类问题一并修复："RF"（series_id=77，6 条）应为 "RF 01"；"Six"（series_id=78，2 条）应为 "Six.One"。
+- 正确的系列在 `racket_series` 中早已存在但一直未被引用（59 Pro Staff / 67 Pro Open / 60 RF 01 / 16 Six.One），本次仅将库条目改挂到正确系列并删除空壳系列。
+
+### 修改文件
+
+- `docs/change-log.md`
+
+### 接口变化
+
+- 无。`GET /api/racket-series`、`GET /api/racket-library`、`GET /api/racket-library/stats` 响应结构不变，仅系列名与系列 ID 变化（前端动态展示，无需改代码）。
+
+### 数据库变化
+
+- `racket_library`：23 条 Wilson 条目 series_id / series 修正（13 Pro Staff、2 Pro Open、6 RF 01、2 Six.One）。
+- `racket_series`：删除 3 个空壳系列（76 Pro、77 RF、78 Six）。
+- 备份表 `racket_library_bak_pro_fix`（同库，修复前快照 23 行，验证后可按需删除）。
+
+### 兼容性说明
+
+- 图片 `file_id` 为直接存储的 cloud:// 路径，改系列名不影响图片显示。
+- `racket_library_image_upload` 以 `racket_library_id` 为幂等键，不会触发重新迁移。
+- 用户我的球拍（`racket.library_id`）经核查无任何行引用受影响条目，无用户数据迁移。
+- 前端无硬编码系列名，刷新后立即生效。
+
+### 已执行检查命令
+
+- 线上库（sh-cynosdbmysql-grp-4686fcoi.sql.tencentcdb.com:26404）事务内执行 UPDATE + DELETE 并终检。
+- 终检：`racket_library` 中 Wilson 系列分布正确，`series = 'Pro'` 剩余 0 条。
+
+### 测试结果
+
+- 通过。
+
 ## 2026-08-15 放宽球鞋标准寿命（standardLifeHours 60 -> 100）
 
 ### 需求/变更内容
@@ -3086,3 +3124,39 @@
 ### 测试结果
 
 - 通过。
+
+
+## 2026-10-19 球拍库管理员审核
+
+- 新增审核状态、审核人、审核时间；迁移 026 将存量初始化为已审核，新数据默认待审核，init.sql 同步更新。
+- 后端 model/repository/service/handler 与路由加入管理员审核、列表/统计/品牌系列权限过滤、个人球拍引用校验；已有个人球拍原引用继续可编辑。
+- 前端 models、racket-api-service 与 racket-library 页面加入状态映射、审核筛选和按钮，保存状态防重复提交。
+- 新增 PUT /api/admin/racket-library/:id/review；列表、统计增加 isReviewed 筛选，响应新增审核字段。无旧接口别名或兼容字段。
+- 外部同步代码未在本仓库发现，约束及部署顺序见 docs/api.md。迁移未执行、服务未部署。
+- 检查：go test ./...；npm run typecheck；权限绕过、状态输入、统计 SQL 过滤新增回归测试。均通过；git diff --check 通过。未进行微信开发者工具视觉验证及真实 MySQL 集成测试。
+
+## 2026-10-19 本地 Docker MySQL 连接脚本
+
+- 新增 `scripts/mysql-local.sh`，通过本地 mysql 客户端以 TCP 连接 127.0.0.1:3306 的 Docker 测试库 tennis_diary，默认用户 root。
+- 支持交互登录、mysql 原生命令参数及标准输入 SQL 导入；密码通过交互输入或已有 MYSQL_PWD 环境变量提供，不读取服务端远程数据库配置。
+- 无 API 或数据库结构变化。检查：`bash -n scripts/mysql-local.sh` 与 `scripts/mysql-local.sh --help` 通过；未执行 SQL 导入或修改数据库。
+
+## 2026-10-19 本地 MySQL 自动认证
+
+- `scripts/mysql-local.sh` 自动从 tennisdaily-mysql 容器读取当前用户对应的密码，支持 Docker secret 文件；保留已有 MYSQL_PWD 优先级，不再交互询问密码。
+- 密码不写入脚本、不打印、不作为命令行参数传递；无需修改 MySQL 账户认证配置。
+- 检查：bash -n 通过。无 API、表结构变化。
+- 自动读取凭据步骤成功；实际 TCP 检查返回 127.0.0.1:3306 connection refused（容器显示运行中并映射 3306），因此本次未确认 TCP 登录成功。
+
+## 2026-10-19 修复本地 MySQL 端口连接拒绝
+
+- `scripts/mysql-local.sh` 改为 docker exec 调用容器内 mysql，通过 Unix socket 连接，无需本机 mysql 客户端或宿主机端口映射。
+- 自动读取容器密码；保留已有 MYSQL_PWD 优先级，交互终端启用 TTY，管道及 SQL 文件导入只保持标准输入。
+- 验证：bash -n 通过；实际只读查询 SELECT DATABASE(), 1 成功返回 tennis_diary / 1。未执行迁移或修改数据库。无 API 或表结构变化。
+
+## 2026-10-21 新增 Git 提交合并脚本
+
+- 新增 `scripts/git-commit-merge.sh`，按现有分支执行 dev 提交全部改动、推送 origin、合并到 main、推送 main 并切回 dev。
+- 脚本自动定位所属仓库，校验提交备注、分支及 origin 配置；任一步骤失败立即停止。
+- 无接口、数据库或兼容性变化；未修改 Go 代码。
+- 检查：`bash -n scripts/git-commit-merge.sh` 通过；空参数检查通过。未实际执行提交、合并或远程推送。

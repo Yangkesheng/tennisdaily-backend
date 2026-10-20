@@ -15,6 +15,7 @@ import (
 )
 
 type RacketService struct {
+	adminUserIDs    []int64
 	repo            *repository.RacketRepository
 	userRepo        *repository.UserRepository
 	contentSecurity *ContentSecurityService
@@ -22,16 +23,16 @@ type RacketService struct {
 	loc             *time.Location
 }
 
-func NewRacketService(repo *repository.RacketRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService, stringHealth *config.PolyesterStringHealthResolver) *RacketService {
+func NewRacketService(repo *repository.RacketRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService, stringHealth *config.PolyesterStringHealthResolver, adminUserIDs []int64) *RacketService {
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		loc = time.Local
 	}
-	return &RacketService{repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, stringHealth: stringHealth, loc: loc}
+	return &RacketService{adminUserIDs: adminUserIDs, repo: repo, userRepo: userRepo, contentSecurity: contentSecurity, stringHealth: stringHealth, loc: loc}
 }
 
-func (s *RacketService) Brands() ([]model.RacketBrandResponse, error) {
-	items, err := s.repo.BrandList()
+func (s *RacketService) Brands(userID int64) ([]model.RacketBrandResponse, error) {
+	items, err := s.repo.BrandList(IsAdminUser(userID, s.adminUserIDs))
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +43,8 @@ func (s *RacketService) Brands() ([]model.RacketBrandResponse, error) {
 	return responses, nil
 }
 
-func (s *RacketService) Series(query model.RacketSeriesQuery) ([]model.RacketSeriesResponse, error) {
-	items, err := s.repo.SeriesList(query)
+func (s *RacketService) Series(userID int64, query model.RacketSeriesQuery) ([]model.RacketSeriesResponse, error) {
+	items, err := s.repo.SeriesList(query, IsAdminUser(userID, s.adminUserIDs))
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,8 @@ func (s *RacketService) Series(query model.RacketSeriesQuery) ([]model.RacketSer
 	return responses, nil
 }
 
-func (s *RacketService) Library(query model.RacketLibraryQuery) ([]model.RacketLibraryBrandGroupResponse, error) {
+func (s *RacketService) Library(userID int64, query model.RacketLibraryQuery) ([]model.RacketLibraryBrandGroupResponse, error) {
+	query = s.visibleLibraryQuery(userID, query)
 	items, err := s.repo.LibraryList(query)
 	if err != nil {
 		return nil, err
@@ -74,12 +76,13 @@ func (s *RacketService) Library(query model.RacketLibraryQuery) ([]model.RacketL
 	return groups, nil
 }
 
-func (s *RacketService) LibraryStats() ([]model.RacketLibraryBrandStatsResponse, error) {
-	brands, err := s.repo.LibraryBrandStats()
+func (s *RacketService) LibraryStats(userID int64, query model.RacketLibraryQuery) ([]model.RacketLibraryBrandStatsResponse, error) {
+	query = s.visibleLibraryQuery(userID, query)
+	brands, err := s.repo.LibraryBrandStats(query.IsReviewed)
 	if err != nil {
 		return nil, err
 	}
-	series, err := s.repo.LibrarySeriesStats()
+	series, err := s.repo.LibrarySeriesStats(query.IsReviewed)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +119,10 @@ func (s *RacketService) LibraryStats() ([]model.RacketLibraryBrandStatsResponse,
 // ---- 管理员维护球拍库 ----
 
 // CreateLibraryItems 管理员新增球拍库条目；品牌、系列不存在时自动插入，前端无需先调用创建接口。
-func (s *RacketService) CreateLibraryItems(req model.CreateRacketLibraryRequest) (model.CreateRacketLibraryResponse, error) {
+func (s *RacketService) CreateLibraryItems(userID int64, req model.CreateRacketLibraryRequest) (model.CreateRacketLibraryResponse, error) {
+	if !IsAdminUser(userID, s.adminUserIDs) {
+		return model.CreateRacketLibraryResponse{}, ErrForbidden
+	}
 	brandName := strings.TrimSpace(req.BrandName)
 	if brandName == "" {
 		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError("品牌名称不能为空")
@@ -189,7 +195,9 @@ func (s *RacketService) CreateLibraryItems(req model.CreateRacketLibraryRequest)
 		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError(fmt.Sprintf("型号 %s 已存在", label))
 	}
 
+	now := time.Now()
 	items := []model.RacketLibrary{{
+		IsReviewed: model.RacketReviewApproved, ReviewedBy: &userID, ReviewedAt: &now,
 		BrandID:       brand.ID,
 		Brand:         brand.Name,
 		SeriesID:      series.ID,
@@ -266,7 +274,7 @@ func (s *RacketService) Primary(userID int64) (*model.RacketResponse, error) {
 }
 
 func (s *RacketService) Create(userID int64, req model.CreateRacketRequest) (model.RacketResponse, error) {
-	if err := s.applyLibraryDefaults(&req.LibraryID, &req.Name, &req.Brand, &req.Model); err != nil {
+	if err := s.applyLibraryDefaults(0, &req.LibraryID, &req.Name, &req.Brand, &req.Model); err != nil {
 		return model.RacketResponse{}, err
 	}
 	if req.Name == "" {
@@ -343,7 +351,15 @@ func (s *RacketService) Detail(userID, id int64) (model.RacketDetailResponse, er
 }
 
 func (s *RacketService) Update(userID, id int64, req model.UpdateRacketRequest) (model.RacketResponse, error) {
-	if err := s.applyLibraryDefaults(&req.LibraryID, &req.Name, &req.Brand, &req.Model); err != nil {
+	racket, err := s.repo.FindByID(userID, id)
+	if err != nil {
+		return model.RacketResponse{}, err
+	}
+	if racket == nil {
+		return model.RacketResponse{}, ErrNotFound
+	}
+
+	if err := s.applyLibraryDefaults(racket.LibraryID, &req.LibraryID, &req.Name, &req.Brand, &req.Model); err != nil {
 		return model.RacketResponse{}, err
 	}
 	if req.Name == "" {
@@ -351,14 +367,6 @@ func (s *RacketService) Update(userID, id int64, req model.UpdateRacketRequest) 
 	}
 	if err := s.checkUserInputTexts(userID, req.Name, req.Brand, req.Model); err != nil {
 		return model.RacketResponse{}, err
-	}
-
-	racket, err := s.repo.FindByID(userID, id)
-	if err != nil {
-		return model.RacketResponse{}, err
-	}
-	if racket == nil {
-		return model.RacketResponse{}, ErrNotFound
 	}
 
 	purchaseDate, err := s.parseOptionalDate(req.PurchaseDate)
@@ -674,7 +682,7 @@ func calculateStringHealthAt(now, stringDate time.Time, afterStringingUsageMinut
 	}
 }
 
-func (s *RacketService) applyLibraryDefaults(libraryID *int64, name *string, brand *string, racketModel *string) error {
+func (s *RacketService) applyLibraryDefaults(existingLibraryID int64, libraryID *int64, name *string, brand *string, racketModel *string) error {
 	if libraryID == nil || *libraryID == 0 {
 		return nil
 	}
@@ -682,7 +690,7 @@ func (s *RacketService) applyLibraryDefaults(libraryID *int64, name *string, bra
 	if err != nil {
 		return err
 	}
-	if item == nil {
+	if item == nil || (item.IsReviewed != model.RacketReviewApproved && *libraryID != existingLibraryID) {
 		return ErrInvalidRequest
 	}
 	if *brand == "" {
@@ -717,4 +725,29 @@ func (s *RacketService) parseOptionalDate(value string) (*time.Time, error) {
 		return nil, err
 	}
 	return &parsed, nil
+}
+
+func (s *RacketService) visibleLibraryQuery(userID int64, query model.RacketLibraryQuery) model.RacketLibraryQuery {
+	if !IsAdminUser(userID, s.adminUserIDs) {
+		approved := model.RacketReviewApproved
+		query.IsReviewed = &approved
+	}
+	return query
+}
+
+func (s *RacketService) ReviewLibrary(userID, id int64, req model.ReviewRacketLibraryRequest) (model.RacketLibraryItemResponse, error) {
+	if !IsAdminUser(userID, s.adminUserIDs) {
+		return model.RacketLibraryItemResponse{}, ErrForbidden
+	}
+	if req.IsReviewed == nil || (*req.IsReviewed != model.RacketReviewPending && *req.IsReviewed != model.RacketReviewApproved) {
+		return model.RacketLibraryItemResponse{}, ErrInvalidRequest
+	}
+	item, err := s.repo.ReviewLibrary(id, userID, *req.IsReviewed)
+	if err != nil {
+		return model.RacketLibraryItemResponse{}, err
+	}
+	if item == nil {
+		return model.RacketLibraryItemResponse{}, ErrNotFound
+	}
+	return model.NewRacketLibraryItemResponse(*item), nil
 }

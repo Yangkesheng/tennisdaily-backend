@@ -42,7 +42,7 @@ func main() {
 	userSettingsService := service.NewUserSettingsService(userSettingRepo, userRepo, contentSecurityService)
 	sessionService := service.NewSessionService(sessionRepo, userRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver, contentSecurityService)
 	statsService := service.NewStatsService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
-	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth)
+	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth, cfg.AdminUserIDs)
 	shoeService := service.NewShoeService(shoeRepo, userRepo, contentSecurityService, cfg.ShoeWear)
 	feedbackService := service.NewFeedbackService(feedbackRepo, userRepo, contentSecurityService)
 	homeService := service.NewHomeService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
@@ -139,6 +139,7 @@ func main() {
 	admin.Use(middleware.RequireAdmin(cfg.AdminUserIDs))
 	{
 		admin.POST("/racket-library", racketHandler.CreateLibrary)
+		admin.PUT("/racket-library/:id/review", racketHandler.ReviewLibrary)
 		admin.POST("/shoe-brands", shoeHandler.CreateBrand)
 		admin.POST("/shoe-series", shoeHandler.CreateSeries)
 		admin.POST("/shoe-library", shoeHandler.CreateLibrary)

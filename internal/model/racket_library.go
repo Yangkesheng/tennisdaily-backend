@@ -24,21 +24,28 @@ func (RacketSeries) TableName() string {
 	return "racket_series"
 }
 
+type ReviewRacketLibraryRequest struct {
+	IsReviewed *int `json:"isReviewed" binding:"required,oneof=0 1"`
+}
+
 type RacketLibrary struct {
-	ID            int64     `json:"id" gorm:"primaryKey"`
-	BrandID       int64     `json:"brandId" gorm:"column:brand_id;not null;default:0"`
-	Brand         string    `json:"brand" gorm:"size:50;not null"`
-	SeriesID      int64     `json:"seriesId" gorm:"column:series_id;not null;default:0"`
-	Series        string    `json:"series" gorm:"size:100;not null;default:''"`
-	Model         string    `json:"model" gorm:"size:100;not null"`
-	ReleaseYear   int       `json:"releaseYear" gorm:"column:release_year;not null"`
-	Weight        int       `json:"weight"`
-	HeadSize      int       `json:"headSize" gorm:"column:head_size"`
-	StringPattern string    `json:"stringPattern" gorm:"column:string_pattern;size:64"`
-	FileID        string    `json:"fileId" gorm:"column:file_id;size:255"`
-	ImageURL      string    `json:"imageUrl" gorm:"column:image_url;size:500"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	IsReviewed    int        `json:"isReviewed" gorm:"column:is_reviewed;not null;default:0"`
+	ReviewedBy    *int64     `json:"reviewedBy" gorm:"column:reviewed_by"`
+	ReviewedAt    *time.Time `json:"reviewedAt" gorm:"column:reviewed_at"`
+	ID            int64      `json:"id" gorm:"primaryKey"`
+	BrandID       int64      `json:"brandId" gorm:"column:brand_id;not null;default:0"`
+	Brand         string     `json:"brand" gorm:"size:50;not null"`
+	SeriesID      int64      `json:"seriesId" gorm:"column:series_id;not null;default:0"`
+	Series        string     `json:"series" gorm:"size:100;not null;default:''"`
+	Model         string     `json:"model" gorm:"size:100;not null"`
+	ReleaseYear   int        `json:"releaseYear" gorm:"column:release_year;not null"`
+	Weight        int        `json:"weight"`
+	HeadSize      int        `json:"headSize" gorm:"column:head_size"`
+	StringPattern string     `json:"stringPattern" gorm:"column:string_pattern;size:64"`
+	FileID        string     `json:"fileId" gorm:"column:file_id;size:255"`
+	ImageURL      string     `json:"imageUrl" gorm:"column:image_url;size:500"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
 func (RacketLibrary) TableName() string {
@@ -60,8 +67,9 @@ func (RacketLibraryImageUpload) TableName() string {
 }
 
 type RacketLibraryQuery struct {
-	BrandID  int64 `form:"brandId" binding:"omitempty,min=1"`
-	SeriesID int64 `form:"seriesId" binding:"omitempty,min=1"`
+	IsReviewed *int  `form:"isReviewed" binding:"omitempty,oneof=0 1"`
+	BrandID    int64 `form:"brandId" binding:"omitempty,min=1"`
+	SeriesID   int64 `form:"seriesId" binding:"omitempty,min=1"`
 }
 
 type RacketSeriesQuery struct {
@@ -97,18 +105,21 @@ func NewRacketSeriesResponse(item RacketSeries) RacketSeriesResponse {
 }
 
 type RacketLibraryItemResponse struct {
-	ID            int64  `json:"id"`
-	BrandID       int64  `json:"brandId"`
-	Brand         string `json:"brand"`
-	SeriesID      int64  `json:"seriesId"`
-	Series        string `json:"series"`
-	Model         string `json:"model"`
-	ReleaseYear   int    `json:"releaseYear"`
-	Weight        int    `json:"weight"`
-	HeadSize      int    `json:"headSize"`
-	StringPattern string `json:"stringPattern"`
-	FileID        string `json:"fileId"`
-	ImageURL      string `json:"imageUrl"`
+	IsReviewed    int        `json:"isReviewed"`
+	ReviewedBy    *int64     `json:"reviewedBy"`
+	ReviewedAt    *time.Time `json:"reviewedAt"`
+	ID            int64      `json:"id"`
+	BrandID       int64      `json:"brandId"`
+	Brand         string     `json:"brand"`
+	SeriesID      int64      `json:"seriesId"`
+	Series        string     `json:"series"`
+	Model         string     `json:"model"`
+	ReleaseYear   int        `json:"releaseYear"`
+	Weight        int        `json:"weight"`
+	HeadSize      int        `json:"headSize"`
+	StringPattern string     `json:"stringPattern"`
+	FileID        string     `json:"fileId"`
+	ImageURL      string     `json:"imageUrl"`
 }
 
 type RacketLibraryBrandGroupResponse struct {
@@ -146,6 +157,7 @@ type RacketLibrarySeriesStatsResponse struct {
 
 func NewRacketLibraryItemResponse(item RacketLibrary) RacketLibraryItemResponse {
 	return RacketLibraryItemResponse{
+		IsReviewed: item.IsReviewed, ReviewedBy: item.ReviewedBy, ReviewedAt: item.ReviewedAt,
 		ID:            item.ID,
 		BrandID:       item.BrandID,
 		Brand:         item.Brand,

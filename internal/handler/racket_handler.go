@@ -20,8 +20,12 @@ func NewRacketHandler(racketService *service.RacketService) *RacketHandler {
 }
 
 func (h *RacketHandler) Brands(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
 	logger.Debug("GET /api/racket-brands start")
-	brands, err := h.racketService.Brands()
+	brands, err := h.racketService.Brands(userID)
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
@@ -31,13 +35,17 @@ func (h *RacketHandler) Brands(c *gin.Context) {
 }
 
 func (h *RacketHandler) Series(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
 	var query model.RacketSeriesQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
 		return
 	}
 	logger.Debug("GET /api/racket-series start brandID=%d", query.BrandID)
-	series, err := h.racketService.Series(query)
+	series, err := h.racketService.Series(userID, query)
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
@@ -47,13 +55,17 @@ func (h *RacketHandler) Series(c *gin.Context) {
 }
 
 func (h *RacketHandler) Library(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
 	var query model.RacketLibraryQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
 		return
 	}
 	logger.Debug("GET /api/racket-library start brandID=%d seriesID=%d", query.BrandID, query.SeriesID)
-	groups, err := h.racketService.Library(query)
+	groups, err := h.racketService.Library(userID, query)
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
@@ -63,8 +75,17 @@ func (h *RacketHandler) Library(c *gin.Context) {
 }
 
 func (h *RacketHandler) LibraryStats(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	var query model.RacketLibraryQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
 	logger.Debug("GET /api/racket-library/stats start")
-	stats, err := h.racketService.LibraryStats()
+	stats, err := h.racketService.LibraryStats(userID, query)
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
@@ -76,6 +97,10 @@ func (h *RacketHandler) LibraryStats(c *gin.Context) {
 // ---- 管理员维护球拍库 ----
 
 func (h *RacketHandler) CreateLibrary(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
 	var req model.CreateRacketLibraryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
@@ -83,7 +108,7 @@ func (h *RacketHandler) CreateLibrary(c *gin.Context) {
 	}
 	logger.Debug("POST /api/admin/racket-library start brandName=%s seriesName=%s model=%s",
 		req.BrandName, req.SeriesName, req.Model)
-	result, err := h.racketService.CreateLibraryItems(req)
+	result, err := h.racketService.CreateLibraryItems(userID, req)
 	if err != nil {
 		handleServiceError(c, err)
 		return
@@ -385,4 +410,26 @@ func parseRecordIDParam(c *gin.Context) (int64, bool) {
 		return 0, false
 	}
 	return recordID, true
+}
+
+func (h *RacketHandler) ReviewLibrary(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	id, ok := parseIDParam(c)
+	if !ok {
+		return
+	}
+	var req model.ReviewRacketLibraryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		return
+	}
+	item, err := h.racketService.ReviewLibrary(userID, id, req)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	response.OK(c, item)
 }
