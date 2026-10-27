@@ -206,6 +206,7 @@ Authorization: Bearer <token>
   "matchRank": 1,
   "matchRankLabel": "冠军",
   "courtName": "奥森网球场",
+  "courtLocation": null,
   "partner": "张三",
   "cost": 80,
   "racketName": "Wilson Blade",
@@ -257,6 +258,7 @@ Authorization: Bearer <token>
   "subCategory": 2,
   "matchRank": 1,
   "courtName": "奥森网球场",
+  "courtLocation": null,
   "partner": "张三",
   "cost": 80,
   "shoeId": 1,
@@ -575,6 +577,7 @@ Authorization: Bearer <token>
     "matchRank": 1,
     "matchRankLabel": "冠军",
     "courtName": "奥森网球场",
+    "courtLocation": null,
     "cost": 80,
     "racketName": "Wilson Blade",
     "shoeName": "Asics Gel Resolution",
@@ -629,6 +632,7 @@ Content-Type: application/json
   "subCategory": 2,
   "matchRank": 0,
   "courtName": "奥森网球场",
+  "courtLocation": null,
   "partner": "张三",
   "cost": 80,
   "shoeName": "Asics Gel Resolution",
@@ -647,6 +651,7 @@ Content-Type: application/json
   "subCategory": 2,
   "matchRank": 1,
   "courtName": "奥森网球场",
+  "courtLocation": null,
   "partner": "张三",
   "cost": 120,
   "shoeName": "Asics Gel Resolution",
@@ -679,6 +684,7 @@ Content-Type: application/json
     "matchRank": 1,
     "matchRankLabel": "冠军",
     "courtName": "奥森网球场",
+    "courtLocation": null,
     "cost": 120,
     "racketName": "Wilson Blade",
     "shoeName": "Asics Gel Resolution",
@@ -695,7 +701,7 @@ Content-Type: application/json
 curl -X POST http://localhost:8081/api/sessions \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeId":1,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date":"2026-01-15","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","courtLocation":null,"partner":"张三","cost":120,"shoeId":1,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ---
@@ -738,6 +744,7 @@ Authorization: Bearer <token>
     "matchRank": 1,
     "matchRankLabel": "冠军",
     "courtName": "奥森网球场",
+    "courtLocation": null,
     "cost": 120,
     "racketName": "Wilson Blade",
     "shoeName": "Asics Gel Resolution",
@@ -785,6 +792,7 @@ Content-Type: application/json
   "subCategory": 1,
   "matchRank": 2,
   "courtName": "国家网球中心",
+  "courtLocation": null,
   "partner": "李四",
   "cost": 100,
   "shoeName": "Nike Vapor",
@@ -812,6 +820,7 @@ Content-Type: application/json
     "matchRank": 2,
     "matchRankLabel": "亚军",
     "courtName": "国家网球中心",
+    "courtLocation": null,
     "cost": 100,
     "racketName": "Babolat Pure Drive",
     "shoeName": "Nike Vapor",
@@ -828,7 +837,7 @@ Content-Type: application/json
 curl -X PUT http://localhost:8081/api/sessions/1 \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
-  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"category":3,"subCategory":1,"matchRank":2,"courtName":"国家网球中心","partner":"李四","cost":100,"shoeId":2,"shoeName":"Nike Vapor","note":"更新后的记录"}'
+  -d '{"date":"2026-01-16","durationMinutes":90,"rating":4,"category":3,"subCategory":1,"matchRank":2,"courtName":"国家网球中心","courtLocation":null,"partner":"李四","cost":100,"shoeId":2,"shoeName":"Nike Vapor","note":"更新后的记录"}'
 ```
 
 ---
@@ -911,6 +920,7 @@ Authorization: Bearer <token>
     "matchRank": 2,
     "matchRankLabel": "亚军",
     "courtName": "国家网球中心",
+    "courtLocation": null,
     "cost": 100,
     "racketName": "Babolat Pure Drive",
     "shoeName": "Nike Vapor",
@@ -1375,6 +1385,7 @@ Authorization: Bearer <token>
 {
   "signature": "底线抽球爱好者",
   "defaultCourtName": "奥森网球场",
+  "defaultCourtLocation": null,
   "defaultDurationMinutes": 120
 }
 ```
@@ -1382,7 +1393,7 @@ Authorization: Bearer <token>
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | signature | string | 个性签名，最长 30 字；未设置为空字符串 |
-| defaultCourtName | string | 默认球场，最长 20 字；未设置为空字符串 |
+| defaultCourtName | string | 默认球场，最长 128 字；未设置为空字符串 |
 | defaultDurationMinutes | number | 默认时长（分钟）；`0` 表示未设置（记录页保持默认 120） |
 
 #### 16.4.2 PUT /api/user-settings
@@ -1401,6 +1412,7 @@ Content-Type: application/json
 {
   "signature": "底线抽球爱好者",
   "defaultCourtName": "奥森网球场",
+  "defaultCourtLocation": null,
   "defaultDurationMinutes": 150
 }
 ```
@@ -1410,7 +1422,7 @@ Content-Type: application/json
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | signature | string | 可选；最长 30 字；空字符串表示清除 |
-| defaultCourtName | string | 可选；最长 20 字；空字符串表示清除 |
+| defaultCourtName | string | 可选；最长 128 字；更新场地时与 defaultCourtLocation 成组传入；空字符串表示清除 |
 | defaultDurationMinutes | number | 可选；`0` 表示清除，否则范围 `30-600` |
 
 响应 data 与 `GET /api/user-settings` 一致。
@@ -1475,7 +1487,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/wechat-login \
 curl -X POST http://localhost:8081/api/sessions \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"date": "2026-01-15 19:30","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","partner":"张三","cost":120,"shoeId":1,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
+  -d '{"date": "2026-01-15 19:30","durationMinutes":120,"rating":5,"category":3,"subCategory":2,"matchRank":1,"courtName":"奥森网球场","courtLocation":null,"partner":"张三","cost":120,"shoeId":1,"shoeName":"Asics Gel Resolution","note":"双打比赛冠军"}'
 ```
 
 ### 18.3 查看列表
@@ -3178,3 +3190,54 @@ items 字段：id、brand、model、nameZh、material、sourceUrl、variants；v
 ### 2026-10-27 手动球线线径
 
 穿线写入lines.main/cross增加可选 `customDiameterMm: number | null`，仅用于两个库ID均为空的手动球线；取值0.50～2.00毫米、最多两位小数，留空/null表示未知。库选择不能传非空自定义线径，仍由variantId决定规格。手动线径保存到现有racket_stringing_lines.diameter_mm_snapshot，响应仍为diameterMm。最近使用按名称、颜色、线径区分手动项，无新增表或迁移。
+
+
+## 2026-10-27 地图场地与最近使用推荐
+
+### 场地协议
+
+- 记录创建/更新必须同时提交 `courtName`（字符串，允许空）与 `courtLocation`（完整对象或显式 null）。不兼容旧版保存；缺字段返回 HTTP 400、code=40001、message="请更新小程序后重试"。
+- 地图位置对象为 `{address, latitude, longitude, coordinateSystem:"gcj02"}`。地址必传字符串，可空，最多 512 个 Unicode 码点；纬度 [-90,90]、经度 [-180,180] 必须明确为数值，允许 0，统一保留 7 位小数。名称最多 128 个 Unicode 码点，名称与地址去除首尾空白。
+- 名称非空且位置为 null 表示手动/历史场地；清空提交 `courtName:"",courtLocation:null`。空名称不得携带位置。编辑其他字段时保留完整位置快照。
+- 记录详情、列表、最近一次及首页 latestSession 的 `courtLocation` 均返回对象或 null；不返回 snake_case 数据库列。
+- `GET /api/user-settings` 新增 `defaultCourtLocation`。`PUT /api/user-settings` 修改场地时必须成组传 `defaultCourtName` 与 `defaultCourtLocation`；两者都不传时不修改场地，允许只更新签名或默认时长。名称 null、只传位置或只传名称均拒绝。
+- 名称与位置一次保存；默认设置同请求的各项在用户行锁保护下原子提交。已有历史名称保留、位置为空，不自动补坐标。
+
+地图场地字段示例（记录请求还须包含 date 等原有必填项）：
+
+```json
+{
+  "courtName": "示例网球中心",
+  "courtLocation": {
+    "address": "北京市示例地址",
+    "latitude": 39.9501234,
+    "longitude": 116.4701234,
+    "coordinateSystem": "gcj02"
+  }
+}
+```
+
+### 推荐接口
+
+`GET /api/sessions/court-recommendations`：JWT 鉴权，不接收 userId。统一响应的 data 为：
+
+```json
+{
+  "latestCourt": null,
+  "recentCourts": [
+    {"courtName":"手动场地","courtLocation":null}
+  ]
+}
+```
+
+- latestCourt 是最近一条未删除记录的场地快照；最近记录场地为空时返回 null，不跳过该记录自动填入更早场地。
+- recentCourts 从当前用户全部未删除历史，按打球时间 date DESC、id DESC 精确去重，最多 4 项。地图场地按名称、地址、7 位小数坐标及坐标系区分，纯名称场地与地图场地分别去重。
+- 前端排除当前已选场地后展示前 3 项；有默认球场优先带入，没有默认时才使用 latestCourt；编辑页不自动带入或展示推荐。
+- 服务端每批读取 100 条场地投影，使用时间/ID 游标，找到 4 项即停止，接口最多执行 5 秒；失败不返回不完整的成功结果。不将全部历史传至前端，不按频次或当前位置排序。
+- 地图选点、推荐点击只修改草稿；用户点保存后才上传。地址与坐标不写本地持久化、请求响应原文日志或行为埋点。
+
+### 发布依赖
+
+前后端须协同发布。已有环境备份并执行 `migrations/029_add_court_location.sql`，为记录增加地址、可空坐标及坐标系列，扩容 user_settings.setting_value 为 TEXT，新增设置键 4 保存默认位置 JSON。迁移针对 MySQL 8.0.16+，已用本地 MySQL 8.4 验证；有效设置键存在重复时会在增列前中止，不能自行清理。
+
+新环境当前 init.sql 已包含此结构，不应再重复执行 029；实际部署必须按迁移记录与 INFORMATION_SCHEMA 核验。增列和扩容在回退时保留；回退旧后端前暂停相关写入，避免旧代码造成名称与位置不一致。微信后台位置接口资格、隐私指引和 iOS/Android 真机地图流程仍需上线前验证。

@@ -18,13 +18,14 @@ import (
 	"github.com/go-co-op/gocron/v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 func main() {
 
 	cfg := config.Load()
 
-	db, err := gorm.Open(mysql.Open(cfg.DatabaseDSN), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(cfg.DatabaseDSN), &gorm.Config{Logger: gormlogger.Default.LogMode(gormlogger.Silent)})
 	if err != nil {
 		log.Fatalf("connect database: %v", err)
 	}
@@ -91,6 +92,7 @@ func main() {
 		authed.GET("/sessions", sessionHandler.List)
 		authed.POST("/sessions", sessionHandler.Create)
 		authed.GET("/sessions/latest", sessionHandler.Latest)
+		authed.GET("/sessions/court-recommendations", sessionHandler.CourtRecommendations)
 		authed.GET("/sessions/calendar", sessionHandler.Calendar)
 		authed.GET("/sessions/:id", sessionHandler.Get)
 		authed.PUT("/sessions/:id", sessionHandler.Update)

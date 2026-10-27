@@ -1,17 +1,17 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"strconv"
-	"strings"
-	"unicode/utf8"
-
 	"tennisdaily-backend/internal/model"
 	"tennisdaily-backend/internal/repository"
+	"unicode/utf8"
 )
 
 const (
 	maxSignatureLength        = 30
-	maxCourtNameLength        = 20
 	minDefaultDurationMinutes = 30
 	maxDefaultDurationMinutes = 600
 )
@@ -22,79 +22,90 @@ type UserSettingsService struct {
 	contentSecurity *ContentSecurityService
 }
 
-func NewUserSettingsService(userSettingRepo *repository.UserSettingRepository, userRepo *repository.UserRepository, contentSecurity *ContentSecurityService) *UserSettingsService {
-	return &UserSettingsService{
-		userSettingRepo: userSettingRepo,
-		userRepo:        userRepo,
-		contentSecurity: contentSecurity,
-	}
+func NewUserSettingsService(settings *repository.UserSettingRepository, users *repository.UserRepository, security *ContentSecurityService) *UserSettingsService {
+	return &UserSettingsService{settings, users, security}
 }
-
-func (s *UserSettingsService) Get(userID int64) (model.UserSettingsResponse, error) {
-	settings, err := s.userSettingRepo.ListByUser(userID)
-	if err != nil {
-		return model.UserSettingsResponse{}, err
-	}
-
-	response := model.UserSettingsResponse{}
-	for _, setting := range settings {
-		switch setting.SettingKey {
+func settingsResponse(rows []model.UserSetting) (model.UserSettingsResponse, error) {
+	result := model.UserSettingsResponse{}
+	seen := make(map[int16]bool)
+	for _, row := range rows {
+		if seen[row.SettingKey] {
+			return result, errors.New("duplicate active user setting")
+		}
+		seen[row.SettingKey] = true
+		switch row.SettingKey {
 		case model.UserSettingSignature:
-			response.Signature = setting.SettingValue
+			result.Signature = row.SettingValue
 		case model.UserSettingDefaultCourtName:
-			response.DefaultCourtName = setting.SettingValue
+			result.DefaultCourtName = row.SettingValue
 		case model.UserSettingDefaultDurationMinutes:
-			if value, parseErr := strconv.Atoi(setting.SettingValue); parseErr == nil {
-				response.DefaultDurationMinutes = value
+			n, err := strconv.Atoi(row.SettingValue)
+			if err != nil {
+				return result, errors.New("invalid stored duration")
+			}
+			result.DefaultDurationMinutes = n
+		case model.UserSettingDefaultCourtLocation:
+			if err := json.Unmarshal([]byte(row.SettingValue), &result.DefaultCourtLocation); err != nil {
+				return result, errors.New("invalid stored default location")
 			}
 		}
 	}
-	return response, nil
+	if l := result.DefaultCourtLocation; l != nil && (!l.Valid() || model.TrimCourtText(result.DefaultCourtName) == "") {
+		return result, errors.New("invalid stored default court")
+	}
+	return result, nil
 }
-
-func (s *UserSettingsService) Update(userID int64, req model.UpdateUserSettingsRequest) (model.UserSettingsResponse, error) {
-	user, err := s.userRepo.FindByID(userID)
+func (s *UserSettingsService) Get(ctx context.Context, userID int64) (model.UserSettingsResponse, error) {
+	rows, err := s.userSettingRepo.ListByUser(ctx, userID)
 	if err != nil {
 		return model.UserSettingsResponse{}, err
 	}
-	if user == nil {
-		return model.UserSettingsResponse{}, ErrNotFound
-	}
-
+	return settingsResponse(rows)
+}
+func (s *UserSettingsService) Update(ctx context.Context, userID int64, req model.UpdateUserSettingsRequest) (model.UserSettingsResponse, error) {
+	var result model.UserSettingsResponse
+	updates := make([]model.UserSetting, 0, 4)
+	texts := make([]string, 0, 3)
 	if req.Signature != nil {
 		if utf8.RuneCountInString(*req.Signature) > maxSignatureLength {
-			return model.UserSettingsResponse{}, ErrInvalidRequest
+			return result, NewInvalidRequestError("个性签名最多 30 字")
 		}
-		if err := s.contentSecurity.CheckTexts(user.OpenID, *req.Signature); err != nil {
-			return model.UserSettingsResponse{}, err
-		}
-		if err := s.userSettingRepo.Upsert(userID, model.UserSettingSignature, *req.Signature); err != nil {
-			return model.UserSettingsResponse{}, err
-		}
+		texts = append(texts, *req.Signature)
+		updates = append(updates, model.UserSetting{SettingKey: model.UserSettingSignature, SettingValue: *req.Signature})
 	}
-
-	if req.DefaultCourtName != nil {
-		courtName := strings.TrimSpace(*req.DefaultCourtName)
-		if utf8.RuneCountInString(courtName) > maxCourtNameLength {
-			return model.UserSettingsResponse{}, ErrInvalidRequest
+	if req.DefaultCourtName != nil || req.DefaultCourtLocation.Present {
+		court, err := normalizeCourt(req.DefaultCourtName, req.DefaultCourtLocation)
+		if err != nil {
+			return result, err
 		}
-		if err := s.contentSecurity.CheckTexts(user.OpenID, courtName); err != nil {
-			return model.UserSettingsResponse{}, err
+		value, err := json.Marshal(court.CourtLocation)
+		if err != nil {
+			return result, errors.New("invalid default location serialization")
 		}
-		if err := s.userSettingRepo.Upsert(userID, model.UserSettingDefaultCourtName, courtName); err != nil {
-			return model.UserSettingsResponse{}, err
-		}
+		updates = append(updates, model.UserSetting{SettingKey: model.UserSettingDefaultCourtName, SettingValue: court.CourtName}, model.UserSetting{SettingKey: model.UserSettingDefaultCourtLocation, SettingValue: string(value)})
+		texts = append(texts, court.CourtName, courtAddress(court))
 	}
-
 	if req.DefaultDurationMinutes != nil {
-		duration := *req.DefaultDurationMinutes
-		if duration != 0 && (duration < minDefaultDurationMinutes || duration > maxDefaultDurationMinutes) {
-			return model.UserSettingsResponse{}, ErrInvalidRequest
+		n := *req.DefaultDurationMinutes
+		if n != 0 && (n < minDefaultDurationMinutes || n > maxDefaultDurationMinutes) {
+			return result, NewInvalidRequestError("默认时长需在 30-600 分钟之间")
 		}
-		if err := s.userSettingRepo.Upsert(userID, model.UserSettingDefaultDurationMinutes, strconv.Itoa(duration)); err != nil {
-			return model.UserSettingsResponse{}, err
-		}
+		updates = append(updates, model.UserSetting{SettingKey: model.UserSettingDefaultDurationMinutes, SettingValue: strconv.Itoa(n)})
 	}
-
-	return s.Get(userID)
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return result, err
+	}
+	if user == nil {
+		return result, ErrNotFound
+	}
+	if err := s.contentSecurity.CheckTexts(user.OpenID, texts...); err != nil {
+		return result, err
+	}
+	err = s.userSettingRepo.Apply(ctx, userID, updates, func(rows []model.UserSetting) error {
+		var parseErr error
+		result, parseErr = settingsResponse(rows)
+		return parseErr
+	})
+	return result, err
 }

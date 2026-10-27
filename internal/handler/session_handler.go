@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"strconv"
+	"time"
 
 	"tennisdaily-backend/internal/logger"
 	"tennisdaily-backend/internal/middleware"
@@ -52,7 +54,7 @@ func (h *SessionHandler) Create(c *gin.Context) {
 
 	var req model.CreateSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		handleCourtBindingError(c, err)
 		return
 	}
 
@@ -98,7 +100,7 @@ func (h *SessionHandler) Update(c *gin.Context) {
 
 	var req model.UpdateSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		handleCourtBindingError(c, err)
 		return
 	}
 
@@ -212,7 +214,30 @@ func handleServiceError(c *gin.Context, err error) {
 	case errors.Is(err, service.ErrNotFound):
 		response.Error(c, 404, response.CodeNotFound, "not found")
 	default:
-		logger.Error("service internal error path=%s error=%v", c.FullPath(), err)
+		logger.Error("service internal error path=%s category=%T", c.FullPath(), err)
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 	}
+}
+
+func (h *SessionHandler) CourtRecommendations(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+	result, err := h.sessionService.CourtRecommendations(ctx, userID)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	response.OK(c, result)
+}
+
+func handleCourtBindingError(c *gin.Context, err error) {
+	message := "invalid request"
+	if errors.Is(err, model.ErrInvalidCourtLocation) {
+		message = "球场位置信息有误，请重新选择"
+	}
+	response.Error(c, 400, response.CodeInvalidRequest, message)
 }

@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"errors"
-
 	"tennisdaily-backend/internal/logger"
 	"tennisdaily-backend/internal/middleware"
 	"tennisdaily-backend/internal/model"
@@ -27,7 +25,7 @@ func (h *UserSettingsHandler) Get(c *gin.Context) {
 		return
 	}
 
-	settings, err := h.userSettingsService.Get(userID)
+	settings, err := h.userSettingsService.Get(c.Request.Context(), userID)
 	if err != nil {
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
@@ -44,22 +42,14 @@ func (h *UserSettingsHandler) Update(c *gin.Context) {
 
 	var req model.UpdateUserSettingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
+		handleCourtBindingError(c, err)
 		return
 	}
 
 	logger.Debug("PUT /api/user-settings start userID=%d", userID)
-	settings, err := h.userSettingsService.Update(userID, req)
+	settings, err := h.userSettingsService.Update(c.Request.Context(), userID, req)
 	if err != nil {
-		if errors.Is(err, service.ErrInvalidRequest) {
-			response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
-			return
-		}
-		if errors.Is(err, service.ErrNotFound) {
-			response.Error(c, 404, response.CodeNotFound, "not found")
-			return
-		}
-		response.Error(c, 500, response.CodeInternalError, "internal error")
+		handleServiceError(c, err)
 		return
 	}
 	logger.Debug("PUT /api/user-settings success userID=%d", userID)

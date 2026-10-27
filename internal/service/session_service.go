@@ -144,12 +144,18 @@ func (s *SessionService) ListByDate(userID int64, date string) ([]model.SessionR
 }
 
 func (s *SessionService) Create(userID int64, req model.CreateSessionRequest) (model.SessionResponse, error) {
-	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeID, req.ShoeName, req.Note)
+	session, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, stringValue(req.CourtName), req.Partner, req.Cost, req.RacketID, req.ShoeID, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
 
-	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.ShoeName, req.Note); err != nil {
+	court, err := normalizeCourt(req.CourtName, req.CourtLocation)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	session.CourtName = court.CourtName
+	session.CourtColumns = model.ColumnsFromLocation(court.CourtLocation)
+	if err := s.checkUserInputTexts(userID, court.CourtName, courtAddress(court), req.Partner, req.ShoeName, req.Note); err != nil {
 		return model.SessionResponse{}, err
 	}
 
@@ -195,12 +201,18 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 		return model.SessionResponse{}, ErrNotFound
 	}
 
-	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, req.CourtName, req.Partner, req.Cost, req.RacketID, req.ShoeID, req.ShoeName, req.Note)
+	updated, err := s.buildSession(userID, req.Date, req.DurationMinutes, req.Rating, req.Type, req.Category, req.SubCategory, req.MatchRank, stringValue(req.CourtName), req.Partner, req.Cost, req.RacketID, req.ShoeID, req.ShoeName, req.Note)
 	if err != nil {
 		return model.SessionResponse{}, err
 	}
 
-	if err := s.checkUserInputTexts(userID, req.CourtName, req.Partner, req.ShoeName, req.Note); err != nil {
+	court, err := normalizeCourt(req.CourtName, req.CourtLocation)
+	if err != nil {
+		return model.SessionResponse{}, err
+	}
+	updated.CourtName = court.CourtName
+	updated.CourtColumns = model.ColumnsFromLocation(court.CourtLocation)
+	if err := s.checkUserInputTexts(userID, court.CourtName, courtAddress(court), req.Partner, req.ShoeName, req.Note); err != nil {
 		return model.SessionResponse{}, err
 	}
 
@@ -212,6 +224,7 @@ func (s *SessionService) Update(userID, id int64, req model.UpdateSessionRequest
 	existing.SubCategory = updated.SubCategory
 	existing.MatchRank = updated.MatchRank
 	existing.CourtName = updated.CourtName
+	existing.CourtColumns = updated.CourtColumns
 	existing.Partner = updated.Partner
 	existing.Cost = updated.Cost
 	existing.RacketID = updated.RacketID
@@ -568,4 +581,11 @@ func sessionShoeName(session model.TennisSession, shoeNames map[int64]string) st
 		return session.ShoeName
 	}
 	return shoeNames[session.ShoeID]
+}
+
+func stringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

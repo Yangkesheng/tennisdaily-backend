@@ -74,6 +74,10 @@ CREATE TABLE IF NOT EXISTS tennis_sessions (
   match_rank SMALLINT NOT NULL DEFAULT 0 COMMENT '比赛成绩:0无 1冠军 2亚军 3季军 4四强 5八强 6十六强 7小组赛',
 
   court_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '球场名称',
+  court_address VARCHAR(512) NOT NULL DEFAULT '',
+  court_latitude DECIMAL(10,7) NULL DEFAULT NULL,
+  court_longitude DECIMAL(10,7) NULL DEFAULT NULL,
+  court_coordinate_system VARCHAR(16) NOT NULL DEFAULT '',
   partner VARCHAR(128) NOT NULL DEFAULT '' COMMENT '搭档',
   cost DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT '本次打球费用',
   racket_id BIGINT NOT NULL DEFAULT 0 COMMENT '使用球拍ID',
@@ -258,6 +262,19 @@ CREATE TABLE IF NOT EXISTS `my_shoes` (
   DEFAULT CHARSET=utf8mb4
   COMMENT='我的球鞋表';
 
+-- Current default-court storage (keys: 1 signature, 2 name, 3 duration, 4 location JSON).
+CREATE TABLE IF NOT EXISTS user_settings (
+ id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ user_id BIGINT NOT NULL,
+ setting_key SMALLINT NOT NULL,
+ setting_value TEXT NOT NULL,
+ created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+ deleted_at DATETIME(3) DEFAULT NULL,
+ UNIQUE KEY uk_user_settings_user_key_deleted (user_id,setting_key,deleted_at),
+ KEY idx_user_settings_user_deleted (user_id,deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS ensure_column$$
@@ -318,6 +335,12 @@ CALL ensure_index('users', 'idx_users_deleted_at', 'INDEX `idx_users_deleted_at`
 ALTER TABLE users MODIFY COLUMN openid VARCHAR(128) DEFAULT NULL COMMENT '微信OpenID，微信登录用户唯一标识';
 
 -- 兼容已存在的旧 tennis_sessions 表。
+-- Current location schema. Historical names remain unchanged; coordinates stay NULL.
+CALL ensure_column('tennis_sessions', 'court_address', '`court_address` VARCHAR(512) NOT NULL DEFAULT ''''', 'court_name');
+CALL ensure_column('tennis_sessions', 'court_latitude', '`court_latitude` DECIMAL(10,7) NULL DEFAULT NULL', 'court_address');
+CALL ensure_column('tennis_sessions', 'court_longitude', '`court_longitude` DECIMAL(10,7) NULL DEFAULT NULL', 'court_latitude');
+CALL ensure_column('tennis_sessions', 'court_coordinate_system', '`court_coordinate_system` VARCHAR(16) NOT NULL DEFAULT ''''', 'court_longitude');
+ALTER TABLE user_settings MODIFY COLUMN setting_value TEXT NOT NULL;
 CALL ensure_column('tennis_sessions', 'partner', '`partner` VARCHAR(128) NOT NULL DEFAULT '''' COMMENT ''搭档''', 'court_name');
 CALL ensure_column('tennis_sessions', 'category', '`category` SMALLINT NOT NULL DEFAULT 1 COMMENT ''一级类型:1日常球局 2训练 3比赛''', 'type');
 CALL ensure_column('tennis_sessions', 'sub_category', '`sub_category` SMALLINT NOT NULL DEFAULT 2 COMMENT ''二级类型:1单打/打单 2双打 3发球 4其他''', 'category');

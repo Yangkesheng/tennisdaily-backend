@@ -39,4 +39,4 @@ git merge --no-edit "$DEV_BRANCH"
 git push origin "$MAIN_BRANCH"
 
 git checkout "$DEV_BRANCH"
-echo "完成：$DEV_BRANCH 已提交并合并到 $MAIN_BRANCH，当前在 $DEV_BRANCH 分支"
+echo "完成：$DEV_BRANCH 已提交并合并到 ${MAIN_BRANCH}，当前在 $DEV_BRANCH 分支"

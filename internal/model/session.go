@@ -7,6 +7,7 @@ import (
 )
 
 type TennisSession struct {
+	CourtColumns    `gorm:"embedded"`
 	ID              int64              `json:"id" gorm:"primaryKey"`
 	UserID          int64              `json:"userId" gorm:"not null;index"`
 	Date            time.Time          `json:"date" gorm:"type:datetime;not null"`
@@ -47,6 +48,7 @@ type SessionResponse struct {
 	MatchRank       MatchRank          `json:"matchRank"`
 	MatchRankLabel  string             `json:"matchRankLabel"`
 	CourtName       string             `json:"courtName"`
+	CourtLocation   *CourtLocation     `json:"courtLocation"`
 	Partner         string             `json:"partner"`
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`
@@ -140,6 +142,7 @@ func NewSessionResponse(session TennisSession, resolver SessionCategoryTextResol
 		MatchRank:       session.MatchRank,
 		MatchRankLabel:  session.MatchRank.Label(),
 		CourtName:       session.CourtName,
+		CourtLocation:   session.CourtColumns.Location(),
 		Partner:         session.Partner,
 		Cost:            session.Cost,
 		RacketID:        session.RacketID,
@@ -192,7 +195,8 @@ type CreateSessionRequest struct {
 	Category        SessionCategory    `json:"category"`
 	SubCategory     SessionSubCategory `json:"subCategory"`
 	MatchRank       MatchRank          `json:"matchRank"`
-	CourtName       string             `json:"courtName"`
+	CourtName       *string            `json:"courtName"`
+	CourtLocation   LocationField      `json:"courtLocation"`
 	Partner         string             `json:"partner"`
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`
@@ -209,7 +213,8 @@ type UpdateSessionRequest struct {
 	Category        SessionCategory    `json:"category"`
 	SubCategory     SessionSubCategory `json:"subCategory"`
 	MatchRank       MatchRank          `json:"matchRank"`
-	CourtName       string             `json:"courtName"`
+	CourtName       *string            `json:"courtName"`
+	CourtLocation   LocationField      `json:"courtLocation"`
 	Partner         string             `json:"partner"`
 	Cost            float64            `json:"cost"`
 	RacketID        int64              `json:"racketId"`

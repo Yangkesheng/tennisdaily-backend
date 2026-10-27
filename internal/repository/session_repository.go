@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -321,4 +322,15 @@ func (r *SessionRepository) EarliestSessionDate(userID int64) (string, error) {
 		Limit(1).
 		Scan(&date).Error
 	return date, err
+}
+
+// CourtHistoryPage keeps the first (possibly unnamed) session for latestCourt semantics.
+func (r *SessionRepository) CourtHistoryPage(ctx context.Context, userID int64, date *time.Time, id int64, limit int) ([]model.TennisSession, error) {
+	q := r.db.WithContext(ctx).Model(&model.TennisSession{}).Select("id, date, court_name, court_address, court_latitude, court_longitude, court_coordinate_system").Where("user_id = ?", userID)
+	if date != nil {
+		q = q.Where("date < ? OR (date = ? AND id < ?)", *date, *date, id)
+	}
+	var rows []model.TennisSession
+	err := q.Order("date DESC, id DESC").Limit(limit).Find(&rows).Error
+	return rows, err
 }
