@@ -1,0 +1,1364 @@
+{
+  "schemaVersion": 1,
+  "curatedOn": "2026-10-21",
+  "purpose": "TennisDay穿线选线首批型号资料；主流覆盖为编辑选取，不是销量排名或推荐",
+  "gaugeCoverage": "仅包含本次来源明确确认的规格，不承诺每款所有线径、颜色或地区SKU完整",
+  "aliasesPolicy": "aliases是编辑添加的搜索变体和品牌中文组合，不宣称官方中文型号名",
+  "publicationPolicy": "source-checked不等于已完成人工发布审核；全部published=false，不自动写数据库",
+  "items": [
+    {
+      "key": "yonex/polytour-pro",
+      "brand": "Yonex",
+      "model": "POLYTOUR PRO",
+      "nameZh": "",
+      "aliases": [
+        "PTP",
+        "Poly Tour Pro",
+        "尤尼克斯 PTP"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/polytour-rev",
+      "brand": "Yonex",
+      "model": "POLYTOUR REV",
+      "nameZh": "",
+      "aliases": [
+        "Poly Tour Rev",
+        "尤尼克斯 REV"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/polytour-fire",
+      "brand": "Yonex",
+      "model": "POLYTOUR FIRE",
+      "nameZh": "",
+      "aliases": [
+        "Poly Tour Fire"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网标题包含130，但Gauge正文只列120/125。本批仅收录正文明确规格，130待进一步核对。",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/polytour-spin",
+      "brand": "Yonex",
+      "model": "POLYTOUR SPIN",
+      "nameZh": "",
+      "aliases": [
+        "Poly Tour Spin"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/polytour-air",
+      "brand": "Yonex",
+      "model": "POLYTOUR AIR",
+      "nameZh": "",
+      "aliases": [
+        "Poly Tour Air"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网另注明HR-Elastomer；material为主材质归一值，不表示纯聚酯。",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/polytour-drive",
+      "brand": "Yonex",
+      "model": "POLYTOUR DRIVE",
+      "nameZh": "",
+      "aliases": [
+        "Poly Tour Drive"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/rexis-feel",
+      "brand": "Yonex",
+      "model": "REXIS FEEL",
+      "nameZh": "",
+      "aliases": [
+        "Rexis Feel"
+      ],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网另列多种聚合物添加组分，仅归一主材质。",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/rexis-comfort",
+      "brand": "Yonex",
+      "model": "REXIS COMFORT",
+      "nameZh": "",
+      "aliases": [
+        "Rexis Comfort"
+      ],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网为Nylon并含FORTIMO。",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/rexis-speed",
+      "brand": "Yonex",
+      "model": "REXIS SPEED",
+      "nameZh": "",
+      "aliases": [
+        "Rexis Speed"
+      ],
+      "material": "polyamide+polyester",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "混合材质，不能归为纯尼龙或纯聚酯。",
+      "missingFields": []
+    },
+    {
+      "key": "yonex/dynawire",
+      "brand": "Yonex",
+      "model": "DYNAWIRE",
+      "nameZh": "",
+      "aliases": [
+        "Dyna Wire"
+      ],
+      "material": "polyamide",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.yonex.com/tennis-strings",
+      "sources": [
+        {
+          "url": "https://www.yonex.com/tennis-strings",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网为Nylon monofilament并含Metal Film，按其原始结构分类记录。",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/hyper-g",
+      "brand": "Solinco",
+      "model": "Hyper-G",
+      "nameZh": "",
+      "aliases": [
+        "Hyper G"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.05
+        },
+        {
+          "diameterMm": 1.1
+        },
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        },
+        {
+          "diameterMm": 1.35
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/hyper-g/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/hyper-g/",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/hyper-g-soft",
+      "brand": "Solinco",
+      "model": "Hyper-G Soft",
+      "nameZh": "",
+      "aliases": [
+        "Hyper G Soft"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/hyper-g-soft/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/hyper-g-soft/",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "Soft、Round与普通版分别建型号，不能合并。",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/hyper-g-round",
+      "brand": "Solinco",
+      "model": "Hyper-G Round",
+      "nameZh": "",
+      "aliases": [
+        "Hyper G Round"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/hyper-g-round/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/hyper-g-round/",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "Soft、Round与普通版分别建型号，不能合并。",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/tour-bite",
+      "brand": "Solinco",
+      "model": "Tour Bite",
+      "nameZh": "",
+      "aliases": [
+        "Tour Bite"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.05
+        },
+        {
+          "diameterMm": 1.1
+        },
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        },
+        {
+          "diameterMm": 1.35
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/tour-bite/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/tour-bite/",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/tour-bite-soft",
+      "brand": "Solinco",
+      "model": "Tour Bite Soft",
+      "nameZh": "",
+      "aliases": [
+        "Tour Bite Soft"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/tour-bite-soft/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/tour-bite-soft/",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "Soft、Round与普通版分别建型号，不能合并。",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/confidential",
+      "brand": "Solinco",
+      "model": "Confidential",
+      "nameZh": "",
+      "aliases": [
+        "Confidential"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/confidential/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/confidential/",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/razor-soft",
+      "brand": "Tecnifibre",
+      "model": "RAZOR SOFT",
+      "nameZh": "",
+      "aliases": [
+        "Razor Soft"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+      "sources": [
+        {
+          "url": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "来源为厂商品牌美国2026目录18–19页；颜色可售组合未建模，发布前结合原表复核。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/razor-code",
+      "brand": "Tecnifibre",
+      "model": "RAZOR CODE",
+      "nameZh": "",
+      "aliases": [
+        "Razor Code"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+      "sources": [
+        {
+          "url": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "来源为厂商品牌美国2026目录18–19页；颜色可售组合未建模，发布前结合原表复核。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/black-code",
+      "brand": "Tecnifibre",
+      "model": "BLACK CODE",
+      "nameZh": "",
+      "aliases": [
+        "Black Code"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.18
+        },
+        {
+          "diameterMm": 1.24
+        },
+        {
+          "diameterMm": 1.28
+        },
+        {
+          "diameterMm": 1.32
+        }
+      ],
+      "sourceUrl": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+      "sources": [
+        {
+          "url": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "来源为厂商品牌美国2026目录18–19页；颜色可售组合未建模，发布前结合原表复核。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/red-code",
+      "brand": "Tecnifibre",
+      "model": "RED CODE",
+      "nameZh": "",
+      "aliases": [
+        "Red Code"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+      "sources": [
+        {
+          "url": "https://www.mytecnifibre.com/site/img/Home/Tecnifibre%20USA%20SS26%20-%20Tennis%2C%20Padel%2C%20Squash%2C%20and%20Pickleball%20Catalogue.pdf",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "来源为厂商品牌美国2026目录18–19页；颜色可售组合未建模，发布前结合原表复核。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/ice-code",
+      "brand": "Tecnifibre",
+      "model": "ICE CODE",
+      "nameZh": "",
+      "aliases": [
+        "Ice Code"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.com/en/products/garniture-ice-code-blanc",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.com/en/products/garniture-ice-code-blanc",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/x-one-biphase",
+      "brand": "Tecnifibre",
+      "model": "X-ONE BIPHASE",
+      "nameZh": "",
+      "aliases": [
+        "X One Biphase",
+        "X-One"
+      ],
+      "material": null,
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.24
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.com/en/collections/cordages-tennis/products/garniture-x-one-biphase-black",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.com/en/collections/cordages-tennis/products/garniture-x-one-biphase-black",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "所查产品页确认多股结构及线径，没有充分确认化学材质；保留null，不能把multifilament填入material。",
+      "missingFields": [
+        "material"
+      ]
+    },
+    {
+      "key": "luxilon/alu-power",
+      "brand": "Luxilon",
+      "model": "ALU Power",
+      "nameZh": "",
+      "aliases": [
+        "ALUPOWER",
+        "力士浪 ALU Power"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.wilson.com/en-us/products/alu-power-125-tennis-string-set-rz99203",
+      "sources": [
+        {
+          "url": "https://www.wilson.com/en-us/products/alu-power-125-tennis-string-set-rz99203",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "仅收录本次产品页确认的1.25，并非该型号完整线径目录；官网还描述其专有聚合物与铝组分。",
+      "missingFields": []
+    },
+    {
+      "key": "luxilon/alu-power-rough",
+      "brand": "Luxilon",
+      "model": "ALU Power Rough",
+      "nameZh": "",
+      "aliases": [
+        "ALU Rough",
+        "力士浪 ALU Power Rough"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://id.wilson.com/en/products/bb-alupower-rough-125-str",
+      "sources": [
+        {
+          "url": "https://id.wilson.com/en/products/bb-alupower-rough-125-str",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "本次仅确认125，不将介绍中提到的130自动视为已确认SKU。",
+      "missingFields": []
+    },
+    {
+      "key": "luxilon/alu-power-soft",
+      "brand": "Luxilon",
+      "model": "ALU Power Soft",
+      "nameZh": "",
+      "aliases": [
+        "力士浪 ALU Power Soft"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.wilson.com/en-us/products/alu-power-soft-125-tennis-string-set-rz99102",
+      "sources": [
+        {
+          "url": "https://www.wilson.com/en-us/products/alu-power-soft-125-tennis-string-set-rz99102",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "luxilon/4g",
+      "brand": "Luxilon",
+      "model": "4G",
+      "nameZh": "",
+      "aliases": [
+        "力士浪 4G"
+      ],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.wilson.com/en-us/products/4g-125-tennis-string-set-rz99710",
+      "sources": [
+        {
+          "url": "https://www.wilson.com/en-us/products/4g-125-tennis-string-set-rz99710",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "本次只确认125；4G Soft不能合并进4G。",
+      "missingFields": []
+    },
+    {
+      "key": "luxilon/element",
+      "brand": "Luxilon",
+      "model": "Element",
+      "nameZh": "",
+      "aliases": [
+        "力士浪 Element"
+      ],
+      "material": "polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.wilson.com/en-us/collections/tennis?irgwc=1",
+      "sources": [
+        {
+          "url": "https://www.wilson.com/en-us/collections/tennis?irgwc=1",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.wilson.com/en-us/collections/luxilon-tennis-string",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "型号125由官方在售目录确认，聚酯分类由官方品牌集合页确认；具体结构和其它线径待补。",
+      "missingFields": []
+    },
+    {
+      "key": "head/lynx-tour",
+      "brand": "HEAD",
+      "model": "Lynx Tour",
+      "nameZh": "",
+      "aliases": [
+        "海德 Lynx Tour"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/en_GB/product/lynx-tour-4",
+      "sources": [
+        {
+          "url": "https://www.head.com/en_GB/product/lynx-tour-4",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "head/lynx",
+      "brand": "HEAD",
+      "model": "Lynx",
+      "nameZh": "",
+      "aliases": [
+        "海德 Lynx"
+      ],
+      "material": null,
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/en_US/product/lynx-6",
+      "sources": [
+        {
+          "url": "https://www.head.com/en_US/product/lynx-6",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "当前所查规格页明确单丝和线径，化学材质未在本次证据中明确，待补。",
+      "missingFields": [
+        "material"
+      ]
+    },
+    {
+      "key": "head/hawk",
+      "brand": "HEAD",
+      "model": "Hawk",
+      "nameZh": "",
+      "aliases": [
+        "海德 Hawk"
+      ],
+      "material": null,
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/en_CA/product/hawk-set-281103",
+      "sources": [
+        {
+          "url": "https://www.head.com/en_CA/product/hawk-set-281103",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "单丝和线径已确认；化学材质待补。",
+      "missingFields": [
+        "material"
+      ]
+    },
+    {
+      "key": "head/hawk-touch",
+      "brand": "HEAD",
+      "model": "Hawk Touch",
+      "nameZh": "",
+      "aliases": [
+        "海德 Hawk Touch"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/fr_CA/product/hawk-touch-3",
+      "sources": [
+        {
+          "url": "https://www.head.com/fr_CA/product/hawk-touch-3",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.tennis-warehouse.com/Head_Hawk_Touch_17_125_String_Anthracite/descpageACHEAD-HAWKT17.html",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "材质由TW具体商品规格交叉核对。",
+      "missingFields": []
+    },
+    {
+      "key": "head/hawk-tour-rpet",
+      "brand": "HEAD",
+      "model": "Hawk Tour rPET",
+      "nameZh": "",
+      "aliases": [
+        "海德 Hawk Tour rPET"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/fr_BE/product/hawk-tour-rpet-281125",
+      "sources": [
+        {
+          "url": "https://www.head.com/fr_BE/product/hawk-tour-rpet-281125",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "厂商规格为再生PET共聚酯。",
+      "missingFields": []
+    },
+    {
+      "key": "babolat/rpm-blast",
+      "brand": "Babolat",
+      "model": "RPM Blast",
+      "nameZh": "",
+      "aliases": [
+        "RPMBlast",
+        "百保力 RPM Blast"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        },
+        {
+          "diameterMm": 1.35
+        }
+      ],
+      "sourceUrl": "https://www.babolat.com/us/rpm-blast-12m/241101.html",
+      "sources": [
+        {
+          "url": "https://www.babolat.com/us/rpm-blast-12m/241101.html",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.tennis-warehouse.com/RPM_Blast_/catpage-RPMFAM.html",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "线径由TW该系列目录交叉确认；新出的蓝色1.27暂不并入普通型号，待颜色/配方版本核对。",
+      "missingFields": []
+    },
+    {
+      "key": "babolat/rpm-team",
+      "brand": "Babolat",
+      "model": "RPM Team",
+      "nameZh": "",
+      "aliases": [
+        "百保力 RPM Team"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.babolat.com/gb/rpm-team-12m/241108.html",
+      "sources": [
+        {
+          "url": "https://www.babolat.com/gb/rpm-team-12m/241108.html",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.tennis-warehouse.com/descpage.html?img=6&pcode=P3LY05",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网Gauge选项未展开；线径由TW商品索引交叉确认。",
+      "missingFields": []
+    },
+    {
+      "key": "babolat/rpm-rough",
+      "brand": "Babolat",
+      "model": "RPM Rough",
+      "nameZh": "",
+      "aliases": [
+        "百保力 RPM Rough"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.babolat.com/us/rpm-rough-200m/201-243140.html",
+      "sources": [
+        {
+          "url": "https://www.babolat.com/us/rpm-rough-200m/201-243140.html",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.tennis-warehouse.com/Babolat_RPM_Rough_17_125_String/descpageACBAB-BRPMBRS.html?color=GR",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "本次仅确认TW的1.25商品规格，非完整线径范围。",
+      "missingFields": []
+    },
+    {
+      "key": "babolat/rpm-soft",
+      "brand": "Babolat",
+      "model": "RPM Soft",
+      "nameZh": "",
+      "aliases": [
+        "百保力 RPM Soft"
+      ],
+      "material": "polyamide",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.babolat.com/us/tennis/strings.html",
+      "sources": [
+        {
+          "url": "https://www.babolat.com/us/tennis/strings.html",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.tennis-warehouse.com/descpage.html?img=6&pcode=P3LY05",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "重要：RPM Soft材质为聚酰胺，不能因RPM前缀归成聚酯。线径由TW商品索引交叉确认。",
+      "missingFields": []
+    },
+    {
+      "key": "babolat/xcel",
+      "brand": "Babolat",
+      "model": "Xcel",
+      "nameZh": "",
+      "aliases": [
+        "百保力 Xcel"
+      ],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.babolat.com/us/tennis/strings.html",
+      "sources": [
+        {
+          "url": "https://www.babolat.com/us/tennis/strings.html",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.tennis-warehouse.com/Babolat_Xcel_17125_String/descpageACBAB-BXCL17.html",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "本次仅确认1.25，非全部规格。",
+      "missingFields": []
+    },
+    {
+      "key": "babolat/touch-vs",
+      "brand": "Babolat",
+      "model": "Touch VS",
+      "nameZh": "",
+      "aliases": [
+        "VS Touch",
+        "百保力 Touch VS"
+      ],
+      "material": "naturalGut",
+      "construction": "naturalGut",
+      "variants": [
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.babolat.com/us/rpm-blast-125-touch-vs-130/281037.html?dwvar_281037_COLOR_DESCRIPTION_ERP=105",
+      "sources": [
+        {
+          "url": "https://www.babolat.com/us/rpm-blast-125-touch-vs-130/281037.html?dwvar_281037_COLOR_DESCRIPTION_ERP=105",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "以官网组合装确认Touch VS为天然肠线且130；拆出单根线材型号，组合装本身不单独建库。",
+      "missingFields": []
+    },
+    {
+      "key": "wilson/nxt",
+      "brand": "Wilson",
+      "model": "NXT",
+      "nameZh": "",
+      "aliases": [
+        "威尔胜 NXT"
+      ],
+      "material": null,
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.tennis-warehouse.com/Wilson_NXT_16_130_String_Black/descpageACWILSON-NXT16B.html",
+      "sources": [
+        {
+          "url": "https://www.tennis-warehouse.com/Wilson_NXT_16_130_String_Black/descpageACWILSON-NXT16B.html",
+          "role": "product-or-manufacturer-catalog"
+        },
+        {
+          "url": "https://www.wilson.com/en-us/collections/tennis",
+          "role": "specification-cross-check"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "该条规格与结构来源为零售商TW，官网目录仅确认产品名；化学材质不作推断。",
+      "missingFields": [
+        "material"
+      ]
+    },
+    {
+      "key": "wilson/sensation",
+      "brand": "Wilson",
+      "model": "Sensation",
+      "nameZh": "",
+      "aliases": [
+        "威尔胜 Sensation"
+      ],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.wilson.com/en-gb/products/sensation-16-tennis-string-200m-reel-rz91100",
+      "sources": [
+        {
+          "url": "https://www.wilson.com/en-gb/products/sensation-16-tennis-string-200m-reel-rz91100",
+          "role": "product-or-manufacturer-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-21",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官方详情同时列16/17和1.30/1.25，按型号汇总两个线径。",
+      "missingFields": []
+    }
+  ]
+}

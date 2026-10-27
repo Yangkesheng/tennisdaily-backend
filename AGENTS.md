@@ -738,6 +738,11 @@ go test ./...
 go run ./cmd/api
 ```
 
+本地默认优先读取 `config.local.example.yaml`，不存在时读取 `config.yaml`。
+可通过 `CONFIG_PATH` 显式指定配置文件；各项环境变量仍优先于 YAML。
+示例默认连接 `127.0.0.1:3306/tennis_diary`（root/root），请按本机配置调整；图片迁移任务默认关闭。
+Docker 镜像仅复制 `config.yaml`，继续使用部署配置。
+
 Docker 构建如需使用：
 
 ```bash

@@ -115,6 +115,12 @@ func Load() Config {
 		panic(fmt.Errorf("invalid LOG_LEVEL: %s", logLevel))
 	}
 
+	loadedPath, err := filepath.Abs(configPath())
+	if err != nil {
+		loadedPath = configPath()
+	}
+	logger.Info("config loaded file=%s", loadedPath)
+
 	port, portSource := envOrDefaultWithSource("SERVER_PORT", fc.Server.Port)
 	databaseDSN, databaseDSNSource := envOrDefaultWithSource("DATABASE_DSN", fc.Database.DSN())
 	jwtSecret, jwtSecretSource := envOrDefaultWithSource("JWT_SECRET", fc.JWT.Secret)
@@ -290,8 +296,10 @@ func configPath() string {
 		return path
 	}
 
-	if _, err := os.Stat("config.yaml"); err == nil {
-		return "config.yaml"
+	for _, name := range []string{"config.local.example.yaml", "config.yaml"} {
+		if _, err := os.Stat(name); err == nil {
+			return name
+		}
 	}
 
 	_, filename, _, ok := runtime.Caller(0)
@@ -299,7 +307,12 @@ func configPath() string {
 		return "config.yaml"
 	}
 
-	return filepath.Join(filepath.Dir(filename), "..", "..", "config.yaml")
+	root := filepath.Join(filepath.Dir(filename), "..", "..")
+	localPath := filepath.Join(root, "config.local.example.yaml")
+	if _, err := os.Stat(localPath); err == nil {
+		return localPath
+	}
+	return filepath.Join(root, "config.yaml")
 }
 
 func (c databaseConfig) DSN() string {

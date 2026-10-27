@@ -68,18 +68,19 @@ func (Racket) TableName() string {
 }
 
 type RacketStringingRecord struct {
-	ID                int64          `json:"id" gorm:"primaryKey"`
-	UserID            int64          `json:"userId" gorm:"not null;index"`
-	RacketID          int64          `json:"racketId" gorm:"not null;index"`
-	StringName        string         `json:"stringName" gorm:"size:100;not null"`
-	StoreName         string         `json:"storeName" gorm:"column:store_name;size:100;not null;default:''"`
-	VerticalTension   *float64       `json:"verticalTension" gorm:"column:vertical_tension;type:decimal(4,1)"`
-	HorizontalTension *float64       `json:"horizontalTension" gorm:"column:horizontal_tension;type:decimal(4,1)"`
-	Cost              float64        `json:"cost" gorm:"type:decimal(10,2);not null"`
-	StringDate        time.Time      `json:"stringDate" gorm:"type:datetime;not null"`
-	CreatedAt         time.Time      `json:"createdAt"`
-	UpdatedAt         time.Time      `json:"updatedAt"`
-	DeletedAt         gorm.DeletedAt `json:"-" gorm:"index"`
+	Lines             []StringingLine `json:"-" gorm:"foreignKey:StringingRecordID"`
+	ID                int64           `json:"id" gorm:"primaryKey"`
+	UserID            int64           `json:"userId" gorm:"not null;index"`
+	RacketID          int64           `json:"racketId" gorm:"not null;index"`
+	StringName        string          `json:"stringName" gorm:"size:100;not null"`
+	StoreName         string          `json:"storeName" gorm:"column:store_name;size:100;not null;default:''"`
+	VerticalTension   *float64        `json:"verticalTension" gorm:"column:vertical_tension;type:decimal(4,1)"`
+	HorizontalTension *float64        `json:"horizontalTension" gorm:"column:horizontal_tension;type:decimal(4,1)"`
+	Cost              float64         `json:"cost" gorm:"type:decimal(10,2);not null"`
+	StringDate        time.Time       `json:"stringDate" gorm:"type:datetime;not null"`
+	CreatedAt         time.Time       `json:"createdAt"`
+	UpdatedAt         time.Time       `json:"updatedAt"`
+	DeletedAt         gorm.DeletedAt  `json:"-" gorm:"index"`
 }
 
 func (RacketStringingRecord) TableName() string {
@@ -127,10 +128,11 @@ type RacketResponse struct {
 }
 
 type StringingRecordResponse struct {
-	ID         int64  `json:"id"`
-	RacketID   int64  `json:"racketId"`
-	StringName string `json:"stringName"`
-	StoreName  string `json:"storeName"`
+	Lines      *StringingLinesResponse `json:"lines"`
+	ID         int64                   `json:"id"`
+	RacketID   int64                   `json:"racketId"`
+	StringName string                  `json:"stringName"`
+	StoreName  string                  `json:"storeName"`
 
 	VerticalTension   *float64  `json:"verticalTension"`
 	HorizontalTension *float64  `json:"horizontalTension"`
@@ -183,22 +185,22 @@ type UpdateRacketRequest struct {
 }
 
 type CreateStringingRecordRequest struct {
-	StringName string `json:"stringName" binding:"required"`
-	StoreName  string `json:"storeName"`
+	Lines     *StringingLinesRequest `json:"lines" binding:"required"`
+	StoreName string                 `json:"storeName" binding:"max=100"`
 
 	VerticalTension   *float64 `json:"verticalTension"`
 	HorizontalTension *float64 `json:"horizontalTension"`
-	Cost              float64  `json:"cost"`
+	Cost              float64  `json:"cost" binding:"gte=0,lte=99999999.99"`
 	StringDate        string   `json:"stringDate" binding:"required"`
 }
 
 type UpdateStringingRecordRequest struct {
-	StringName string `json:"stringName" binding:"required"`
-	StoreName  string `json:"storeName"`
+	Lines     *StringingLinesRequest `json:"lines" binding:"required"`
+	StoreName string                 `json:"storeName" binding:"max=100"`
 
 	VerticalTension   *float64 `json:"verticalTension"`
 	HorizontalTension *float64 `json:"horizontalTension"`
-	Cost              float64  `json:"cost"`
+	Cost              float64  `json:"cost" binding:"gte=0,lte=99999999.99"`
 	StringDate        string   `json:"stringDate" binding:"required"`
 }
 
@@ -247,7 +249,8 @@ func NewStringingRecordResponse(record RacketStringingRecord) StringingRecordRes
 	return StringingRecordResponse{
 		ID:                record.ID,
 		RacketID:          record.RacketID,
-		StringName:        record.StringName,
+		StringName:        StringingDisplayName(record),
+		Lines:             StringingLinesFromRecord(record),
 		StoreName:         record.StoreName,
 		VerticalTension:   record.VerticalTension,
 		HorizontalTension: record.HorizontalTension,

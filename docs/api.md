@@ -3128,3 +3128,53 @@ Authorization: Bearer <token>
 3. 外部同步新增应省略审核字段或显式写 0；遇到已审核条目跳过业务字段覆盖，待审核条目允许更新但保持 0；不得更新审核字段。完成同步程序调整后再恢复同步。
 
 本仓库未找到外部同步程序，数据库默认值只能保证省略审核字段的新增处于待审核，不能限制外部程序直接覆盖已审核数据。外部同步实现仍需在其所在项目调整。本次未连接数据库、未执行迁移、未部署。
+
+
+## 球线库基础查询（2026-10-21）
+
+以下接口需要 JWT，独立于穿线记录保存协议：
+
+- `GET /api/string-library?keyword=&brand=&page=1&pageSize=20`：查询已发布型号。keyword 最长 100 字符，brand 最长 100 字符；page 1～10000，pageSize 1～50。关键词匹配品牌、型号、中文名、别名，LIKE 通配符按字面量处理。响应 data 为 `{items,page,pageSize,total}`。
+- `GET /api/string-brands`：返回存在已发布型号的品牌名称字符串数组。
+
+items 字段：id、brand、model、nameZh、material、sourceUrl、variants；variants 为 `{id,diameterMm}` 数组。无结果返回空数组，查询失败返回既有统一错误结构。当前按品牌、型号、ID 排序；暂未实现相关度排序、详情、审核、最近使用和穿线结构化保存接口。
+
+部署前手动执行后端迁移 `027_create_string_library.sql`。迁移未自动执行、不附带未经核验的种子数据；空库时查询正常返回空列表。材质暂为来源描述文本，未添加数字枚举。当前版本是基础查询阶段，后续按评审设计完善品牌实体、审核与来源模型。
+
+
+## 结构化穿线记录（2026-10-21，破坏性变更）
+
+用户已确认：切换新结构，不兼容旧客户端写入，历史记录保留原文。
+
+`POST /api/rackets/:id/stringing-records` 与 `PUT /api/rackets/:id/stringing-records/:recordId` 必须提交 `lines.main` 与 `lines.cross`，原 `stringName` 不再是写入字段；只传旧字段返回 40001。两侧格式：
+
+```json
+{
+  "lines": {
+    "main": {"stringId": 1, "variantId": 2, "customName": "", "color": ""},
+    "cross": {"stringId": null, "variantId": null, "customName": "手动名称", "color": ""}
+  },
+  "verticalTension": 50,
+  "horizontalTension": 48,
+  "cost": 100,
+  "storeName": "",
+  "stringDate": "2026-10-21 19:30"
+}
+```
+
+库选择：stringId 为正整数，variantId 可空，customName 空；规格必须属于该型号。手动选择：两个 ID 均空，customName 去除首尾空白后 1～100 字符。color 可空、最多 50 字符。同线也提交两个相同选择。两侧与父记录原子写入；型号名、线径快照由服务器生成，不采信客户端展示名。
+
+穿线记录响应增加 `lines`：包含 main/cross，两侧字段为 stringId、variantId、name、diameterMm、color。历史无结构记录 `lines=null`，展示 `stringName` 原文；新记录的 `stringName` 是服务器生成的只读摘要，用于现有球拍和历史展示，不支持旧请求回写。编辑历史记录时，新客户端将原文明确作为手动名称，旧数据库 string_name 原文不改写，不自动匹配库。
+
+- `GET /api/rackets/:id/stringing-records/latest`：本人球拍最近未删除记录，无记录 data=null；日期与 ID 倒序，验证球拍归属；两侧追加 isSelectable。可复用球线与磅数，不复制日期、费用或地点。
+- `GET /api/string-library/recent`：本人未删除球拍与穿线记录中，按日期/ID倒序去重最多 6 个单侧配置，返回两侧快照格式及 isSelectable。历史文本作为手动项返回，库下架项不可直接新建引用。查询分批扫描至 6 个唯一项或历史耗尽。
+- `GET /api/string-library` 额外支持 `stringId` 正整数筛选，供已选型号直接补线径。
+
+下架型号只允许同一历史记录同一侧原样保留；新建或复用时须重新选线，或由用户明确转换成手动名称。改名不会改写历史快照。全部接口沿用 JWT 和统一响应、错误码。
+
+上线前备份，并按顺序执行 `027_create_string_library.sql`、`028_create_stringing_lines.sql`；没有自动执行迁移或灌入商品数据。部署新后端并发布新小程序应协调进行，旧客户端写入将失败。回滚前暂停新穿线写入并备份新增数据；不得直接删除快照表后启动仍依赖它的服务。回滚应用到旧版本会丢失新结构展示能力，因此不以降级作为常规回退，优先前滚修复。回退后端前需另行评审新记录如何显示，不能将空旧字段误认为已恢复。
+
+
+### 2026-10-27 手动球线线径
+
+穿线写入lines.main/cross增加可选 `customDiameterMm: number | null`，仅用于两个库ID均为空的手动球线；取值0.50～2.00毫米、最多两位小数，留空/null表示未知。库选择不能传非空自定义线径，仍由variantId决定规格。手动线径保存到现有racket_stringing_lines.diameter_mm_snapshot，响应仍为diameterMm。最近使用按名称、颜色、线径区分手动项，无新增表或迁移。

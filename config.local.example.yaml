@@ -1,0 +1,150 @@
+# 本地启动自动优先读取此文件；CONFIG_PATH 可显式指定其他配置。
+# 按本机 MySQL 修改 database；微信凭证建议通过环境变量覆盖。
+server:
+  port: "8081"
+
+database:
+  host: "127.0.0.1"
+  port: 3306
+  user: "root"
+  password: "root"
+  name: "tennis_diary"
+  charset: "utf8mb4"
+  parseTime: true
+  loc: "Asia/Shanghai"
+  timeZone: "Asia/Shanghai"
+
+jwt:
+  secret: "local-dev-secret-change-me"
+  expireHours: 720
+
+wechat:
+  appId: ""
+  appSecret: ""
+
+admin:
+  userIds: []
+
+logger:
+  level: "debug"
+
+storage:
+  enabled: false
+  envId: ""
+  bucket: ""
+  region: "ap-shanghai"
+  folder: "racket_library"
+  schedule: "0 3 * * *"
+  runOnStart: false
+  shoeFolder: "shoe_library"
+  shoeSchedule: "0 3 * * *"
+  shoeRunOnStart: false
+
+sessionEnums:
+  categories:
+    - value: 1
+      label: 日常球局
+      subCategories:
+        - value: 1
+          label: 单打
+        - value: 2
+          label: 双打
+    - value: 2
+      label: 训练
+      subCategories:
+        - value: 21
+          label: 发球
+        - value: 22
+          label: 截击
+        - value: 23
+          label: 正手
+        - value: 24
+          label: 反手
+        - value: 25
+          label: 体能      
+        - value: 26
+          label: 力量
+        - value: 27
+          label: 高压
+        - value: 28
+          label: 综合 
+        - value: 29
+          label: 其他
+    - value: 3
+      label: 比赛
+      subCategories:
+        - value: 1
+          label: 单打
+        - value: 2
+          label: 双打
+
+
+polyesterStringHealth:
+  standardLifeHours: 16
+  restWearPerDay: 0.18
+  states:
+    - key: fresh
+      minScore: 85
+      label: "新上线"
+      display: "新上线 · 手感正脆"
+      color: "green"
+    - key: peak
+      minScore: 70
+      label: "巅峰期"
+      display: "巅峰期 · 预计还可打 {remainingHours}h"
+      color: "green"
+    - key: good
+      minScore: 45
+      label: "状态良好"
+      display: "状态良好 · 预计还可打 {remainingHours}h"
+      color: "teal"
+    - key: decline
+      minScore: 25
+      label: "开始衰减"
+      display: "开始衰减 · 建议近期重穿"
+      color: "orange"
+    - key: dead
+      minScore: 10
+      label: "手感变死"
+      display: "手感变死 · 建议重穿"
+      color: "deep_orange"
+    - key: expired
+      minScore: 0
+      label: "已超期"
+      display: "已超期 · 不建议比赛使用"
+      color: "red"
+
+shoeWear:
+  standardLifeHours: 100
+  restWearPerDay: 0.06
+  states:
+    - key: fresh
+      minScore: 85
+      label: "全新"
+      display: "全新 · 缓震充足"
+      color: "green"
+    - key: good
+      minScore: 65
+      label: "状态良好"
+      display: "状态良好 · 预计还可打 {remainingHours}h"
+      color: "teal"
+    - key: worn
+      minScore: 40
+      label: "开始磨损"
+      display: "开始磨损 · 建议关注中底"
+      color: "orange"
+    - key: tired
+      minScore: 20
+      label: "磨损明显"
+      display: "磨损明显 · 建议考虑换鞋"
+      color: "deep_orange"
+    - key: dead
+      minScore: 8
+      label: "缓震衰减"
+      display: "缓震衰减 · 建议尽快换鞋"
+      color: "red"
+    - key: expired
+      minScore: 0
+      label: "已超期"
+      display: "已超期 · 不建议继续使用"
+      color: "red"

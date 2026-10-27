@@ -433,3 +433,32 @@ func (h *RacketHandler) ReviewLibrary(c *gin.Context) {
 	}
 	response.OK(c, item)
 }
+
+func (h *RacketHandler) LatestStringing(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	racketID, ok := parseIDParam(c)
+	if !ok {
+		return
+	}
+	result, err := h.racketService.LatestStringing(userID, racketID)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	response.OK(c, result)
+}
+func (h *RacketHandler) RecentStrings(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	result, err := h.racketService.RecentStrings(userID)
+	if err != nil {
+		handleServiceError(c, err)
+		return
+	}
+	response.OK(c, result)
+}

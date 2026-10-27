@@ -401,7 +401,7 @@ func (r *RacketRepository) CreateStringingRecord(record *model.RacketStringingRe
 
 func (r *RacketRepository) FindStringingRecordByID(userID, racketID, recordID int64) (*model.RacketStringingRecord, error) {
 	var record model.RacketStringingRecord
-	err := r.db.Where("user_id = ? AND racket_id = ? AND id = ? AND deleted_at IS NULL", userID, racketID, recordID).First(&record).Error
+	err := r.db.Preload("Lines").Where("user_id = ? AND racket_id = ? AND id = ? AND deleted_at IS NULL", userID, racketID, recordID).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -412,7 +412,19 @@ func (r *RacketRepository) FindStringingRecordByID(userID, racketID, recordID in
 }
 
 func (r *RacketRepository) UpdateStringingRecord(record *model.RacketStringingRecord) error {
-	return r.db.Save(record).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Omit("Lines").Save(record).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("stringing_record_id = ?", record.ID).Delete(&model.StringingLine{}).Error; err != nil {
+			return err
+		}
+		for i := range record.Lines {
+			record.Lines[i].ID = 0
+			record.Lines[i].StringingRecordID = record.ID
+		}
+		return tx.Create(&record.Lines).Error
+	})
 }
 
 func (r *RacketRepository) SoftDeleteStringingRecord(userID, racketID, recordID int64) (bool, error) {
@@ -427,8 +439,8 @@ func (r *RacketRepository) SoftDeleteStringingRecord(userID, racketID, recordID 
 
 func (r *RacketRepository) ListStringingRecords(userID, racketID int64) ([]model.RacketStringingRecord, error) {
 	var records []model.RacketStringingRecord
-	err := r.db.Where("user_id = ? AND racket_id = ? AND deleted_at IS NULL", userID, racketID).
-		Order("string_date DESC, created_at DESC").
+	err := r.db.Preload("Lines").Where("user_id = ? AND racket_id = ? AND deleted_at IS NULL", userID, racketID).
+		Order("string_date DESC, id DESC").
 		Find(&records).Error
 	return records, err
 }
@@ -440,7 +452,7 @@ func (r *RacketRepository) LatestStringingRecords(userID int64, racketIDs []int6
 	}
 
 	var records []model.RacketStringingRecord
-	err := r.db.Where("user_id = ? AND racket_id IN ? AND deleted_at IS NULL", userID, racketIDs).
+	err := r.db.Preload("Lines").Where("user_id = ? AND racket_id IN ? AND deleted_at IS NULL", userID, racketIDs).
 		Order("racket_id ASC, string_date DESC, id DESC").
 		Find(&records).Error
 	if err != nil {
@@ -559,4 +571,32 @@ func (r *RacketRepository) ReviewLibrary(id, userID int64, reviewed int) (*model
 		return nil, nil
 	}
 	return &item, err
+}
+
+// CatalogString returns the current catalog state for server-side selection validation.
+func (r *RacketRepository) CatalogString(id int64) (*model.StringLibrary, error) {
+	var item model.StringLibrary
+	err := r.db.Preload("Variants").First(&item, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &item, err
+}
+func (r *RacketRepository) LatestStringing(userID, racketID int64) (*model.RacketStringingRecord, error) {
+	var record model.RacketStringingRecord
+	err := r.db.Preload("Lines").Where("user_id = ? AND racket_id = ?", userID, racketID).Order("string_date DESC, id DESC").First(&record).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &record, err
+}
+
+// Page by stable date/id ordering, not a fixed history window.
+func (r *RacketRepository) StringingHistoryPage(userID int64, offset int) ([]model.RacketStringingRecord, error) {
+	records := []model.RacketStringingRecord{}
+	err := r.db.Model(&model.RacketStringingRecord{}).Preload("Lines").
+		Joins("JOIN racket ON racket.id = racket_stringing_record.racket_id AND racket.user_id = racket_stringing_record.user_id AND racket.deleted_at IS NULL").
+		Where("racket_stringing_record.user_id = ?", userID).
+		Order("racket_stringing_record.string_date DESC, racket_stringing_record.id DESC").Offset(offset).Limit(100).Find(&records).Error
+	return records, err
 }

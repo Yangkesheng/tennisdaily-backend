@@ -58,6 +58,8 @@ func main() {
 	homeHandler := handler.NewHomeHandler(homeService)
 	enumHandler := handler.NewEnumHandler(enumService)
 
+	stringHandler := handler.NewTennisStringHandler(service.NewTennisStringService(repository.NewTennisStringRepository(db)))
+
 	r := gin.Default()
 	r.GET("/health", func(c *gin.Context) {
 		logger.Debug("GET /health start clientIP=%s", c.ClientIP())
@@ -96,6 +98,11 @@ func main() {
 		authed.GET("/stats/month", statsHandler.Month)
 		authed.GET("/stats/charts", statsHandler.Charts)
 		authed.GET("/stats/records", statsHandler.Records)
+
+		authed.GET("/string-library/recent", racketHandler.RecentStrings)
+		authed.GET("/rackets/:id/stringing-records/latest", racketHandler.LatestStringing)
+		authed.GET("/string-library", stringHandler.List)
+		authed.GET("/string-brands", stringHandler.Brands)
 
 		authed.GET("/racket-brands", racketHandler.Brands)
 		authed.GET("/racket-series", racketHandler.Series)

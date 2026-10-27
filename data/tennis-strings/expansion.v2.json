@@ -1,0 +1,1068 @@
+{
+  "schemaVersion": 1,
+  "curatedOn": "2026-10-27",
+  "purpose": "上市前增量球线目录，供本地测试与发布复核",
+  "gaugeCoverage": "仅收证据明确的毫米线径，不代表完整SKU或中国实时库存",
+  "publicationPolicy": "本批已授权写本地测试库published=true；生产尚未导入，published=false表示生产待审核",
+  "items": [
+    {
+      "key": "solinco/revolution",
+      "brand": "Solinco",
+      "model": "Revolution",
+      "nameZh": "",
+      "aliases": [],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/revolution/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/revolution/",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/outlast",
+      "brand": "Solinco",
+      "model": "Outlast",
+      "nameZh": "",
+      "aliases": [],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/outlast/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/outlast/",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/barb-wire",
+      "brand": "Solinco",
+      "model": "Barb Wire",
+      "nameZh": "",
+      "aliases": [],
+      "material": "co-polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/barb-wire/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/barb-wire/",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/tour-bite-diamond-rough",
+      "brand": "Solinco",
+      "model": "Tour Bite Diamond Rough",
+      "nameZh": "",
+      "aliases": [],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/tour-bite-diamond-rough/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/tour-bite-diamond-rough/",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/vanquish",
+      "brand": "Solinco",
+      "model": "Vanquish",
+      "nameZh": "",
+      "aliases": [],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.3
+        },
+        {
+          "diameterMm": 1.35
+        }
+      ],
+      "sourceUrl": "https://solincosports.com/equipment/vanquish/",
+      "sources": [
+        {
+          "url": "https://solincosports.com/equipment/vanquish/",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "保留官网明确列出的17/1.20规格，不按其他品牌Gauge换算。",
+      "missingFields": []
+    },
+    {
+      "key": "solinco/mach-10",
+      "brand": "Solinco",
+      "model": "Mach-10",
+      "nameZh": "",
+      "aliases": [
+        "Mach 10"
+      ],
+      "material": "co-polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://shop.solincosports.com/products/mach-10",
+      "sources": [
+        {
+          "url": "https://shop.solincosports.com/products/mach-10",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "signum-pro/x-perience",
+      "brand": "Signum Pro",
+      "model": "X-perience",
+      "nameZh": "",
+      "aliases": [
+        "Signum-Pro X-perience",
+        "西格 X-perience"
+      ],
+      "material": "co-polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.18
+        },
+        {
+          "diameterMm": 1.24
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.signum-pro.com/html/index.php?id=86",
+      "sources": [
+        {
+          "url": "https://www.signum-pro.com/html/index.php?id=86",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "signum-pro/poly-plasma",
+      "brand": "Signum Pro",
+      "model": "Poly Plasma",
+      "nameZh": "",
+      "aliases": [
+        "Signum-Pro Poly Plasma",
+        "西格 Poly Plasma"
+      ],
+      "material": "co-polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.18
+        },
+        {
+          "diameterMm": 1.23
+        },
+        {
+          "diameterMm": 1.28
+        },
+        {
+          "diameterMm": 1.33
+        }
+      ],
+      "sourceUrl": "https://www.signum-pro.com/html/index.php?id=5",
+      "sources": [
+        {
+          "url": "https://www.signum-pro.com/html/index.php?id=5",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "signum-pro/tornado",
+      "brand": "Signum Pro",
+      "model": "Tornado",
+      "nameZh": "",
+      "aliases": [
+        "Signum-Pro Tornado",
+        "西格 Tornado"
+      ],
+      "material": "co-polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.17
+        },
+        {
+          "diameterMm": 1.23
+        },
+        {
+          "diameterMm": 1.29
+        }
+      ],
+      "sourceUrl": "https://www.signum-pro.com/html/index.php?id=42",
+      "sources": [
+        {
+          "url": "https://www.signum-pro.com/html/index.php?id=42",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "signum-pro/firestorm",
+      "brand": "Signum Pro",
+      "model": "Firestorm",
+      "nameZh": "",
+      "aliases": [
+        "Signum-Pro Firestorm",
+        "西格 Firestorm"
+      ],
+      "material": "co-polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.signum-pro.com/html/index.php?id=44",
+      "sources": [
+        {
+          "url": "https://www.signum-pro.com/html/index.php?id=44",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "kirschbaum/max-power",
+      "brand": "Kirschbaum",
+      "model": "Max Power",
+      "nameZh": "",
+      "aliases": [
+        "基尔斯鲍姆 Max Power"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://kirschbaum-strings.de/produkte/produktdetail/max-power%3A126",
+      "sources": [
+        {
+          "url": "https://kirschbaum-strings.de/produkte/produktdetail/max-power%3A126",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "kirschbaum/pro-line",
+      "brand": "Kirschbaum",
+      "model": "Pro Line",
+      "nameZh": "",
+      "aliases": [
+        "Pro Line II",
+        "Pro Line 2",
+        "PL2"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://kirschbaum-strings.de/produkte/produktdetail/pro-line-ehemals-pro-line-ii%3A292",
+      "sources": [
+        {
+          "url": "https://kirschbaum-strings.de/produkte/produktdetail/pro-line-ehemals-pro-line-ii%3A292",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://kirschbaum-strings.de/produkte/tennissaiten/co-polyester-saiten",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "厂商明确Pro Line II改名为Pro Line且线材相同，旧名仅作别名，不重复建型号。材质由厂商Co-Polyester分类页确认。",
+      "missingFields": []
+    },
+    {
+      "key": "kirschbaum/pro-line-rough",
+      "brand": "Kirschbaum",
+      "model": "Pro Line Rough",
+      "nameZh": "",
+      "aliases": [
+        "Pro Line II Rough"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://kirschbaum-strings.de/produkte/produktdetail/pro-line-rough%3A139",
+      "sources": [
+        {
+          "url": "https://kirschbaum-strings.de/produkte/produktdetail/pro-line-rough%3A139",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "kirschbaum/evolution",
+      "brand": "Kirschbaum",
+      "model": "Evolution",
+      "nameZh": "",
+      "aliases": [
+        "Pro Line Evolution"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://kirschbaum-strings.de/produkte/tennissaiten/co-polyester-saiten",
+      "sources": [
+        {
+          "url": "https://kirschbaum-strings.de/produkte/tennissaiten/co-polyester-saiten",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "",
+      "missingFields": []
+    },
+    {
+      "key": "head/velocity-mlt",
+      "brand": "HEAD",
+      "model": "Velocity MLT",
+      "nameZh": "",
+      "aliases": [],
+      "material": null,
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/en_US/product/velocity-mlt-4",
+      "sources": [
+        {
+          "url": "https://www.head.com/en_US/product/velocity-mlt-4",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网明确型号、结构与毫米线径；化学材质未在本次产品页明确，留空，不以结构推断。",
+      "missingFields": [
+        "material"
+      ]
+    },
+    {
+      "key": "head/lynx-touch",
+      "brand": "HEAD",
+      "model": "Lynx Touch",
+      "nameZh": "",
+      "aliases": [],
+      "material": null,
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/en_US/product/lynx-touch-281042",
+      "sources": [
+        {
+          "url": "https://www.head.com/en_US/product/lynx-touch-281042",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网明确型号、结构与毫米线径；化学材质未在本次产品页明确，留空，不以结构推断。",
+      "missingFields": [
+        "material"
+      ]
+    },
+    {
+      "key": "head/hawk-power",
+      "brand": "HEAD",
+      "model": "Hawk Power",
+      "nameZh": "",
+      "aliases": [],
+      "material": null,
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.head.com/en_US/product/hawk-power-281022",
+      "sources": [
+        {
+          "url": "https://www.head.com/en_US/product/hawk-power-281022",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官网明确型号、结构与毫米线径；化学材质未在本次产品页明确，留空，不以结构推断。",
+      "missingFields": [
+        "material"
+      ]
+    },
+    {
+      "key": "gosen/g-tour-1",
+      "brand": "GOSEN",
+      "model": "G-TOUR 1",
+      "nameZh": "",
+      "aliases": [
+        "G TOUR 1",
+        "高胜 G-TOUR 1"
+      ],
+      "material": "polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.gosencanada.com/g-tour",
+      "sources": [
+        {
+          "url": "https://www.gosencanada.com/g-tour",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "加拿大官方目录确认毫米规格；地区供应状态可能不同。",
+      "missingFields": []
+    },
+    {
+      "key": "gosen/g-tour-2",
+      "brand": "GOSEN",
+      "model": "G-TOUR 2",
+      "nameZh": "",
+      "aliases": [
+        "G TOUR 2",
+        "高胜 G-TOUR 2"
+      ],
+      "material": "polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.gosencanada.com/g-tour",
+      "sources": [
+        {
+          "url": "https://www.gosencanada.com/g-tour",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "加拿大官方目录确认毫米规格；地区供应状态可能不同。",
+      "missingFields": []
+    },
+    {
+      "key": "gosen/g-tour-3",
+      "brand": "GOSEN",
+      "model": "G-TOUR 3",
+      "nameZh": "",
+      "aliases": [
+        "G TOUR 3",
+        "高胜 G-TOUR 3"
+      ],
+      "material": "polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.18
+        },
+        {
+          "diameterMm": 1.23
+        },
+        {
+          "diameterMm": 1.28
+        }
+      ],
+      "sourceUrl": "https://www.gosencanada.com/g-tour",
+      "sources": [
+        {
+          "url": "https://www.gosencanada.com/g-tour",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "加拿大官方目录确认毫米规格；地区供应状态可能不同。",
+      "missingFields": []
+    },
+    {
+      "key": "msv/focus-hex",
+      "brand": "MSV",
+      "model": "Focus HEX",
+      "nameZh": "",
+      "aliases": [
+        "Focus-Hex"
+      ],
+      "material": "co-polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.1
+        },
+        {
+          "diameterMm": 1.18
+        },
+        {
+          "diameterMm": 1.23
+        },
+        {
+          "diameterMm": 1.27
+        },
+        {
+          "diameterMm": 1.33
+        }
+      ],
+      "sourceUrl": "https://www.msv-tennis-shop.com/product/msv-focus-hex-tennis-string-12m-our-bestseller.63.html?language_code=en",
+      "sources": [
+        {
+          "url": "https://www.msv-tennis-shop.com/product/msv-focus-hex-tennis-string-12m-our-bestseller.63.html?language_code=en",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://www.msv-tennis-shop.com/documents/products/PDF/ERSA%20Testbericht%20MSV%20Focus-Hex%201%2C18%20Juli%202016%20k.pdf?ver=1739458771",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "线径由官方商店确认；材质、结构由其托管的ERSA测试报告确认。",
+      "missingFields": []
+    },
+    {
+      "key": "dunlop/explosive-bite",
+      "brand": "Dunlop",
+      "model": "Explosive Bite",
+      "nameZh": "",
+      "aliases": [
+        "邓禄普 Explosive Bite"
+      ],
+      "material": "polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.27
+        },
+        {
+          "diameterMm": 1.32
+        }
+      ],
+      "sourceUrl": "https://www.dunloptennis.net/storage/catalog2025.pdf",
+      "sources": [
+        {
+          "url": "https://www.dunloptennis.net/storage/catalog2025.pdf",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://us.dunlopsports.com/tennis-strings.html",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "日本官方2025目录明确毫米线径；为目录覆盖，不保证中国所有渠道当前有货。",
+      "missingFields": []
+    },
+    {
+      "key": "dunlop/explosive-spin",
+      "brand": "Dunlop",
+      "model": "Explosive Spin",
+      "nameZh": "",
+      "aliases": [
+        "邓禄普 Explosive Spin"
+      ],
+      "material": "polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.dunloptennis.net/storage/catalog2025.pdf",
+      "sources": [
+        {
+          "url": "https://www.dunloptennis.net/storage/catalog2025.pdf",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://us.dunlopsports.com/tennis-strings.html",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "日本官方2025目录明确毫米线径；为目录覆盖，不保证中国所有渠道当前有货。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/razor-spin",
+      "brand": "Tecnifibre",
+      "model": "RAZOR SPIN",
+      "nameZh": "",
+      "aliases": [],
+      "material": "polyester",
+      "construction": "monofilament",
+      "variants": [
+        {
+          "diameterMm": 1.15
+        },
+        {
+          "diameterMm": 1.2
+        },
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.jp/products/string/razor-spin/",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.jp/products/string/razor-spin/",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://www.tecnifibre.jp/wp/wp-content/uploads/04d44dcc1be25c5336fe15c9144338ab.pdf",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "2026-05-16日本上市，官方新品公告明确毫米线径；材质含PU添加，不表示纯聚酯。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/nrg2",
+      "brand": "Tecnifibre",
+      "model": "NRG2",
+      "nameZh": "",
+      "aliases": [
+        "NRG²",
+        "NRG 2"
+      ],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.24
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.jp/products/string/nrg2/",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.jp/products/string/nrg2/",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://www.tennis-warehouse.com/Tecnifibre_NRG2_17_124_String_Black/descpageACTFUSA-NRG17BK.html",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "本批仅确认1.24；官网产品编码中的132不直接转换成毫米规格。含PU。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/tgv",
+      "brand": "Tecnifibre",
+      "model": "TGV",
+      "nameZh": "",
+      "aliases": [],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.jp/products/string/tgv/",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.jp/products/string/tgv/",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://www.tecnifibre.com/collections/cordages-de-tennis-multifilament/products/bobine-200m-tgv-black",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "毫米线径由品牌全球商店索引确认，材料含PU。1.35尚未纳入。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/xr3",
+      "brand": "Tecnifibre",
+      "model": "XR3",
+      "nameZh": "",
+      "aliases": [
+        "XR-3"
+      ],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.com/en/products/garniture-xr3-naturel",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.com/en/products/garniture-xr3-naturel",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "含三个单丝芯和多股结构；主材质归一为聚酰胺，含PU与硅表面处理。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/multifeel",
+      "brand": "Tecnifibre",
+      "model": "MULTIFEEL",
+      "nameZh": "",
+      "aliases": [],
+      "material": "polyamide",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        },
+        {
+          "diameterMm": 1.3
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.com/en-ue/products/bobine-multifeel-black?variant=54757820236120",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.com/en-ue/products/bobine-multifeel-black?variant=54757820236120",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "聚酰胺中心单丝加多股结构，含PU；不将中心单丝误分类为整体单丝。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/triax",
+      "brand": "Tecnifibre",
+      "model": "TRIAX",
+      "nameZh": "",
+      "aliases": [],
+      "material": "polyamide+polyester",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.28
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.com/en/products/garniture-triax-naturel",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.com/en/products/garniture-triax-naturel",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://www.tecnifibre.jp/products/string/triax/",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "日本官网明确尼龙、聚酯、PU混合；全球页明确1.28。1.33尚未纳入，不能按产品编号推断。",
+      "missingFields": []
+    },
+    {
+      "key": "tecnifibre/duramix",
+      "brand": "Tecnifibre",
+      "model": "DURAMIX",
+      "nameZh": "",
+      "aliases": [],
+      "material": "polyamide+polyester",
+      "construction": "multifilament",
+      "variants": [
+        {
+          "diameterMm": 1.25
+        }
+      ],
+      "sourceUrl": "https://www.tecnifibre.com/en-uee/products/garniture-duramix-black",
+      "sources": [
+        {
+          "url": "https://www.tecnifibre.com/en-uee/products/garniture-duramix-black",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://www.tecnifibre.jp/products/string/duramix/",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "材料含尼龙、聚酯、PU。全球标题写monofilament与日本结构描述冲突，采用日本规格明确的多股结构；仅收毫米明示的1.25。",
+      "missingFields": []
+    },
+    {
+      "key": "luxilon/element-ir-soft",
+      "brand": "Luxilon",
+      "model": "Element IR Soft",
+      "nameZh": "",
+      "aliases": [],
+      "material": "polyester",
+      "construction": null,
+      "variants": [
+        {
+          "diameterMm": 1.27
+        }
+      ],
+      "sourceUrl": "https://www.wilson.com/de-de/products/element-ir-soft-127-tennis-string-set-wr8309200?variant=53965119029562",
+      "sources": [
+        {
+          "url": "https://www.wilson.com/de-de/products/element-ir-soft-127-tennis-string-set-wr8309200?variant=53965119029562",
+          "role": "manufacturer-product-or-catalog"
+        },
+        {
+          "url": "https://catalogs.asbsports.com/vendors/pdfs/Wilson-Racquet_Sports-SS_2026.pdf",
+          "role": "manufacturer-product-or-catalog"
+        }
+      ],
+      "sourceCheckedOn": "2026-10-27",
+      "reviewStatus": "source-checked-awaiting-release-review",
+      "published": false,
+      "notes": "官方商品页确认1.27，材质由品牌2026目录Polyester分类交叉确认；与Element分开建型号。",
+      "missingFields": []
+    }
+  ],
+  "existingItemUpdates": [
+    {
+      "brand": "Tecnifibre",
+      "model": "X-ONE BIPHASE",
+      "material": "polyamide",
+      "sourceUrl": "https://www.tecnifibre.jp/products/string/x-one-biphase/",
+      "sourceCheckedOn": "2026-10-27",
+      "notes": "日本官方规格明确尼龙、PU与多股结构，补齐首批未知材质。"
+    }
+  ]
+}

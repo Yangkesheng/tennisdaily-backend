@@ -458,38 +458,11 @@ func (s *RacketService) Delete(userID, id int64) error {
 	return nil
 }
 
-func (s *RacketService) AddStringingRecord(userID, racketID int64, req model.CreateStringingRecordRequest) error {
-	if req.StringName == "" || req.StringDate == "" {
-		return ErrInvalidRequest
-	}
-	if err := s.checkUserInputTexts(userID, req.StringName, req.StoreName); err != nil {
-		return err
-	}
-	if _, err := s.requireRacket(userID, racketID); err != nil {
-		return err
-	}
-	stringDate, err := s.parseStringingDate(req.StringDate)
-	if err != nil {
-		return ErrInvalidRequest
-	}
-	record := model.RacketStringingRecord{
-		UserID:            userID,
-		RacketID:          racketID,
-		StringName:        req.StringName,
-		StoreName:         req.StoreName,
-		VerticalTension:   req.VerticalTension,
-		HorizontalTension: req.HorizontalTension,
-		Cost:              req.Cost,
-		StringDate:        stringDate,
-	}
-	return s.repo.CreateStringingRecord(&record)
-}
-
 func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.CreateStringingRecordRequest) (model.StringingRecordResponse, error) {
-	if req.StringName == "" || req.StringDate == "" {
+	if req.Lines == nil || req.StringDate == "" {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
-	if err := s.checkUserInputTexts(userID, req.StringName, req.StoreName); err != nil {
+	if err := s.checkUserInputTexts(userID, req.Lines.Main.CustomName, req.Lines.Cross.CustomName, req.Lines.Main.Color, req.Lines.Cross.Color, req.StoreName); err != nil {
 		return model.StringingRecordResponse{}, err
 	}
 	if _, err := s.requireRacket(userID, racketID); err != nil {
@@ -499,10 +472,15 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 	if err != nil {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
+	lines, err := s.resolveStringingLines(*req.Lines, nil)
+	if err != nil {
+		return model.StringingRecordResponse{}, err
+	}
 	record := model.RacketStringingRecord{
+		Lines:             lines,
 		UserID:            userID,
 		RacketID:          racketID,
-		StringName:        req.StringName,
+		StringName:        "",
 		StoreName:         req.StoreName,
 		VerticalTension:   req.VerticalTension,
 		HorizontalTension: req.HorizontalTension,
@@ -516,10 +494,10 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 }
 
 func (s *RacketService) UpdateStringingRecord(userID, racketID, recordID int64, req model.UpdateStringingRecordRequest) (model.StringingRecordResponse, error) {
-	if req.StringName == "" || req.StringDate == "" {
+	if req.Lines == nil || req.StringDate == "" {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
-	if err := s.checkUserInputTexts(userID, req.StringName, req.StoreName); err != nil {
+	if err := s.checkUserInputTexts(userID, req.Lines.Main.CustomName, req.Lines.Cross.CustomName, req.Lines.Main.Color, req.Lines.Cross.Color, req.StoreName); err != nil {
 		return model.StringingRecordResponse{}, err
 	}
 	if _, err := s.requireRacket(userID, racketID); err != nil {
@@ -536,7 +514,12 @@ func (s *RacketService) UpdateStringingRecord(userID, racketID, recordID int64, 
 	if err != nil {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
-	record.StringName = req.StringName
+	lines, err := s.resolveStringingLines(*req.Lines, record.Lines)
+	if err != nil {
+		return model.StringingRecordResponse{}, err
+	}
+	record.Lines = lines
+	// Preserve the original historical text; new display is derived from snapshots.
 	record.StoreName = req.StoreName
 	record.VerticalTension = req.VerticalTension
 	record.HorizontalTension = req.HorizontalTension
@@ -624,7 +607,7 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 			racket.FileID = library.FileID
 		}
 		if record, ok := latest[racket.ID]; ok {
-			racket.StringName = record.StringName
+			racket.StringName = model.StringingDisplayName(record)
 			racket.StoreName = record.StoreName
 			racket.VerticalTension = record.VerticalTension
 			racket.HorizontalTension = record.HorizontalTension
