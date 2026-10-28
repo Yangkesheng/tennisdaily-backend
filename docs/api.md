@@ -3238,6 +3238,6 @@ items 字段：id、brand、model、nameZh、material、sourceUrl、variants；v
 
 ### 发布依赖
 
-前后端须协同发布。已有环境备份并执行 `migrations/029_add_court_location.sql`，为记录增加地址、可空坐标及坐标系列，扩容 user_settings.setting_value 为 TEXT，新增设置键 4 保存默认位置 JSON。迁移针对 MySQL 8.0.16+，已用本地 MySQL 8.4 验证；有效设置键存在重复时会在增列前中止，不能自行清理。
+前后端须协同发布。已有环境备份并执行 `migrations/029_add_court_location.sql`，为记录增加地址、可空坐标及坐标系列，扩容 user_settings.setting_value 为 TEXT，新增设置键 4 保存默认位置 JSON。迁移使用数据库级存储过程，需 CREATE/ALTER ROUTINE 权限；不使用会话临时表，支持部分完成后重试。有效设置键存在重复时会在增列前中止，不能自行清理。SQL 控制台须将 CREATE PROCEDURE ... END 作为完整语句执行；mysql CLI 使用 DELIMITER。
 
 新环境当前 init.sql 已包含此结构，不应再重复执行 029；实际部署必须按迁移记录与 INFORMATION_SCHEMA 核验。增列和扩容在回退时保留；回退旧后端前暂停相关写入，避免旧代码造成名称与位置不一致。微信后台位置接口资格、隐私指引和 iOS/Android 真机地图流程仍需上线前验证。

@@ -96,8 +96,35 @@ func courtTestDB(t *testing.T) *gorm.DB {
 	if err = db.Where("user_id = ?", 99).Unscoped().Delete(&model.UserSetting{}).Error; err != nil {
 		t.Fatal("reset duplicate fixture failed")
 	}
+
+	// Create the routine on one physical connection and call it on another.
+	poolForMigration, _ := db.DB()
+	firstConnection, err := poolForMigration.Conn(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondConnection, err := poolForMigration.Conn(context.Background())
+	if err != nil {
+		firstConnection.Close()
+		t.Fatal(err)
+	}
+	parts := strings.SplitN(string(script), "\nCALL migrate_court_location_029();", 2)
+	if len(parts) != 2 {
+		t.Fatal("unexpected migration layout")
+	}
+	_, createErr := firstConnection.ExecContext(context.Background(), parts[0])
+	var callErr error
+	if createErr == nil {
+		_, callErr = secondConnection.ExecContext(context.Background(), "CALL migrate_court_location_029();"+parts[1])
+	}
+	firstConnection.Close()
+	secondConnection.Close()
+	if createErr != nil || callErr != nil {
+		t.Fatal("cross-connection migration failed")
+	}
+
 	if err = db.Exec(string(script)).Error; err != nil {
-		t.Fatal("apply actual location migration failed")
+		t.Fatal("location migration is not repeatable")
 	}
 	var row model.TennisSession
 	if err = db.First(&row, old.ID).Error; err != nil || row.CourtName != "历史场地" || row.CourtColumns.Location() != nil {
@@ -319,5 +346,59 @@ func TestCourtMySQLFreshInitialization(t *testing.T) {
 	var typ string
 	if err = db.Raw("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='user_settings' AND COLUMN_NAME='setting_value'").Scan(&typ).Error; err != nil || typ != "text" {
 		t.Fatal("fresh init lacks TEXT settings")
+	}
+}
+
+func TestCourtMySQLConsoleMigration(t *testing.T) {
+	db := courtTestDB(t)
+	script, err := os.ReadFile("../../migrations/029_court_location_console.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	type statement struct {
+		MigrationStatus string
+		SQLToExecute    *string `gorm:"column:sql_to_execute"`
+	}
+	read := func() []statement {
+		var rows []statement
+		if err := db.Raw(string(script)).Scan(&rows).Error; err != nil {
+			t.Fatal(err)
+		}
+		return rows
+	}
+	if rows := read(); len(rows) != 1 || rows[0].MigrationStatus != "DONE" {
+		t.Fatal("current schema not recognized")
+	}
+	if err := db.Migrator().DropColumn(&model.TennisSession{}, "court_address"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Exec("ALTER TABLE user_settings MODIFY setting_value VARCHAR(255) NOT NULL DEFAULT ''").Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&[]model.UserSetting{{UserID: 1, SettingKey: 2, SettingValue: "A"}, {UserID: 1, SettingKey: 2, SettingValue: "B"}}).Error; err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range read() {
+		if row.SQLToExecute != nil || !strings.HasPrefix(row.MigrationStatus, "BLOCKED") {
+			t.Fatal("duplicate settings did not block console migration")
+		}
+	}
+	if err := db.Where("user_id = ?", 1).Unscoped().Delete(&model.UserSetting{}).Error; err != nil {
+		t.Fatal(err)
+	}
+	rows := read()
+	if len(rows) != 2 {
+		t.Fatal("partial schema not recognized")
+	}
+	for _, row := range rows {
+		if row.MigrationStatus != "READY" || row.SQLToExecute == nil {
+			t.Fatal("missing executable statement")
+		}
+		if err := db.Exec(*row.SQLToExecute).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if rows := read(); len(rows) != 1 || rows[0].MigrationStatus != "DONE" {
+		t.Fatal("migration not completed")
 	}
 }
