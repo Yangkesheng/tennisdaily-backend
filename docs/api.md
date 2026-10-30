@@ -3241,3 +3241,17 @@ items 字段：id、brand、model、nameZh、material、sourceUrl、variants；v
 前后端须协同发布。已有环境备份并执行 `migrations/029_add_court_location.sql`，为记录增加地址、可空坐标及坐标系列，扩容 user_settings.setting_value 为 TEXT，新增设置键 4 保存默认位置 JSON。迁移使用数据库级存储过程，需 CREATE/ALTER ROUTINE 权限；不使用会话临时表，支持部分完成后重试。有效设置键存在重复时会在增列前中止，不能自行清理。SQL 控制台须将 CREATE PROCEDURE ... END 作为完整语句执行；mysql CLI 使用 DELIMITER。
 
 新环境当前 init.sql 已包含此结构，不应再重复执行 029；实际部署必须按迁移记录与 INFORMATION_SCHEMA 核验。增列和扩容在回退时保留；回退旧后端前暂停相关写入，避免旧代码造成名称与位置不一致。微信后台位置接口资格、隐私指引和 iOS/Android 真机地图流程仍需上线前验证。
+
+
+## 2026-10-30 穿线地图地点
+
+穿线创建/更新请求及响应新增 `storeLocation`（null 或 `{address,latitude,longitude,coordinateSystem:"gcj02"}`），必须显式提交。留空：`storeName:""`、`storeLocation:null`；非空名称必须配合法位置。名称最多100字、地址512字，坐标7位小数。不兼容历史手填地点。
+
+`GET /api/stringing-stores/recent`：JWT 鉴权，无参数，统一响应 data 为 `[{storeName,storeLocation}]`，没有为 `[]`。按当前用户跨球拍的穿线时间和ID倒序读取，排除已删除记录、已删除球拍和无有效位置记录，以名称、地址、坐标及坐标系去重，返回最多三个不同场所。
+
+先执行后端 `migrations/030_add_stringing_store_location.sql`（新增 `racket_stringing_record` 的 store_address VARCHAR(512)、store_latitude/store_longitude DECIMAL(10,7)、store_coordinate_system VARCHAR(16) 独立列），再部署后端与前端。无历史回填或兼容。
+
+
+### 2026-10-30 穿线地点存储统一
+
+穿线地点与球场一致使用独立列：`store_name VARCHAR(100)`、`store_address VARCHAR(512) NOT NULL DEFAULT ''`、`store_latitude DECIMAL(10,7) NULL`、`store_longitude DECIMAL(10,7) NULL`、`store_coordinate_system VARCHAR(16) NOT NULL DEFAULT ''`。不使用 store_location JSON 列。接口仍为 storeLocation 对象或 null，由 model 在独立列与对象间转换。清空地点时地址和坐标系为空、经纬度为 SQL NULL。更新尚未执行的迁移030，无历史 JSON 迁移、无兼容逻辑。

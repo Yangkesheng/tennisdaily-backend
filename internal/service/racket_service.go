@@ -459,6 +459,11 @@ func (s *RacketService) Delete(userID, id int64) error {
 }
 
 func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.CreateStringingRecordRequest) (model.StringingRecordResponse, error) {
+	location, locationErr := normalizeStringingStore(req.StoreName, req.StoreLocation)
+	if locationErr != nil {
+		return model.StringingRecordResponse{}, locationErr
+	}
+	req.StoreName = model.TrimCourtText(req.StoreName)
 	if req.Lines == nil || req.StringDate == "" {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
@@ -482,6 +487,7 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 		RacketID:          racketID,
 		StringName:        "",
 		StoreName:         req.StoreName,
+		StoreColumns:      model.StoreColumnsFromLocation(location),
 		VerticalTension:   req.VerticalTension,
 		HorizontalTension: req.HorizontalTension,
 		Cost:              req.Cost,
@@ -494,6 +500,11 @@ func (s *RacketService) CreateStringingRecord(userID, racketID int64, req model.
 }
 
 func (s *RacketService) UpdateStringingRecord(userID, racketID, recordID int64, req model.UpdateStringingRecordRequest) (model.StringingRecordResponse, error) {
+	location, locationErr := normalizeStringingStore(req.StoreName, req.StoreLocation)
+	if locationErr != nil {
+		return model.StringingRecordResponse{}, locationErr
+	}
+	req.StoreName = model.TrimCourtText(req.StoreName)
 	if req.Lines == nil || req.StringDate == "" {
 		return model.StringingRecordResponse{}, ErrInvalidRequest
 	}
@@ -521,6 +532,7 @@ func (s *RacketService) UpdateStringingRecord(userID, racketID, recordID int64, 
 	record.Lines = lines
 	// Preserve the original historical text; new display is derived from snapshots.
 	record.StoreName = req.StoreName
+	record.StoreColumns = model.StoreColumnsFromLocation(location)
 	record.VerticalTension = req.VerticalTension
 	record.HorizontalTension = req.HorizontalTension
 	record.Cost = req.Cost

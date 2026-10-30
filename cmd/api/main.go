@@ -102,6 +102,7 @@ func main() {
 		authed.GET("/stats/records", statsHandler.Records)
 
 		authed.GET("/string-library/recent", racketHandler.RecentStrings)
+		authed.GET("/stringing-stores/recent", racketHandler.RecentStringingStores)
 		authed.GET("/rackets/:id/stringing-records/latest", racketHandler.LatestStringing)
 		authed.GET("/string-library", stringHandler.List)
 		authed.GET("/string-brands", stringHandler.Brands)

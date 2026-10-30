@@ -462,3 +462,16 @@ func (h *RacketHandler) RecentStrings(c *gin.Context) {
 	}
 	response.OK(c, result)
 }
+
+func (h *RacketHandler) RecentStringingStores(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	stores, err := h.racketService.RecentStringingStores(c.Request.Context(), userID)
+	if err != nil {
+		response.Error(c, 500, response.CodeInternalError, "internal error")
+		return
+	}
+	response.OK(c, stores)
+}

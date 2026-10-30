@@ -68,6 +68,7 @@ func (Racket) TableName() string {
 }
 
 type RacketStringingRecord struct {
+	StoreColumns      `json:"-" gorm:"embedded"`
 	Lines             []StringingLine `json:"-" gorm:"foreignKey:StringingRecordID"`
 	ID                int64           `json:"id" gorm:"primaryKey"`
 	UserID            int64           `json:"userId" gorm:"not null;index"`
@@ -128,11 +129,12 @@ type RacketResponse struct {
 }
 
 type StringingRecordResponse struct {
-	Lines      *StringingLinesResponse `json:"lines"`
-	ID         int64                   `json:"id"`
-	RacketID   int64                   `json:"racketId"`
-	StringName string                  `json:"stringName"`
-	StoreName  string                  `json:"storeName"`
+	StoreLocation *CourtLocation          `json:"storeLocation"`
+	Lines         *StringingLinesResponse `json:"lines"`
+	ID            int64                   `json:"id"`
+	RacketID      int64                   `json:"racketId"`
+	StringName    string                  `json:"stringName"`
+	StoreName     string                  `json:"storeName"`
 
 	VerticalTension   *float64  `json:"verticalTension"`
 	HorizontalTension *float64  `json:"horizontalTension"`
@@ -185,8 +187,9 @@ type UpdateRacketRequest struct {
 }
 
 type CreateStringingRecordRequest struct {
-	Lines     *StringingLinesRequest `json:"lines" binding:"required"`
-	StoreName string                 `json:"storeName" binding:"max=100"`
+	StoreLocation LocationField          `json:"storeLocation"`
+	Lines         *StringingLinesRequest `json:"lines" binding:"required"`
+	StoreName     string                 `json:"storeName" binding:"max=100"`
 
 	VerticalTension   *float64 `json:"verticalTension"`
 	HorizontalTension *float64 `json:"horizontalTension"`
@@ -195,8 +198,9 @@ type CreateStringingRecordRequest struct {
 }
 
 type UpdateStringingRecordRequest struct {
-	Lines     *StringingLinesRequest `json:"lines" binding:"required"`
-	StoreName string                 `json:"storeName" binding:"max=100"`
+	StoreLocation LocationField          `json:"storeLocation"`
+	Lines         *StringingLinesRequest `json:"lines" binding:"required"`
+	StoreName     string                 `json:"storeName" binding:"max=100"`
 
 	VerticalTension   *float64 `json:"verticalTension"`
 	HorizontalTension *float64 `json:"horizontalTension"`
@@ -252,6 +256,7 @@ func NewStringingRecordResponse(record RacketStringingRecord) StringingRecordRes
 		StringName:        StringingDisplayName(record),
 		Lines:             StringingLinesFromRecord(record),
 		StoreName:         record.StoreName,
+		StoreLocation:     record.StoreColumns.Location(),
 		VerticalTension:   record.VerticalTension,
 		HorizontalTension: record.HorizontalTension,
 		Cost:              record.Cost,

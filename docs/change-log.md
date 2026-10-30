@@ -3258,3 +3258,19 @@
 - 控制台按分号拆分 CREATE PROCEDURE 导致 1064；新增 migrations/029_court_location_console.sql，适配无会话连续性且不能发送复合语句的执行器。
 - 新文件只有一个 SELECT，返回 READY/BLOCKED/DONE 和待执行 SQL；备份后仅执行 READY 行，再查询确认 DONE。逐列检查存在状态，支持部分执行后重试，不使用临时表、过程或变量，不自动修改表。
 - 添加完成状态、缺失列、重复设置及生成语句执行的集成测试。Go 全量检查通过；本轮 MySQL 实测未完成（Docker 未运行），未执行业务库迁移。
+
+
+## 2026-10-30 穿线地点地图搜索
+
+- 默认空，点击直接微信地图选点；沿用球线配置不复制地点。最近三个不同有效地点按当前用户全部球拍的穿线时间倒序推荐，单行等宽弱化胶囊，无候选隐藏。
+- model/repository/service/handler/路由、前端 racket service/stringing-edit 增加地点读写；非空地点必须有完整坐标，不兼容历史、不补数据。
+- API 新增 storeLocation 及 GET /api/stringing-stores/recent；数据库迁移030尚未执行。
+- 检查：gofmt、go test ./...、npm run typecheck、test-stringing-selection.cjs、test-court-selection.cjs；数据库和真机地图联调待验收。
+
+
+## 2026-10-30 统一穿线地点独立列存储
+
+- 将穿线地点 JSON 存储改为地址、纬度、经度、坐标系四个独立字段，与球场类型一致；经纬度 DECIMAL(10,7)。
+- 修改 model/stringing_store.go、model/racket.go、service/racket_service.go、service/stringing_store.go、repository/racket_repository.go、迁移030和文档。
+- API storeLocation 请求/响应不变；新增/编辑、最近场所查询均使用独立列。无兼容字段，不迁移历史 JSON 数据；更新的迁移030尚未执行。
+- 检查：gofmt、go test ./...；补充列映射、地点往返及清空测试。

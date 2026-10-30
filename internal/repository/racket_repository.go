@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -599,4 +600,17 @@ func (r *RacketRepository) StringingHistoryPage(userID int64, offset int) ([]mod
 		Where("racket_stringing_record.user_id = ?", userID).
 		Order("racket_stringing_record.string_date DESC, racket_stringing_record.id DESC").Offset(offset).Limit(100).Find(&records).Error
 	return records, err
+}
+
+// Projections only; exclude deleted records and deleted parent rackets.
+func (r *RacketRepository) StringingStoreHistory(ctx context.Context, userID int64, date *time.Time, id int64) ([]model.RacketStringingRecord, error) {
+	var rows []model.RacketStringingRecord
+	query := r.db.WithContext(ctx).Model(&model.RacketStringingRecord{}).
+		Select("id, store_name, store_address, store_latitude, store_longitude, store_coordinate_system, string_date").Where("user_id = ?", userID).
+		Where("EXISTS (SELECT 1 FROM racket WHERE racket.id = racket_stringing_record.racket_id AND racket.user_id = ? AND racket.deleted_at IS NULL)", userID)
+	if date != nil {
+		query = query.Where("string_date < ? OR (string_date = ? AND id < ?)", *date, *date, id)
+	}
+	err := query.Order("string_date DESC, id DESC").Limit(100).Find(&rows).Error
+	return rows, err
 }
