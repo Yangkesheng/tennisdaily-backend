@@ -32,7 +32,7 @@ func NewRacketService(repo *repository.RacketRepository, userRepo *repository.Us
 }
 
 func (s *RacketService) Brands(userID int64) ([]model.RacketBrandResponse, error) {
-	items, err := s.repo.BrandList(IsAdminUser(userID, s.adminUserIDs))
+	items, err := s.repo.BrandList()
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (s *RacketService) Brands(userID int64) ([]model.RacketBrandResponse, error
 }
 
 func (s *RacketService) Series(userID int64, query model.RacketSeriesQuery) ([]model.RacketSeriesResponse, error) {
-	items, err := s.repo.SeriesList(query, IsAdminUser(userID, s.adminUserIDs))
+	items, err := s.repo.SeriesList(query)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,6 @@ func (s *RacketService) Series(userID int64, query model.RacketSeriesQuery) ([]m
 }
 
 func (s *RacketService) Library(userID int64, query model.RacketLibraryQuery) ([]model.RacketLibraryBrandGroupResponse, error) {
-	query = s.visibleLibraryQuery(userID, query)
 	items, err := s.repo.LibraryList(query)
 	if err != nil {
 		return nil, err
@@ -77,12 +76,11 @@ func (s *RacketService) Library(userID int64, query model.RacketLibraryQuery) ([
 }
 
 func (s *RacketService) LibraryStats(userID int64, query model.RacketLibraryQuery) ([]model.RacketLibraryBrandStatsResponse, error) {
-	query = s.visibleLibraryQuery(userID, query)
-	brands, err := s.repo.LibraryBrandStats(query.IsReviewed)
+	brands, err := s.repo.LibraryBrandStats()
 	if err != nil {
 		return nil, err
 	}
-	series, err := s.repo.LibrarySeriesStats(query.IsReviewed)
+	series, err := s.repo.LibrarySeriesStats()
 	if err != nil {
 		return nil, err
 	}
@@ -195,9 +193,7 @@ func (s *RacketService) CreateLibraryItems(userID int64, req model.CreateRacketL
 		return model.CreateRacketLibraryResponse{}, NewInvalidRequestError(fmt.Sprintf("型号 %s 已存在", label))
 	}
 
-	now := time.Now()
 	items := []model.RacketLibrary{{
-		IsReviewed: model.RacketReviewApproved, ReviewedBy: &userID, ReviewedAt: &now,
 		BrandID:       brand.ID,
 		Brand:         brand.Name,
 		SeriesID:      series.ID,
@@ -685,7 +681,7 @@ func (s *RacketService) applyLibraryDefaults(existingLibraryID int64, libraryID 
 	if err != nil {
 		return err
 	}
-	if item == nil || (item.IsReviewed != model.RacketReviewApproved && *libraryID != existingLibraryID) {
+	if item == nil {
 		return ErrInvalidRequest
 	}
 	if *brand == "" {
@@ -720,29 +716,4 @@ func (s *RacketService) parseOptionalDate(value string) (*time.Time, error) {
 		return nil, err
 	}
 	return &parsed, nil
-}
-
-func (s *RacketService) visibleLibraryQuery(userID int64, query model.RacketLibraryQuery) model.RacketLibraryQuery {
-	if !IsAdminUser(userID, s.adminUserIDs) {
-		approved := model.RacketReviewApproved
-		query.IsReviewed = &approved
-	}
-	return query
-}
-
-func (s *RacketService) ReviewLibrary(userID, id int64, req model.ReviewRacketLibraryRequest) (model.RacketLibraryItemResponse, error) {
-	if !IsAdminUser(userID, s.adminUserIDs) {
-		return model.RacketLibraryItemResponse{}, ErrForbidden
-	}
-	if req.IsReviewed == nil || (*req.IsReviewed != model.RacketReviewPending && *req.IsReviewed != model.RacketReviewApproved) {
-		return model.RacketLibraryItemResponse{}, ErrInvalidRequest
-	}
-	item, err := s.repo.ReviewLibrary(id, userID, *req.IsReviewed)
-	if err != nil {
-		return model.RacketLibraryItemResponse{}, err
-	}
-	if item == nil {
-		return model.RacketLibraryItemResponse{}, ErrNotFound
-	}
-	return model.NewRacketLibraryItemResponse(*item), nil
 }

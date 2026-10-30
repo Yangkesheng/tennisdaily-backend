@@ -3274,3 +3274,11 @@
 - 修改 model/stringing_store.go、model/racket.go、service/racket_service.go、service/stringing_store.go、repository/racket_repository.go、迁移030和文档。
 - API storeLocation 请求/响应不变；新增/编辑、最近场所查询均使用独立列。无兼容字段，不迁移历史 JSON 数据；更新的迁移030尚未执行。
 - 检查：gofmt、go test ./...；补充列映射、地点往返及清空测试。
+
+
+## 2026-10-31 取消球拍库审核
+
+- 球拍库列表、品牌、系列和统计对所有已登录用户开放全部入库球拍；添加个人球拍不再要求审核通过。
+- 移除审核筛选、状态、按钮及审核 API，查询不再发送 isReviewed，响应移除审核字段；管理员新增权限不变。
+- 修改球拍 model/service/repository/handler、路由及小程序球拍库页面、服务和类型；init.sql 不再定义审核列。历史迁移026停用，已有审核列无需删除，未操作业务数据库或部署。
+- 检查：前端 npm run typecheck 通过；后端 GOCACHE=/tmp/tennisday-go-cache go test ./... 通过。

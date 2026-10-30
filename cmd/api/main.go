@@ -149,7 +149,6 @@ func main() {
 	admin.Use(middleware.RequireAdmin(cfg.AdminUserIDs))
 	{
 		admin.POST("/racket-library", racketHandler.CreateLibrary)
-		admin.PUT("/racket-library/:id/review", racketHandler.ReviewLibrary)
 		admin.POST("/shoe-brands", shoeHandler.CreateBrand)
 		admin.POST("/shoe-series", shoeHandler.CreateSeries)
 		admin.POST("/shoe-library", shoeHandler.CreateLibrary)

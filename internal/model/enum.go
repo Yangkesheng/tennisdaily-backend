@@ -197,9 +197,3 @@ func (r MatchRank) Label() string {
 		return "未知"
 	}
 }
-
-// Racket library review states.
-const (
-	RacketReviewPending  = 0
-	RacketReviewApproved = 1
-)

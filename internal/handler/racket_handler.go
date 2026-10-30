@@ -412,28 +412,6 @@ func parseRecordIDParam(c *gin.Context) (int64, bool) {
 	return recordID, true
 }
 
-func (h *RacketHandler) ReviewLibrary(c *gin.Context) {
-	userID, ok := currentUserID(c)
-	if !ok {
-		return
-	}
-	id, ok := parseIDParam(c)
-	if !ok {
-		return
-	}
-	var req model.ReviewRacketLibraryRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, 400, response.CodeInvalidRequest, "invalid request")
-		return
-	}
-	item, err := h.racketService.ReviewLibrary(userID, id, req)
-	if err != nil {
-		handleServiceError(c, err)
-		return
-	}
-	response.OK(c, item)
-}
-
 func (h *RacketHandler) LatestStringing(c *gin.Context) {
 	userID, ok := currentUserID(c)
 	if !ok {

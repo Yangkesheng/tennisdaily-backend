@@ -9,7 +9,6 @@ import (
 	"tennisdaily-backend/internal/model"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type RacketRepository struct {
@@ -20,22 +19,16 @@ func NewRacketRepository(db *gorm.DB) *RacketRepository {
 	return &RacketRepository{db: db}
 }
 
-func (r *RacketRepository) BrandList(includePending bool) ([]model.RacketBrand, error) {
+func (r *RacketRepository) BrandList() ([]model.RacketBrand, error) {
 	var items []model.RacketBrand
 	db := r.db.Model(&model.RacketBrand{})
-	if !includePending {
-		db = db.Where("EXISTS (SELECT 1 FROM racket_library l WHERE l.brand_id = racket_brands.id AND l.is_reviewed = ?)", model.RacketReviewApproved)
-	}
 	err := db.Order("name ASC").Find(&items).Error
 	return items, err
 }
 
-func (r *RacketRepository) SeriesList(query model.RacketSeriesQuery, includePending bool) ([]model.RacketSeries, error) {
+func (r *RacketRepository) SeriesList(query model.RacketSeriesQuery) ([]model.RacketSeries, error) {
 	var items []model.RacketSeries
 	db := r.db.Model(&model.RacketSeries{})
-	if !includePending {
-		db = db.Where("EXISTS (SELECT 1 FROM racket_library l WHERE l.series_id = racket_series.id AND l.is_reviewed = ?)", model.RacketReviewApproved)
-	}
 	if query.BrandID > 0 {
 		db = db.Where("brand_id = ?", query.BrandID)
 	}
@@ -45,7 +38,7 @@ func (r *RacketRepository) SeriesList(query model.RacketSeriesQuery, includePend
 
 func (r *RacketRepository) LibraryList(query model.RacketLibraryQuery) ([]model.RacketLibrary, error) {
 	var items []model.RacketLibrary
-	db := r.db.Model(&model.RacketLibrary{}).Scopes(libraryReviewScope(query.IsReviewed))
+	db := r.db.Model(&model.RacketLibrary{})
 	if query.BrandID > 0 {
 		db = db.Where("brand_id = ?", query.BrandID)
 	}
@@ -56,9 +49,9 @@ func (r *RacketRepository) LibraryList(query model.RacketLibraryQuery) ([]model.
 	return items, err
 }
 
-func (r *RacketRepository) LibraryBrandStats(reviewed *int) ([]model.RacketLibraryBrandStats, error) {
+func (r *RacketRepository) LibraryBrandStats() ([]model.RacketLibraryBrandStats, error) {
 	var rows []model.RacketLibraryBrandStats
-	err := r.db.Model(&model.RacketLibrary{}).Scopes(libraryReviewScope(reviewed)).
+	err := r.db.Model(&model.RacketLibrary{}).
 		Select("brand_id, brand, COUNT(*) AS count").
 		Group("brand, brand_id").
 		Order("count DESC").
@@ -66,9 +59,9 @@ func (r *RacketRepository) LibraryBrandStats(reviewed *int) ([]model.RacketLibra
 	return rows, err
 }
 
-func (r *RacketRepository) LibrarySeriesStats(reviewed *int) ([]model.RacketLibrarySeriesStats, error) {
+func (r *RacketRepository) LibrarySeriesStats() ([]model.RacketLibrarySeriesStats, error) {
 	var rows []model.RacketLibrarySeriesStats
-	err := r.db.Model(&model.RacketLibrary{}).Scopes(libraryReviewScope(reviewed)).
+	err := r.db.Model(&model.RacketLibrary{}).
 		Select("brand_id, brand, series_id, series, COUNT(*) AS count").
 		Group("brand, brand_id, series, series_id").
 		Order("count DESC").
@@ -536,42 +529,6 @@ func (r *RacketRepository) UsageStatsSince(userID int64, latestStringing map[int
 		}
 	}
 	return usage, nil
-}
-
-// libraryReviewScope is shared by lists and counts to keep visibility consistent.
-func libraryReviewScope(reviewed *int) func(*gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if reviewed != nil {
-			return db.Where("is_reviewed = ?", *reviewed)
-		}
-		return db
-	}
-}
-
-func (r *RacketRepository) ReviewLibrary(id, userID int64, reviewed int) (*model.RacketLibrary, error) {
-	var item model.RacketLibrary
-	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&item, id).Error; err != nil {
-			return err
-		}
-		if item.IsReviewed == reviewed {
-			return nil
-		}
-		now := time.Now()
-		item.IsReviewed = reviewed
-		if reviewed == model.RacketReviewApproved {
-			item.ReviewedBy = &userID
-			item.ReviewedAt = &now
-		} else {
-			item.ReviewedBy = nil
-			item.ReviewedAt = nil
-		}
-		return tx.Save(&item).Error
-	})
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-	return &item, err
 }
 
 // CatalogString returns the current catalog state for server-side selection validation.

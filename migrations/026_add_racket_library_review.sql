@@ -1,3 +1,4 @@
+-- OBSOLETE 2026-10-31: racket review removed. Do not run this historical migration.
 -- Pause external imports before applying. Run once before deploying the new API.
 -- DEFAULT 1 initializes existing rows without an UPDATE that could re-approve future imports.
 ALTER TABLE racket_library
