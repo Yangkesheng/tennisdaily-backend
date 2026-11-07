@@ -3289,3 +3289,9 @@
 - 修改 `internal/model/racket.go`、`internal/repository/racket_repository.go`、`internal/service/racket_service.go` 与接口文档。
 - `GET /api/rackets`、`GET /api/my-rackets/primary` 增加 `recentStringingUsage`，`GET /api/rackets/:id` 增加 `stringingUsageSessions`。现有字段和数据库结构无变化。
 - 已执行 `gofmt` 和 `go test ./...`。内存 SQL 样例验证最近 6 场、同时间排序、穿线边界、软删除和用户隔离。未执行 MySQL 实库联调。
+
+## 2026-11-08 排查主力拍接口返回 500
+
+- 线上访问日志显示 `GET /api/my-rackets/primary` 返回 500，访问日志未包含数据库错误详情。将列表和主力拍新增的球线查询从窗口函数改为按用户、球拍及穿线时间筛选后使用 `ORDER BY date DESC, id DESC LIMIT 6`。有场次的球拍才查询，返回时恢复由旧到新的顺序。
+- 在主力拍和球拍列表 handler 记录服务错误，客户端仍使用原有错误响应。修改 `internal/repository/racket_repository.go`、`internal/service/racket_service.go` 和 `internal/handler/racket_handler.go`，接口字段与数据库结构无变化。
+- `gofmt`、`go test ./...` 通过。本地 MySQL 8.4 使用连接专属临时表，通过 Go 仓储验证最近 6 场、完整明细、时间边界、同时间排序、软删除与用户隔离。未修改业务表或部署线上服务。

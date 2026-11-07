@@ -158,6 +158,7 @@ func (h *RacketHandler) List(c *gin.Context) {
 
 	rackets, err := h.racketService.List(userID, includeRetired)
 	if err != nil {
+		logger.Error("GET /api/rackets failed userID=%d: %v", userID, err)
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
 	}
@@ -190,6 +191,7 @@ func (h *RacketHandler) MyPrimaryRacket(c *gin.Context) {
 
 	racket, err := h.racketService.Primary(userID)
 	if err != nil {
+		logger.Error("GET /api/my-rackets/primary failed userID=%d: %v", userID, err)
 		response.Error(c, 500, response.CodeInternalError, "internal error")
 		return
 	}

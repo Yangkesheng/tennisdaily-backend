@@ -345,7 +345,7 @@ func (s *RacketService) Detail(userID, id int64) (model.RacketDetailResponse, er
 
 	usage := make([]model.StringingUsageSession, 0)
 	if len(records) > 0 {
-		sessions, err := s.repo.StringingUsageSessions(userID, records[0])
+		sessions, err := s.repo.StringingUsageSessions(userID, records[0], 0)
 		if err != nil {
 			return model.RacketDetailResponse{}, err
 		}
@@ -620,18 +620,6 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket, incl
 		return nil, err
 	}
 
-	recentUsage := make(map[int64][]model.StringingUsageSession)
-	if includeRecentUsage {
-		const recentUsageLimit = 6
-		sessions, err := s.repo.RecentStringingUsage(userID, latest, recentUsageLimit)
-		if err != nil {
-			return nil, err
-		}
-		for _, session := range sessions {
-			recentUsage[session.RacketID] = append(recentUsage[session.RacketID], stringingUsageSession(session))
-		}
-	}
-
 	responses := make([]model.RacketResponse, 0, len(rackets))
 	for _, racket := range rackets {
 		if library, ok := libraries[racket.LibraryID]; ok {
@@ -667,7 +655,17 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket, incl
 			racket.StringHealth = &health
 		}
 		response := model.NewRacketResponse(racket)
-		response.RecentStringingUsage = recentUsage[racket.ID]
+		if record, ok := latest[racket.ID]; includeRecentUsage && ok && racket.AfterStringingUsageCount > 0 {
+			const recentUsageLimit = 6
+			sessions, err := s.repo.StringingUsageSessions(userID, record, recentUsageLimit)
+			if err != nil {
+				return nil, fmt.Errorf("list recent stringing usage for racket %d: %w", racket.ID, err)
+			}
+			response.RecentStringingUsage = make([]model.StringingUsageSession, 0, len(sessions))
+			for i := len(sessions) - 1; i >= 0; i-- {
+				response.RecentStringingUsage = append(response.RecentStringingUsage, stringingUsageSession(sessions[i]))
+			}
+		}
 		responses = append(responses, response)
 	}
 	return responses, nil

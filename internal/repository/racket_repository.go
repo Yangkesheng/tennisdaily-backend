@@ -536,26 +536,17 @@ func (r *RacketRepository) stringingUsageQuery(userID int64, latestStringing map
 		Where("user_id = ? AND deleted_at IS NULL AND ("+strings.Join(conditions, " OR ")+")", args...)
 }
 
-func (r *RacketRepository) RecentStringingUsage(userID int64, latestStringing map[int64]model.RacketStringingRecord, limit int) ([]model.TennisSession, error) {
-	if len(latestStringing) == 0 {
-		return nil, nil
+// StringingUsageSessions returns newest records first. A zero limit returns the full cycle.
+func (r *RacketRepository) StringingUsageSessions(userID int64, latest model.RacketStringingRecord, limit int) ([]model.TennisSession, error) {
+	query := r.stringingUsageQuery(userID, map[int64]model.RacketStringingRecord{latest.RacketID: latest}).
+		Select("id, date, duration_minutes").
+		Order("date DESC, id DESC")
+	if limit > 0 {
+		query = query.Limit(limit)
 	}
 
-	ranked := r.stringingUsageQuery(userID, latestStringing).
-		Select("id, racket_id, date, duration_minutes, ROW_NUMBER() OVER (PARTITION BY racket_id ORDER BY date DESC, id DESC) AS usage_rank")
 	var sessions []model.TennisSession
-	err := r.db.Table("(?) AS ranked_usage", ranked).
-		Select("id, racket_id, date, duration_minutes").
-		Where("usage_rank <= ?", limit).
-		Order("racket_id ASC, date ASC, id ASC").Scan(&sessions).Error
-	return sessions, err
-}
-
-func (r *RacketRepository) StringingUsageSessions(userID int64, latest model.RacketStringingRecord) ([]model.TennisSession, error) {
-	var sessions []model.TennisSession
-	err := r.stringingUsageQuery(userID, map[int64]model.RacketStringingRecord{latest.RacketID: latest}).
-		Select("id, date, duration_minutes").
-		Order("date DESC, id DESC").Find(&sessions).Error
+	err := query.Find(&sessions).Error
 	return sessions, err
 }
 
