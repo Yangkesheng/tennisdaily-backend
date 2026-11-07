@@ -656,7 +656,7 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket, incl
 		}
 		response := model.NewRacketResponse(racket)
 		if record, ok := latest[racket.ID]; includeRecentUsage && ok && racket.AfterStringingUsageCount > 0 {
-			const recentUsageLimit = 6
+			const recentUsageLimit = 12
 			sessions, err := s.repo.StringingUsageSessions(userID, record, recentUsageLimit)
 			if err != nil {
 				return nil, fmt.Errorf("list recent stringing usage for racket %d: %w", racket.ID, err)
