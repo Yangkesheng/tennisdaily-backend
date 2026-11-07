@@ -121,6 +121,7 @@ type RacketResponse struct {
 	AfterStringingUsageCount   int                      `json:"afterStringingUsageCount"`
 	AfterStringingUsageMinutes int                      `json:"afterStringingUsageMinutes"`
 	AfterStringingUsageHours   int                      `json:"afterStringingUsageHours"`
+	RecentStringingUsage       []StringingUsageSession  `json:"recentStringingUsage,omitempty"`
 	StringHealth               *StringHealthResponse    `json:"stringHealth"`
 	TotalMinutes               int                      `json:"totalMinutes"`
 	TotalHours                 int                      `json:"totalHours"`
@@ -151,9 +152,16 @@ type StringHealthResponse struct {
 	RemainingHours int     `json:"remainingHours"`
 }
 
+type StringingUsageSession struct {
+	ID              int64  `json:"id"`
+	Date            string `json:"date"`
+	DurationMinutes int    `json:"durationMinutes"`
+}
+
 type RacketDetailResponse struct {
-	Racket           RacketResponse            `json:"racket"`
-	StringingRecords []StringingRecordResponse `json:"stringingRecords"`
+	Racket                 RacketResponse            `json:"racket"`
+	StringingRecords       []StringingRecordResponse `json:"stringingRecords"`
+	StringingUsageSessions []StringingUsageSession   `json:"stringingUsageSessions"`
 }
 
 type RacketStatsResponse struct {

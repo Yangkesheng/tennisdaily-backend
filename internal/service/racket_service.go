@@ -243,7 +243,7 @@ func (s *RacketService) List(userID int64, includeRetired bool) ([]model.RacketR
 	if err != nil {
 		return nil, err
 	}
-	return s.enrichRackets(userID, rackets)
+	return s.enrichRackets(userID, rackets, true)
 }
 
 func (s *RacketService) Selectable(userID int64) ([]model.RacketResponse, error) {
@@ -251,7 +251,7 @@ func (s *RacketService) Selectable(userID int64) ([]model.RacketResponse, error)
 	if err != nil {
 		return nil, err
 	}
-	return s.enrichRackets(userID, rackets)
+	return s.enrichRackets(userID, rackets, false)
 }
 
 func (s *RacketService) Primary(userID int64) (*model.RacketResponse, error) {
@@ -262,7 +262,7 @@ func (s *RacketService) Primary(userID int64) (*model.RacketResponse, error) {
 	if racket == nil {
 		return nil, nil
 	}
-	responses, err := s.enrichRackets(userID, []model.Racket{*racket})
+	responses, err := s.enrichRackets(userID, []model.Racket{*racket}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +313,7 @@ func (s *RacketService) Create(userID int64, req model.CreateRacketRequest) (mod
 		racket.Status = model.RacketStatusPrimary
 	}
 
-	responses, err := s.enrichRackets(userID, []model.Racket{racket})
+	responses, err := s.enrichRackets(userID, []model.Racket{racket}, false)
 	if err != nil {
 		return model.RacketResponse{}, err
 	}
@@ -329,7 +329,7 @@ func (s *RacketService) Detail(userID, id int64) (model.RacketDetailResponse, er
 		return model.RacketDetailResponse{}, ErrNotFound
 	}
 
-	responses, err := s.enrichRackets(userID, []model.Racket{*racket})
+	responses, err := s.enrichRackets(userID, []model.Racket{*racket}, false)
 	if err != nil {
 		return model.RacketDetailResponse{}, err
 	}
@@ -343,7 +343,22 @@ func (s *RacketService) Detail(userID, id int64) (model.RacketDetailResponse, er
 		recordResponses = append(recordResponses, model.NewStringingRecordResponse(record))
 	}
 
-	return model.RacketDetailResponse{Racket: responses[0], StringingRecords: recordResponses}, nil
+	usage := make([]model.StringingUsageSession, 0)
+	if len(records) > 0 {
+		sessions, err := s.repo.StringingUsageSessions(userID, records[0])
+		if err != nil {
+			return model.RacketDetailResponse{}, err
+		}
+		for _, session := range sessions {
+			usage = append(usage, stringingUsageSession(session))
+		}
+	}
+
+	return model.RacketDetailResponse{
+		Racket:                 responses[0],
+		StringingRecords:       recordResponses,
+		StringingUsageSessions: usage,
+	}, nil
 }
 
 func (s *RacketService) Update(userID, id int64, req model.UpdateRacketRequest) (model.RacketResponse, error) {
@@ -399,7 +414,7 @@ func (s *RacketService) Update(userID, id int64, req model.UpdateRacketRequest) 
 	if err != nil {
 		return model.RacketResponse{}, err
 	}
-	responses, err := s.enrichRackets(userID, []model.Racket{*updated})
+	responses, err := s.enrichRackets(userID, []model.Racket{*updated}, false)
 	if err != nil {
 		return model.RacketResponse{}, err
 	}
@@ -417,7 +432,7 @@ func (s *RacketService) SetPrimary(userID, id int64) (model.RacketResponse, erro
 	if err != nil {
 		return model.RacketResponse{}, err
 	}
-	responses, err := s.enrichRackets(userID, []model.Racket{*racket})
+	responses, err := s.enrichRackets(userID, []model.Racket{*racket}, false)
 	if err != nil {
 		return model.RacketResponse{}, err
 	}
@@ -436,7 +451,7 @@ func (s *RacketService) Retire(userID, id int64) (model.RacketResponse, error) {
 	if err != nil {
 		return model.RacketResponse{}, err
 	}
-	responses, err := s.enrichRackets(userID, []model.Racket{*racket})
+	responses, err := s.enrichRackets(userID, []model.Racket{*racket}, false)
 	if err != nil {
 		return model.RacketResponse{}, err
 	}
@@ -575,7 +590,7 @@ func (s *RacketService) requireRacket(userID, racketID int64) (*model.Racket, er
 	return racket, nil
 }
 
-func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]model.RacketResponse, error) {
+func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket, includeRecentUsage bool) ([]model.RacketResponse, error) {
 	ids := make([]int64, 0, len(rackets))
 	libraryIDs := make([]int64, 0, len(rackets))
 	libraryIDSet := make(map[int64]struct{})
@@ -603,6 +618,18 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 	afterStringingUsage, err := s.repo.UsageStatsSince(userID, latest)
 	if err != nil {
 		return nil, err
+	}
+
+	recentUsage := make(map[int64][]model.StringingUsageSession)
+	if includeRecentUsage {
+		const recentUsageLimit = 6
+		sessions, err := s.repo.RecentStringingUsage(userID, latest, recentUsageLimit)
+		if err != nil {
+			return nil, err
+		}
+		for _, session := range sessions {
+			recentUsage[session.RacketID] = append(recentUsage[session.RacketID], stringingUsageSession(session))
+		}
 	}
 
 	responses := make([]model.RacketResponse, 0, len(rackets))
@@ -639,9 +666,19 @@ func (s *RacketService) enrichRackets(userID int64, rackets []model.Racket) ([]m
 			health := s.calculateStringHealth(record.StringDate, racket.AfterStringingUsageMinutes)
 			racket.StringHealth = &health
 		}
-		responses = append(responses, model.NewRacketResponse(racket))
+		response := model.NewRacketResponse(racket)
+		response.RecentStringingUsage = recentUsage[racket.ID]
+		responses = append(responses, response)
 	}
 	return responses, nil
+}
+
+func stringingUsageSession(session model.TennisSession) model.StringingUsageSession {
+	return model.StringingUsageSession{
+		ID:              session.ID,
+		Date:            session.Date.Format("2006-01-02 15:04"),
+		DurationMinutes: session.DurationMinutes,
+	}
 }
 
 func (s *RacketService) calculateStringHealth(stringDate time.Time, afterStringingUsageMinutes int) model.StringHealthResponse {

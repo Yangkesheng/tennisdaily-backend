@@ -498,23 +498,14 @@ func (r *RacketRepository) UsageStatsSince(userID int64, latestStringing map[int
 		return usage, nil
 	}
 
-	conditions := make([]string, 0, len(latestStringing))
-	args := make([]interface{}, 0, len(latestStringing)*2+1)
-	args = append(args, userID)
-	for racketID, record := range latestStringing {
-		conditions = append(conditions, "(racket_id = ? AND date >= ?)")
-		args = append(args, racketID, record.StringDate)
-	}
-
 	type row struct {
 		RacketID int64 `gorm:"column:racket_id"`
 		Count    int   `gorm:"column:count"`
 		Minutes  int   `gorm:"column:minutes"`
 	}
 	var rows []row
-	err := r.db.Model(&model.TennisSession{}).
+	err := r.stringingUsageQuery(userID, latestStringing).
 		Select("racket_id, COUNT(id) AS count, COALESCE(SUM(duration_minutes), 0) AS minutes").
-		Where("user_id = ? AND deleted_at IS NULL AND ("+strings.Join(conditions, " OR ")+")", args...).
 		Group("racket_id").
 		Scan(&rows).Error
 	if err != nil {
@@ -529,6 +520,43 @@ func (r *RacketRepository) UsageStatsSince(userID int64, latestStringing map[int
 		}
 	}
 	return usage, nil
+}
+
+// Use the same user, racket and timestamp filters for totals and individual sessions.
+func (r *RacketRepository) stringingUsageQuery(userID int64, latestStringing map[int64]model.RacketStringingRecord) *gorm.DB {
+	conditions := make([]string, 0, len(latestStringing))
+	args := make([]interface{}, 0, len(latestStringing)*2+1)
+	args = append(args, userID)
+	for racketID, record := range latestStringing {
+		conditions = append(conditions, "(racket_id = ? AND date >= ?)")
+		args = append(args, racketID, record.StringDate)
+	}
+
+	return r.db.Model(&model.TennisSession{}).
+		Where("user_id = ? AND deleted_at IS NULL AND ("+strings.Join(conditions, " OR ")+")", args...)
+}
+
+func (r *RacketRepository) RecentStringingUsage(userID int64, latestStringing map[int64]model.RacketStringingRecord, limit int) ([]model.TennisSession, error) {
+	if len(latestStringing) == 0 {
+		return nil, nil
+	}
+
+	ranked := r.stringingUsageQuery(userID, latestStringing).
+		Select("id, racket_id, date, duration_minutes, ROW_NUMBER() OVER (PARTITION BY racket_id ORDER BY date DESC, id DESC) AS usage_rank")
+	var sessions []model.TennisSession
+	err := r.db.Table("(?) AS ranked_usage", ranked).
+		Select("id, racket_id, date, duration_minutes").
+		Where("usage_rank <= ?", limit).
+		Order("racket_id ASC, date ASC, id ASC").Scan(&sessions).Error
+	return sessions, err
+}
+
+func (r *RacketRepository) StringingUsageSessions(userID int64, latest model.RacketStringingRecord) ([]model.TennisSession, error) {
+	var sessions []model.TennisSession
+	err := r.stringingUsageQuery(userID, map[int64]model.RacketStringingRecord{latest.RacketID: latest}).
+		Select("id, date, duration_minutes").
+		Order("date DESC, id DESC").Find(&sessions).Error
+	return sessions, err
 }
 
 // CatalogString returns the current catalog state for server-side selection validation.

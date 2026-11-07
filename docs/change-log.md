@@ -3282,3 +3282,10 @@
 - 移除审核筛选、状态、按钮及审核 API，查询不再发送 isReviewed，响应移除审核字段；管理员新增权限不变。
 - 修改球拍 model/service/repository/handler、路由及小程序球拍库页面、服务和类型；init.sql 不再定义审核列。历史迁移026停用，已有审核列无需删除，未操作业务数据库或部署。
 - 检查：前端 npm run typecheck 通过；后端 GOCACHE=/tmp/tennisday-go-cache go test ./... 通过。
+
+## 2026-11-08 球线使用足迹
+
+- 球拍列表与首页主力拍返回本次穿线后最近 6 场，详情返回本次穿线后的场次明细。累计和明细共用当前用户、球拍、穿线时间和软删除过滤。
+- 修改 `internal/model/racket.go`、`internal/repository/racket_repository.go`、`internal/service/racket_service.go` 与接口文档。
+- `GET /api/rackets`、`GET /api/my-rackets/primary` 增加 `recentStringingUsage`，`GET /api/rackets/:id` 增加 `stringingUsageSessions`。现有字段和数据库结构无变化。
+- 已执行 `gofmt` 和 `go test ./...`。内存 SQL 样例验证最近 6 场、同时间排序、穿线边界、软删除和用户隔离。未执行 MySQL 实库联调。

@@ -3241,3 +3241,10 @@ items 字段：id、brand、model、nameZh、material、sourceUrl、variants；v
 ### 2026-10-30 穿线地点存储统一
 
 穿线地点与球场一致使用独立列：`store_name VARCHAR(100)`、`store_address VARCHAR(512) NOT NULL DEFAULT ''`、`store_latitude DECIMAL(10,7) NULL`、`store_longitude DECIMAL(10,7) NULL`、`store_coordinate_system VARCHAR(16) NOT NULL DEFAULT ''`。不使用 store_location JSON 列。接口仍为 storeLocation 对象或 null，由 model 在独立列与对象间转换。清空地点时地址和坐标系为空、经纬度为 SQL NULL。更新尚未执行的迁移030，无历史 JSON 迁移、无兼容逻辑。
+
+### 球线使用足迹
+
+- `GET /api/my-rackets/primary` 和 `GET /api/rackets` 的球拍对象新增 `recentStringingUsage`，每支球拍最多返回最近 6 场，按打球时间、记录 ID 升序排列。无符合条件的场次时省略此字段。
+- `GET /api/rackets/:id` 的 `data` 新增 `stringingUsageSessions`，返回本次穿线后的全部场次，按打球时间、记录 ID 降序排列。无符合条件的场次时返回 `[]`。
+- 两个字段中的场次对象均为 `{ id, date, durationMinutes }`。日期格式为 `YYYY-MM-DD HH:mm`，时长单位为分钟。
+- 明细与 `afterStringingUsageMinutes` 使用同一口径，只统计当前用户、当前球拍、最近一次穿线时间及之后的未删除记录。相同穿线时间以记录 ID 较大的一条为准。已有累计字段和球线状态字段的口径保持不变。
