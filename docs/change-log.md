@@ -1,5 +1,12 @@
 # Change Log
 
+## 2026-11-09 训练新增「拉球」二级类型
+
+- `config.yaml` 和 `config.local.example.yaml` 在「训练」下新增「拉球」，编号为 `30`，展示在「其他」之前。
+- `GET /api/session-config` 返回该选项，创建和更新记录接受 `category=2`、`subCategory=30`。已更新 `docs/api.md`。
+- 无数据库迁移，现有分类编号和记录保持原值。
+- `go test ./...` 通过。针对两套 YAML 的专项检查验证了枚举返回、训练分类校验及其他一级分类拒绝该选项。
+
 ## 2026-08-15 修复 Wilson 球拍库系列命名（Pro → Pro Staff / Pro Open，RF → RF 01，Six → Six.One）
 
 ### 需求/变更内容

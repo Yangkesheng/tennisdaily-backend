@@ -142,8 +142,16 @@ Authorization: Bearer <token>
 |---:|---|---:|---|---|
 | 1 | 日常球局 | 1 | 打单 | 日常球局 · 打单 |
 | 1 | 日常球局 | 2 | 双打 | 日常球局 · 双打 |
-| 2 | 训练 | 3 | 发球 | 训练 · 发球 |
-| 2 | 训练 | 4 | 其他 | 训练 · 其他 |
+| 2 | 训练 | 21 | 发球 | 训练 · 发球 |
+| 2 | 训练 | 22 | 截击 | 训练 · 截击 |
+| 2 | 训练 | 23 | 正手 | 训练 · 正手 |
+| 2 | 训练 | 24 | 反手 | 训练 · 反手 |
+| 2 | 训练 | 25 | 体能 | 训练 · 体能 |
+| 2 | 训练 | 26 | 力量 | 训练 · 力量 |
+| 2 | 训练 | 27 | 高压 | 训练 · 高压 |
+| 2 | 训练 | 28 | 综合 | 训练 · 综合 |
+| 2 | 训练 | 30 | 拉球 | 训练 · 拉球 |
+| 2 | 训练 | 29 | 其他 | 训练 · 其他 |
 | 3 | 比赛 | 1 | 单打 | 比赛 · 单打 |
 | 3 | 比赛 | 2 | 双打 | 比赛 · 双打 |
 
@@ -230,7 +238,7 @@ Authorization: Bearer <token>
 | typeLabel | string | 旧打球类型中文文案 |
 | category | number | 一级类型枚举：`1` 日常球局、`2` 训练、`3` 比赛 |
 | categoryText | string | 一级类型中文文案 |
-| subCategory | number | 二级类型枚举：`1` 单打/打单、`2` 双打、`3` 发球、`4` 其他 |
+| subCategory | number | 二级类型，取值见 3.1 节和 `GET /api/session-config` |
 | subCategoryText | string | 二级类型中文文案 |
 | typeText | string | 两级类型组合展示文案 |
 | matchRank | number | 比赛成绩枚举 |
@@ -376,19 +384,21 @@ GET /api/session-config
       "label": "训练",
       "subCategories": [
         {
-          "value": 3,
+          "value": 21,
           "label": "发球",
           "category": 2,
           "typeText": "训练 · 发球",
           "legacyType": 3
         },
-        {
-          "value": 4,
-          "label": "其他",
-          "category": 2,
-          "typeText": "训练 · 其他",
-          "legacyType": 3
-        }
+        { "value": 22, "label": "截击", "category": 2, "typeText": "训练 · 截击", "legacyType": 3 },
+        { "value": 23, "label": "正手", "category": 2, "typeText": "训练 · 正手", "legacyType": 3 },
+        { "value": 24, "label": "反手", "category": 2, "typeText": "训练 · 反手", "legacyType": 3 },
+        { "value": 25, "label": "体能", "category": 2, "typeText": "训练 · 体能", "legacyType": 3 },
+        { "value": 26, "label": "力量", "category": 2, "typeText": "训练 · 力量", "legacyType": 3 },
+        { "value": 27, "label": "高压", "category": 2, "typeText": "训练 · 高压", "legacyType": 3 },
+        { "value": 28, "label": "综合", "category": 2, "typeText": "训练 · 综合", "legacyType": 3 },
+        { "value": 30, "label": "拉球", "category": 2, "typeText": "训练 · 拉球", "legacyType": 3 },
+        { "value": 29, "label": "其他", "category": 2, "typeText": "训练 · 其他", "legacyType": 3 }
       ]
     },
     {
