@@ -1,5 +1,11 @@
 # Change Log
 
+## 2026-11-09 球线使用柱图按天汇总
+
+- `internal/repository/racket_repository.go` 和 `internal/service/racket_service.go` 将 `recentStringingUsage` 的查询范围改为最近 12 个有记录的北京时间自然日，保留范围内的全部符合条件场次，供小程序按日累计。
+- 响应字段及场次对象结构沿用现有定义。球拍详情仍按场展示，无数据库迁移。已更新 `docs/api.md`。
+- `go test ./...` 通过。使用内存测试数据验证了查询的日期边界、同日多场和排除条件。
+
 ## 2026-11-09 训练新增「拉球」二级类型
 
 - `config.yaml` 和 `config.local.example.yaml` 在「训练」下新增「拉球」，编号为 `30`，展示在「其他」之前。

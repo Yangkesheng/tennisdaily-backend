@@ -536,13 +536,21 @@ func (r *RacketRepository) stringingUsageQuery(userID int64, latestStringing map
 		Where("user_id = ? AND deleted_at IS NULL AND ("+strings.Join(conditions, " OR ")+")", args...)
 }
 
-// StringingUsageSessions returns newest records first. A zero limit returns the full cycle.
-func (r *RacketRepository) StringingUsageSessions(userID int64, latest model.RacketStringingRecord, limit int) ([]model.TennisSession, error) {
-	query := r.stringingUsageQuery(userID, map[int64]model.RacketStringingRecord{latest.RacketID: latest}).
+// StringingUsageSessions returns all sessions on the most recent active days, newest first.
+// A zero day limit returns the full cycle.
+func (r *RacketRepository) StringingUsageSessions(userID int64, latest model.RacketStringingRecord, dayLimit int) ([]model.TennisSession, error) {
+	records := map[int64]model.RacketStringingRecord{latest.RacketID: latest}
+	query := r.stringingUsageQuery(userID, records).
 		Select("id, date, duration_minutes").
 		Order("date DESC, id DESC")
-	if limit > 0 {
-		query = query.Limit(limit)
+	if dayLimit > 0 {
+		oldestDay := r.stringingUsageQuery(userID, records).
+			Select("DATE(date)").
+			Group("DATE(date)").
+			Order("DATE(date) DESC").
+			Offset(dayLimit - 1).
+			Limit(1)
+		query = query.Where("date >= COALESCE((?), ?)", oldestDay, latest.StringDate)
 	}
 
 	var sessions []model.TennisSession

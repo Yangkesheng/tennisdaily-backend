@@ -3250,7 +3250,7 @@ items 字段：id、brand、model、nameZh、material、sourceUrl、variants；v
 
 ### 球线使用足迹
 
-- `GET /api/my-rackets/primary` 和 `GET /api/rackets` 的球拍对象新增 `recentStringingUsage`，每支球拍最多返回最近 12 场，按打球时间、记录 ID 升序排列。无符合条件的场次时省略此字段。
+- `GET /api/my-rackets/primary` 和 `GET /api/rackets` 的球拍对象包含 `recentStringingUsage`，返回每支球拍最近 12 个有上场记录的北京时间自然日内的全部符合条件场次，按打球时间、记录 ID 升序排列。无符合条件的场次时省略此字段。
 - `GET /api/rackets/:id` 的 `data` 新增 `stringingUsageSessions`，返回本次穿线后的全部场次，按打球时间、记录 ID 降序排列。无符合条件的场次时返回 `[]`。
 - 两个字段中的场次对象均为 `{ id, date, durationMinutes }`。日期格式为 `YYYY-MM-DD HH:mm`，时长单位为分钟。
 - 明细与 `afterStringingUsageMinutes` 使用同一口径，只统计当前用户、当前球拍、最近一次穿线时间及之后的未删除记录。相同穿线时间以记录 ID 较大的一条为准。已有累计字段和球线状态字段的口径保持不变。
