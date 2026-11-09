@@ -7,10 +7,7 @@ import (
 	"tennisdaily-backend/internal/repository"
 )
 
-const (
-	maxFeedbackContentLength = 1000
-	maxFeedbackContactLength = 100
-)
+const maxFeedbackContentLength = 1000
 
 type FeedbackService struct {
 	repo            *repository.FeedbackRepository
@@ -24,16 +21,12 @@ func NewFeedbackService(repo *repository.FeedbackRepository, userRepo *repositor
 
 func (s *FeedbackService) Create(userID int64, req model.CreateFeedbackRequest) (model.FeedbackResponse, error) {
 	content := strings.TrimSpace(req.Content)
-	contact := strings.TrimSpace(req.Contact)
 
 	if content == "" {
 		return model.FeedbackResponse{}, NewInvalidRequestError("反馈内容不能为空")
 	}
 	if len([]rune(content)) > maxFeedbackContentLength {
 		return model.FeedbackResponse{}, NewInvalidRequestError("反馈内容过长，请控制在1000字以内")
-	}
-	if len([]rune(contact)) > maxFeedbackContactLength {
-		return model.FeedbackResponse{}, NewInvalidRequestError("联系方式过长")
 	}
 
 	user, err := s.userRepo.FindByID(userID)
@@ -44,14 +37,13 @@ func (s *FeedbackService) Create(userID int64, req model.CreateFeedbackRequest) 
 		return model.FeedbackResponse{}, ErrUnauthorized
 	}
 
-	if err := s.contentSecurity.CheckTexts(user.OpenID, content, contact); err != nil {
+	if err := s.contentSecurity.CheckTexts(user.OpenID, content); err != nil {
 		return model.FeedbackResponse{}, err
 	}
 
 	feedback := model.Feedback{
 		UserID:  userID,
 		Content: content,
-		Contact: contact,
 		Status:  model.FeedbackStatusPending,
 	}
 	if err := s.repo.Create(&feedback); err != nil {

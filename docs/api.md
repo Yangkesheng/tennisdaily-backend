@@ -3081,8 +3081,7 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "content": "希望支持按周查看统计",
-  "contact": "微信：tennisday"
+  "content": "希望支持按周查看统计"
 }
 ```
 
@@ -3091,13 +3090,12 @@ Authorization: Bearer <token>
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `content` | string | 是 | 反馈内容，去除首尾空格后不能为空，最长 1000 字 |
-| `contact` | string | 否 | 联系方式，选填，最长 100 字 |
 
 规则：
 
 - 需要登录。
 - 反馈归属当前登录用户，不接受前端传 `userId`。
-- 反馈内容和联系方式会经过微信内容安全校验，命中敏感内容返回 `输入内容包含敏感信息，请修改后重试`。
+- 反馈正文会经过微信内容安全校验，命中敏感内容返回 `输入内容包含敏感信息，请修改后重试`。
 - 创建时 `status` 固定为 `0`（待处理）。
 - 采用软删除，普通查询只返回未删除数据。
 
@@ -3107,7 +3105,6 @@ Authorization: Bearer <token>
 {
   "id": 1,
   "content": "希望支持按周查看统计",
-  "contact": "微信：tennisday",
   "status": 0,
   "createdAt": "2026-08-11T10:00:00+08:00"
 }
@@ -3119,7 +3116,6 @@ Authorization: Bearer <token>
 |---|---|---|
 | `id` | number | 反馈ID |
 | `content` | string | 反馈内容 |
-| `contact` | string | 联系方式，未填为空字符串 |
 | `status` | number | 处理状态：`0` 待处理、`1` 已处理 |
 | `createdAt` | string | 创建时间 |
 

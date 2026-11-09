@@ -3300,3 +3300,9 @@
 
 - `GET /api/my-rackets/primary` 与 `GET /api/rackets` 的 `recentStringingUsage` 上限从 6 场提高到 12 场。修改 `internal/service/racket_service.go` 和接口文档，沿用已有字段、排序、过滤和数据库结构。
 - `gofmt` 与 `go test ./...` 通过。
+
+## 2026-11-09 意见反馈停止收集联系方式
+
+- `internal/model/feedback.go` 和 `internal/service/feedback_service.go` 移除联系方式字段及处理。更新 `docs/api.md`，`POST /api/feedback` 只绑定正文，响应移除 `contact`。旧请求的多余字段由现有 JSON 绑定机制忽略。
+- `migrations/023_create_feedback.sql` 的新建表定义移除 `contact` 列。按确认无历史数据处理，无删列迁移或数据清理。已有表中该列具有空字符串默认值，新版 INSERT 不引用该列。
+- `gofmt`、`go test ./...` 通过。专项检查覆盖新旧请求的 Gin JSON 绑定、GORM INSERT SQL dry run 和响应序列化。未执行 MySQL 实库或微信真机联调。
