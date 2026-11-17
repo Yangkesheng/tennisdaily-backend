@@ -24,7 +24,7 @@ func (r *AdminAnalyticsRepository) dailyCounts(table string, start, end time.Tim
 	err := r.db.Table(table).
 		Select("DATE_FORMAT(created_at, '%Y-%m-%d') AS date, COUNT(*) AS count").
 		Where("created_at >= ? AND created_at < ? AND deleted_at IS NULL", start, end).
-		Group("DATE(created_at)").
+		Group("DATE_FORMAT(created_at, '%Y-%m-%d')").
 		Scan(&rows).Error
 	return rows, err
 }
@@ -69,7 +69,7 @@ func (r *AdminAnalyticsRepository) Daily(start, end time.Time) ([]model.AdminAna
 			UNION ALL
 			SELECT user_id, created_at FROM my_shoes WHERE created_at >= ? AND created_at < ? AND deleted_at IS NULL
 		) AS activity
-		GROUP BY DATE(activity.created_at)`, start, end, start, end, start, end, start, end).Scan(&activeRows).Error
+		GROUP BY DATE_FORMAT(activity.created_at, '%Y-%m-%d')`, start, end, start, end, start, end, start, end).Scan(&activeRows).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -83,7 +83,7 @@ func (r *AdminAnalyticsRepository) Daily(start, end time.Time) ([]model.AdminAna
 		Select("DATE_FORMAT(activity_day.activity_date, '%Y-%m-%d') AS date, COUNT(DISTINCT activity_day.installation_id) AS count").
 		Joins("JOIN analytics_installations AS installation ON installation.installation_id = activity_day.installation_id").
 		Where("activity_day.activity_date >= ? AND activity_day.activity_date < ? AND installation.user_id IS NULL", start, end).
-		Group("activity_day.activity_date").Scan(&anonymousRows).Error
+		Group("DATE_FORMAT(activity_day.activity_date, '%Y-%m-%d')").Scan(&anonymousRows).Error
 	if err != nil {
 		return nil, 0, err
 	}
