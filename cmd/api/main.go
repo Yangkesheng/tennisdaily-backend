@@ -46,6 +46,7 @@ func main() {
 	racketService := service.NewRacketService(racketRepo, userRepo, contentSecurityService, cfg.PolyesterStringHealth, cfg.AdminUserIDs)
 	shoeService := service.NewShoeService(shoeRepo, userRepo, contentSecurityService, cfg.ShoeWear)
 	feedbackService := service.NewFeedbackService(feedbackRepo, userRepo, contentSecurityService)
+	adminAnalyticsService := service.NewAdminAnalyticsService(repository.NewAdminAnalyticsRepository(db))
 	homeService := service.NewHomeService(sessionRepo, racketRepo, shoeRepo, cfg.SessionCategoryResolver)
 	enumService := service.NewEnumService(cfg.SessionCategoryResolver)
 
@@ -56,6 +57,8 @@ func main() {
 	racketHandler := handler.NewRacketHandler(racketService)
 	shoeHandler := handler.NewShoeHandler(shoeService)
 	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
+	installationService := service.NewAnalyticsInstallationService(repository.NewAnalyticsInstallationRepository(db))
+	adminAnalyticsHandler := handler.NewAdminAnalyticsHandler(adminAnalyticsService, installationService)
 	homeHandler := handler.NewHomeHandler(homeService)
 	enumHandler := handler.NewEnumHandler(enumService)
 
@@ -75,6 +78,7 @@ func main() {
 	api.POST("/auth/wechat-login", authHandler.WechatLogin)
 	api.POST("/auth/phone-login", authHandler.PhoneLogin)
 	api.GET("/session-config", enumHandler.SessionConfig)
+	api.POST("/analytics/app-open", adminAnalyticsHandler.AppOpen)
 
 	authed := api.Group("")
 	authed.Use(middleware.Auth(authService))
@@ -83,6 +87,7 @@ func main() {
 		authed.POST("/auth/logout", authHandler.Logout)
 		authed.PUT("/auth/profile", authHandler.UpdateProfile)
 		authed.GET("/admin/permissions", authHandler.AdminPermissions)
+		authed.POST("/analytics/app-open/identify", adminAnalyticsHandler.IdentifyInstallation)
 
 		authed.GET("/user-settings", userSettingsHandler.Get)
 		authed.PUT("/user-settings", userSettingsHandler.Update)
@@ -148,6 +153,7 @@ func main() {
 	admin := authed.Group("/admin")
 	admin.Use(middleware.RequireAdmin(cfg.AdminUserIDs))
 	{
+		admin.GET("/analytics/daily", adminAnalyticsHandler.Daily)
 		admin.POST("/racket-library", racketHandler.CreateLibrary)
 		admin.POST("/shoe-brands", shoeHandler.CreateBrand)
 		admin.POST("/shoe-series", shoeHandler.CreateSeries)

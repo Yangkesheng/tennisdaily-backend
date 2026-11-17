@@ -3319,3 +3319,13 @@
 - `internal/model/feedback.go` 和 `internal/service/feedback_service.go` 移除联系方式字段及处理。更新 `docs/api.md`，`POST /api/feedback` 只绑定正文，响应移除 `contact`。旧请求的多余字段由现有 JSON 绑定机制忽略。
 - `migrations/023_create_feedback.sql` 的新建表定义移除 `contact` 列。按确认无历史数据处理，无删列迁移或数据清理。已有表中该列具有空字符串默认值，新版 INSERT 不引用该列。
 - `gofmt`、`go test ./...` 通过。专项检查覆盖新旧请求的 Gin JSON 绑定、GORM INSERT SQL dry run 和响应序列化。未执行 MySQL 实库或微信真机联调。
+## 2026-11-17 管理员数据看板与匿名打开统计
+
+- 新增管理员每日统计接口和小程序看板，覆盖新增用户、打球记录、球拍、穿线、球鞋；包含区间去重的未注册匿名安装打开数。管理员路由由 `RequireAdmin` 保护，统计仅返回聚合数据。
+- 新增匿名打开记录与 JWT 安装关联接口。小程序仅在隐私同意后上报随机安装标识；登录后服务端将标识关联当前用户。新增 `analytics_installations` 与 `analytics_installation_days` 两张表，按安装和上海自然日去重，避免后续打开覆盖历史日期；新增迁移031并同步初始化 SQL。
+- 新增 `pages/admin-analytics` 管理看板并在“我的”页为管理员展示入口；更新隐私指引与授权提示。
+- 新增 API：`GET /api/admin/analytics/daily`、`POST /api/analytics/app-open`、`POST /api/analytics/app-open/identify`。接口日期采用 `Asia/Shanghai`，统计区间最多 366 天。
+- `activeUsers` 明确定义为当日有新增核心业务数据的去重用户数，不代表完整 DAU；匿名打开按本机随机安装标识计数，多设备或卸载重装会重复。
+- 数据库新增 `analytics_installations`，部署前须执行迁移031。兼容性：旧客户端不发匿名打开数据，其他业务接口无变化。
+- 检查：`GOCACHE=/tmp/tennisday-go-cache go test ./...` 通过；`npm run typecheck` 通过。未连接 MySQL 实例，迁移031尚未执行。
+

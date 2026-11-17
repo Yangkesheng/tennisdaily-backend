@@ -339,6 +339,9 @@ Authorization: Bearer <token>
 | POST | `/api/admin/shoe-brands` | 是（管理员） | 新增球鞋品牌 |
 | POST | `/api/admin/shoe-series` | 是（管理员） | 新增球鞋系列 |
 | POST | `/api/admin/shoe-library` | 是（管理员） | 新增球鞋库鞋款，配色合并为单条 |
+| GET | `/api/admin/analytics/daily` | 是（管理员） | 查询每日新增用户、打球记录、球拍、穿线、球鞋及匿名未注册打开汇总 |
+| POST | `/api/analytics/app-open` | 否（隐私同意后） | 上报匿名安装打开时间，不返回安装标识 |
+| POST | `/api/analytics/app-open/identify` | 是 | 将当前匿名安装关联到 JWT 当前用户 |
 
 ---
 
@@ -3254,3 +3257,23 @@ items 字段：id、brand、model、nameZh、material、sourceUrl、variants；v
 - `GET /api/rackets/:id` 的 `data` 新增 `stringingUsageSessions`，返回本次穿线后的全部场次，按打球时间、记录 ID 降序排列。无符合条件的场次时返回 `[]`。
 - 两个字段中的场次对象均为 `{ id, date, durationMinutes }`。日期格式为 `YYYY-MM-DD HH:mm`，时长单位为分钟。
 - 明细与 `afterStringingUsageMinutes` 使用同一口径，只统计当前用户、当前球拍、最近一次穿线时间及之后的未删除记录。相同穿线时间以记录 ID 较大的一条为准。已有累计字段和球线状态字段的口径保持不变。
+
+## 管理员数据看板与匿名打开统计
+
+### GET /api/admin/analytics/daily
+
+管理员 JWT 鉴权。查询参数 `startDate`、`endDate` 均必填，格式 `YYYY-MM-DD`，区间含首尾日期，最多 366 天。时区为 `Asia/Shanghai`。
+
+响应 `data`：`startDate`、`endDate`、`timeZone`、`generatedAt`、`unregisteredOpeners`（区间内去重匿名安装数）、`days`。每日项字段为 `date`、`newUsers`、`newSessions`、`newRackets`、`newStringingRecords`、`newShoes`、`activeUsers`、`unregisteredOpeners`。
+
+业务新增按各业务表 `created_at` 统计，并排除当前软删除对象。`activeUsers` 表示当日新增任一核心业务数据的去重用户数，不能解释为完整 DAU。区间汇总的 `unregisteredOpeners` 按匿名安装标识去重；每日值按日期去重，同一安装跨日会在每日序列重复计入。注册后关联安装标识，该安装不再计入未注册打开数。安装标识不是自然人身份，同一人卸载重装或多设备可能被重复计算。
+
+### POST /api/analytics/app-open
+
+无需登录，但客户端仅在隐私指引同意后调用。请求 `{ "installationId": "32位随机十六进制标识" }`。服务端仅保存安装标识及首次/最近打开时间；响应 `{ "accepted": true }`，不返回标识。调用失败不得影响小程序使用。
+
+### POST /api/analytics/app-open/identify
+
+需要 JWT。请求同上；用户 ID 仅从 JWT 获取，服务端把该安装标识关联到当前账号，从未注册打开统计中排除。此接口不接受或使用客户端传入的 userId。
+
+数据库部署需先执行 `migrations/031_create_analytics_installations.sql`（包含安装关联表与按自然日去重的打开表）。新环境可使用包含这两张表的 `migrations/init.sql`。
