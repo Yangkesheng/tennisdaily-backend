@@ -3329,3 +3329,10 @@
 - 数据库新增 `analytics_installations`，部署前须执行迁移031。兼容性：旧客户端不发匿名打开数据，其他业务接口无变化。
 - 检查：`GOCACHE=/tmp/tennisday-go-cache go test ./...` 通过；`npm run typecheck` 通过。未连接 MySQL 实例，迁移031尚未执行。
 
+## 2026-11-17 管理看板显示当前总用户
+
+- 管理员每日统计响应新增 `totalUsers`，按 `users.deleted_at IS NULL` 统计，不受查询日期范围影响。
+- 看板在周期指标前新增“当前总用户”概览卡，和所选区间的“新增用户”分开展示。
+- 数据库结构及旧接口无变化。
+- 检查：`GOCACHE=/tmp/tennisday-go-cache go test ./...` 和小程序 `npm run typecheck` 通过。
+

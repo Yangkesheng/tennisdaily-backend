@@ -36,8 +36,13 @@ func (s *AdminAnalyticsService) Daily(startDate, endDate string) (*model.AdminAn
 	if err != nil {
 		return nil, err
 	}
+	totalUsers, err := s.repo.TotalUsers()
+	if err != nil {
+		return nil, err
+	}
 	return &model.AdminAnalyticsResponse{
 		StartDate: startDate, EndDate: endDate, TimeZone: "Asia/Shanghai",
-		GeneratedAt: time.Now().In(loc).Format("2006-01-02 15:04:05"), UnregisteredOpeners: unregisteredOpeners, Days: days,
+		GeneratedAt: time.Now().In(loc).Format("2006-01-02 15:04:05"), TotalUsers: totalUsers,
+		UnregisteredOpeners: unregisteredOpeners, Days: days,
 	}, nil
 }

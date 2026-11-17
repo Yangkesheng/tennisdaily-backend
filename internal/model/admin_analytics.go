@@ -16,6 +16,7 @@ type AdminAnalyticsResponse struct {
 	EndDate             string              `json:"endDate"`
 	TimeZone            string              `json:"timeZone"`
 	GeneratedAt         string              `json:"generatedAt"`
+	TotalUsers          int64               `json:"totalUsers"`
 	UnregisteredOpeners int64               `json:"unregisteredOpeners"`
 	Days                []AdminAnalyticsDay `json:"days"`
 }

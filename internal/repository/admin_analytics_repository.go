@@ -29,6 +29,12 @@ func (r *AdminAnalyticsRepository) dailyCounts(table string, start, end time.Tim
 	return rows, err
 }
 
+func (r *AdminAnalyticsRepository) TotalUsers() (int64, error) {
+	var count int64
+	err := r.db.Table("users").Where("deleted_at IS NULL").Count(&count).Error
+	return count, err
+}
+
 func (r *AdminAnalyticsRepository) Daily(start, end time.Time) ([]model.AdminAnalyticsDay, int64, error) {
 	days := make([]model.AdminAnalyticsDay, 0, int(end.Sub(start).Hours()/24))
 	index := make(map[string]int, cap(days))

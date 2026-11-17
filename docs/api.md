@@ -3264,7 +3264,7 @@ items 字段：id、brand、model、nameZh、material、sourceUrl、variants；v
 
 管理员 JWT 鉴权。查询参数 `startDate`、`endDate` 均必填，格式 `YYYY-MM-DD`，区间含首尾日期，最多 366 天。时区为 `Asia/Shanghai`。
 
-响应 `data`：`startDate`、`endDate`、`timeZone`、`generatedAt`、`unregisteredOpeners`（区间内去重匿名安装数）、`days`。每日项字段为 `date`、`newUsers`、`newSessions`、`newRackets`、`newStringingRecords`、`newShoes`、`activeUsers`、`unregisteredOpeners`。
+响应 `data`：`startDate`、`endDate`、`timeZone`、`generatedAt`、`totalUsers`（当前未软删除用户总数，不受日期筛选影响）、`unregisteredOpeners`（区间内去重匿名安装数）、`days`。每日项字段为 `date`、`newUsers`、`newSessions`、`newRackets`、`newStringingRecords`、`newShoes`、`activeUsers`、`unregisteredOpeners`。
 
 业务新增按各业务表 `created_at` 统计，并排除当前软删除对象。`activeUsers` 表示当日新增任一核心业务数据的去重用户数，不能解释为完整 DAU。区间汇总的 `unregisteredOpeners` 按匿名安装标识去重；每日值按日期去重，同一安装跨日会在每日序列重复计入。注册后关联安装标识，该安装不再计入未注册打开数。安装标识不是自然人身份，同一人卸载重装或多设备可能被重复计算。
 
